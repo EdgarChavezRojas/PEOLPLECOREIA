@@ -1,0 +1,47 @@
+# Database Configuration (DEV: PostgreSQL via Docker)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/iam_db
+    username: iam_user
+    password: iam_password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        show-sql: true
+
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    clean-disabled: false
+    validate-on-migrate: false
+
+
+# JWT Security Configuration (DEV mode: disabled by default)
+security:
+  jwt:
+    enabled: false
+
+# Actuator Configuration (DEV: expose more endpoints)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration (DEV: more verbose)
+logging:
+  level:
+    root: INFO
+    com.solveria: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.flywaydb: DEBUG

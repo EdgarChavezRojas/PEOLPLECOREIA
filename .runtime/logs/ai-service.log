@@ -1,0 +1,68 @@
+2026-03-04T11:50:15.605-04:00  INFO 43168 --- [ai-service] [main] c.s.ai.bootstrap.AiServiceApplication    : Starting AiServiceApplication using Java 21.0.8 with PID 43168 (C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-bootstrap\target\classes started by usuario in C:\Users\usuario\IdeaProjects\ProyectoAI)
+2026-03-04T11:50:15.607-04:00  INFO 43168 --- [ai-service] [main] c.s.ai.bootstrap.AiServiceApplication    : No active profile set, falling back to 1 default profile: "dev"
+2026-03-04T11:50:17.719-04:00  INFO 43168 --- [ai-service] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8091 (http)
+2026-03-04T11:50:17.736-04:00  INFO 43168 --- [ai-service] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-04T11:50:17.737-04:00  INFO 43168 --- [ai-service] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-03-04T11:50:17.820-04:00  INFO 43168 --- [ai-service] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-04T11:50:17.820-04:00  INFO 43168 --- [ai-service] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2160 ms
+2026-03-04T11:50:17.994-04:00  INFO 43168 --- [ai-service] [main] c.s.a.i.llm.stub.DevLlmChatPortStub      : DevLlmChatPortStub initialized - using stub LLM responses in dev/test profile
+2026-03-04T11:50:18.349-04:00  INFO 43168 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-api\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:50:18.350-04:00  INFO 43168 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-application\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:50:18.350-04:00  INFO 43168 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-infrastructure\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:50:18.350-04:00  INFO 43168 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-domain\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:50:18.387-04:00  WARN 43168 --- [ai-service] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration': Injection of autowired dependencies failed
+2026-03-04T11:50:18.390-04:00  INFO 43168 --- [ai-service] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-03-04T11:50:18.409-04:00  INFO 43168 --- [ai-service] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-03-04T11:50:18.432-04:00 ERROR 43168 --- [ai-service] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Invalid mapping pattern detected:
+/swagger-ui/**/*swagger-initializer.js
+           ^
+No more pattern data allowed after {*...} or ** pattern element
+
+Action:
+
+Fix this pattern in your application or switch to the legacy parser implementation with 'spring.mvc.pathmatch.matching-strategy=ant_path_matcher'.
+
+2026-03-04T11:55:30.995-04:00  INFO 46720 --- [ai-service] [main] c.s.ai.bootstrap.AiServiceApplication    : Starting AiServiceApplication using Java 21.0.8 with PID 46720 (C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-bootstrap\target\classes started by usuario in C:\Users\usuario\IdeaProjects\ProyectoAI)
+2026-03-04T11:55:30.997-04:00  INFO 46720 --- [ai-service] [main] c.s.ai.bootstrap.AiServiceApplication    : No active profile set, falling back to 1 default profile: "dev"
+2026-03-04T11:55:32.749-04:00  INFO 46720 --- [ai-service] [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8091 (http)
+2026-03-04T11:55:32.764-04:00  INFO 46720 --- [ai-service] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-04T11:55:32.764-04:00  INFO 46720 --- [ai-service] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-03-04T11:55:32.837-04:00  INFO 46720 --- [ai-service] [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-04T11:55:32.838-04:00  INFO 46720 --- [ai-service] [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1796 ms
+2026-03-04T11:55:32.994-04:00  INFO 46720 --- [ai-service] [main] c.s.a.i.llm.stub.DevLlmChatPortStub      : DevLlmChatPortStub initialized - using stub LLM responses in dev/test profile
+2026-03-04T11:55:33.310-04:00  INFO 46720 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-api\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:55:33.311-04:00  INFO 46720 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-application\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:55:33.311-04:00  INFO 46720 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-infrastructure\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:55:33.311-04:00  INFO 46720 --- [ai-service] [main] .i.s.PathMatchingResourcePatternResolver : Skipping search for files matching pattern [**/*.class]: directory [C:\Users\usuario\IdeaProjects\ProyectoAI\ai-service\modules\ai-domain\target\classes\com\solveria\ai\bootstrap] does not exist
+2026-03-04T11:55:33.349-04:00  WARN 46720 --- [ai-service] [main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration': Injection of autowired dependencies failed
+2026-03-04T11:55:33.352-04:00  INFO 46720 --- [ai-service] [main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-03-04T11:55:33.370-04:00  INFO 46720 --- [ai-service] [main] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-03-04T11:55:33.392-04:00 ERROR 46720 --- [ai-service] [main] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Invalid mapping pattern detected:
+/swagger-ui/**/*swagger-initializer.js
+           ^
+No more pattern data allowed after {*...} or ** pattern element
+
+Action:
+
+Fix this pattern in your application or switch to the legacy parser implementation with 'spring.mvc.pathmatch.matching-strategy=ant_path_matcher'.
+

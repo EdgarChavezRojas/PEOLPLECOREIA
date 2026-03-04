@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: iam-service
+  profiles:
+    active: dev
+  autoconfigure:
+    exclude:
+      - org.springdoc.webmvc.core.configuration.SpringDocWebMvcConfiguration
+      - org.springdoc.webmvc.ui.SwaggerConfig
+
+# JWT Security Configuration
+security:
+  jwt:
+    enabled: false  # Default: disabled for DEV mode
+
+server:
+  port: 8080
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    # enabled: false esto se activa en produccion
+  swagger-ui:
+    path: /swagger-ui.html

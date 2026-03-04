@@ -1,0 +1,68 @@
+ d#!/usr/bin/env pwsh
+<#
+.SYNOPSIS
+    Run all tests in all repositories
+.DESCRIPTION
+    Runs unit + integration tests for core-platform, iam-service, and ai-service.
+    Ensures core-platform is installed first.
+.EXAMPLE
+    .\scripts\test-all.ps1
+#>
+
+[CmdletBinding()]
+param()
+
+$ErrorActionPreference = "Stop"
+$rootDir = Split-Path -Parent $PSScriptRoot
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host " Running All Tests" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Step 1: Install core-platform (needed for service tests)
+Write-Host "[0/3] Installing core-platform..." -ForegroundColor Yellow
+& "$PSScriptRoot\install-core.ps1"
+Write-Host ""
+
+# Step 2: Test core-platform
+Write-Host "[1/3] Testing core-platform..." -ForegroundColor Yellow
+Push-Location "$rootDir\core-plataform"
+& .\mvnw test
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    throw "core-platform tests failed"
+}
+Write-Host "✓ core-platform tests passed" -ForegroundColor Green
+Pop-Location
+
+Write-Host ""
+
+# Step 3: Test iam-service
+Write-Host "[2/3] Testing iam-service..." -ForegroundColor Yellow
+Push-Location "$rootDir\iam-service"
+& .\mvnw test
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    throw "iam-service tests failed"
+}
+Write-Host "✓ iam-service tests passed" -ForegroundColor Green
+Pop-Location
+
+Write-Host ""
+
+# Step 4: Test ai-service
+Write-Host "[3/3] Testing ai-service..." -ForegroundColor Yellow
+Push-Location "$rootDir\ai-service"
+& .\mvnw.cmd test
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    throw "ai-service tests failed"
+}
+Write-Host "✓ ai-service tests passed" -ForegroundColor Green
+Pop-Location
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host " ✓ ALL TESTS PASSED" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Cyan
