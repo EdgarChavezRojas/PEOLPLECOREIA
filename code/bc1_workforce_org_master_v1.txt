@@ -1,0 +1,2398 @@
+================================================================================
+BC1: WORKFORCE & ORG MASTER (El Núcleo Operativo)
+Versión: v1.0
+Fecha: 2026-04-24
+Especificación: Cap 1 - documentacion modulo core para RRHH.md
+================================================================================
+
+ESTRUCTURA DE PAQUETES:
+com.solveria.core.workforce.domain.model.*              (Entidades de Dominio)
+com.solveria.core.workforce.domain.service.*            (Servicios de Dominio)
+com.solveria.core.workforce.application.usecase.*       (Casos de Uso)
+com.solveria.core.workforce.application.dto.*           (DTOs)
+com.solveria.core.workforce.infrastructure.jpa.*        (Entidades JPA)
+com.solveria.core.workforce.infrastructure.repository.* (Repositorios)
+com.solveria.core.workforce.infrastructure.adapter.*    (Adaptadores)
+com.solveria.core.workforce.api.rest.*                  (Controladores REST)
+
+================================================================================
+PARTE 1: DOMAIN MODEL - VALUE OBJECTS Y ENTIDADES
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/ContactPoint.java
+package com.solveria.core.workforce.domain.model.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.Embeddable;
+import java.io.Serializable;
+
+/**
+ * Value Object: ContactPoint
+ *
+ * Representa un punto de contacto (email, teléfono, dirección).
+ * Es reemplazable; si cambia, se reemplaza completamente (no tiene identidad propia).
+ *
+ * Invariantes:
+ * - Email debe tener formato válido si está presente
+ * - Teléfono debe ser formato válido (opcional)
+ * - Dirección es de libre formato (opcional)
+ */
+@Embeddable
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+public class ContactPoint implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+    private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
+
+    private String email;
+    private String phone;
+    private String address;
+
+    public static ContactPoint create(String email, String phone, String address) {
+        if (email != null && !email.matches(EMAIL_PATTERN)) {
+            throw new IllegalArgumentException("Email format inválido");
+        }
+        return new ContactPoint(email, phone, address);
+    }
+
+    public ContactPoint updateEmail(String newEmail) {
+        if (newEmail != null && !newEmail.matches(EMAIL_PATTERN)) {
+            throw new IllegalArgumentException("Email format inválido");
+        }
+        return new ContactPoint(newEmail, this.phone, this.address);
+    }
+
+    public ContactPoint updatePhone(String newPhone) {
+        return new ContactPoint(this.email, newPhone, this.address);
+    }
+
+    public ContactPoint updateAddress(String newAddress) {
+        return new ContactPoint(this.email, this.phone, newAddress);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/PartyIdentifierType.java
+package com.solveria.core.workforce.domain.model.vo;
+
+public enum PartyIdentifierType {
+    CI("Carnet de Identidad"),
+    PASSPORT("Pasaporte");
+
+    private final String description;
+
+    PartyIdentifierType(String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/Extension.java
+package com.solveria.core.workforce.domain.model.vo;
+
+public enum Extension {
+    SCZ("Santa Cruz"),
+    LP("La Paz"),
+    CB("Cochabamba"),
+    OR("Oruro"),
+    PT("Potosí"),
+    TJ("Tarija"),
+    BE("Beni"),
+    PA("Pando");
+
+    private final String name;
+
+    Extension(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/Gender.java
+package com.solveria.core.workforce.domain.model.vo;
+
+public enum Gender {
+    MALE("Varón"),
+    FEMALE("Mujer"),
+    OTHER("Otro");
+
+    private final String label;
+
+    Gender(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/CostCenter.java
+package com.solveria.core.workforce.domain.model.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.Embeddable;
+import java.io.Serializable;
+
+/**
+ * Value Object: CostCenter
+ *
+ * Etiqueta contable inmutable. Si el código cambia, se asigna uno nuevo.
+ * No tiene ciclo de vida propio.
+ */
+@Embeddable
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+public class CostCenter implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String costCode;
+    private String description;
+
+    public static CostCenter create(String costCode, String description) {
+        if (costCode == null || costCode.isBlank()) {
+            throw new IllegalArgumentException("costCode no puede estar vacío");
+        }
+        return new CostCenter(costCode, description);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/HeadcountPlan.java
+package com.solveria.core.workforce.domain.model.vo;
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.Embeddable;
+import java.io.Serializable;
+
+/**
+ * Value Object: HeadcountPlan
+ *
+ * Plan de ocupación de plazas.
+ *
+ * Invariante: No se puede exceder el límite de slots.
+ */
+@Embeddable
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+public class HeadcountPlan implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private Integer maxSlots;
+    private Integer currentSlots;
+
+    public static HeadcountPlan create(Integer maxSlots) {
+        if (maxSlots == null || maxSlots <= 0) {
+            throw new IllegalArgumentException("maxSlots debe ser mayor a 0");
+        }
+        return new HeadcountPlan(maxSlots, 0);
+    }
+
+    public boolean hasVacancy() {
+        return currentSlots < maxSlots;
+    }
+
+    public void occupy() {
+        if (!hasVacancy()) {
+            throw new IllegalStateException("No hay plazas vacantes. Control de Plazas (Headcount): " +
+                    "Impide asignar personal a una posición sin plaza vacante autorizada presupuestariamente.");
+        }
+        currentSlots++;
+    }
+
+    public void vacate() {
+        if (currentSlots > 0) {
+            currentSlots--;
+        }
+    }
+
+    public Integer getAvailableSlots() {
+        return maxSlots - currentSlots;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/PartyIdentifier.java
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.Extension;
+import com.solveria.core.workforce.domain.model.vo.PartyIdentifierType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Entity: PartyIdentifier
+ *
+ * Representa un documento de identidad (CI, Pasaporte).
+ * Tiene ciclo de vida (fechas de emisión y caducidad) y requiere identidad propia.
+ *
+ * Invariantes:
+ * - id_type es requerido
+ * - id_number es único
+ * - issue_date debe ser anterior a expiry_date
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PartyIdentifier {
+
+    private UUID identifierId;
+    private UUID personId;
+    private PartyIdentifierType idType;
+    private String idNumber;
+    private Extension extension;
+    private LocalDate issueDate;
+    private LocalDate expiryDate;
+
+    public static PartyIdentifier create(UUID personId, PartyIdentifierType idType,
+                                         String idNumber, Extension extension,
+                                         LocalDate issueDate, LocalDate expiryDate) {
+        if (idType == null || idNumber == null || idNumber.isBlank()) {
+            throw new IllegalArgumentException("idType e idNumber son requeridos");
+        }
+        if (issueDate != null && expiryDate != null && issueDate.isAfter(expiryDate)) {
+            throw new IllegalArgumentException("issueDate no puede ser posterior a expiryDate");
+        }
+
+        return PartyIdentifier.builder()
+                .identifierId(UUID.randomUUID())
+                .personId(personId)
+                .idType(idType)
+                .idNumber(idNumber)
+                .extension(extension)
+                .issueDate(issueDate)
+                .expiryDate(expiryDate)
+                .build();
+    }
+
+    public boolean isExpired() {
+        if (expiryDate == null) return false;
+        return LocalDate.now().isAfter(expiryDate);
+    }
+
+    public boolean isExpiringSoon(int daysThreshold) {
+        if (expiryDate == null) return false;
+        LocalDate thresholdDate = LocalDate.now().plusDays(daysThreshold);
+        return LocalDate.now().isBefore(expiryDate) && expiryDate.isBefore(thresholdDate);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/Person.java
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Aggregate Root: Person
+ *
+ * Identidad civil única del ser humano. Es el anclaje del dominio.
+ * Sobrevive a cualquier contrato o relación laboral.
+ *
+ * Invariantes Críticos:
+ * - Identidad Única: Una persona física solo posee un registro maestro (Person ID)
+ * - GlobalID es único y sirve para la deduplicación
+ * - birth_date >= 18 años al momento del registro
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Person {
+
+    private UUID personId;
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private Gender gender;
+    private String globalId;
+    private ContactPoint contactPoint;
+    private List<PartyIdentifier> identifiers;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+
+    private static final int MINIMUM_AGE = 18;
+
+    public static Person create(String firstName, String lastName, LocalDate birthDate,
+                                Gender gender, String globalId, ContactPoint contactPoint) {
+        // Validar age >= 18
+        Period age = Period.between(birthDate, LocalDate.now());
+        if (age.getYears() < MINIMUM_AGE) {
+            throw new IllegalArgumentException("La persona debe tener mínimo " + MINIMUM_AGE + " años");
+        }
+
+        if (firstName == null || firstName.isBlank() ||
+            lastName == null || lastName.isBlank() ||
+            globalId == null || globalId.isBlank()) {
+            throw new IllegalArgumentException("firstName, lastName y globalId son requeridos");
+        }
+
+        return Person.builder()
+                .personId(UUID.randomUUID())
+                .firstName(firstName)
+                .lastName(lastName)
+                .birthDate(birthDate)
+                .gender(gender)
+                .globalId(globalId)
+                .contactPoint(contactPoint != null ? contactPoint : new ContactPoint())
+                .identifiers(new ArrayList<>())
+                .createdAt(LocalDate.now())
+                .updatedAt(LocalDate.now())
+                .build();
+    }
+
+    public void addIdentifier(PartyIdentifier identifier) {
+        if (identifier == null) {
+            throw new IllegalArgumentException("identifier no puede ser nulo");
+        }
+        // Evitar duplicados por idNumber
+        boolean exists = identifiers.stream()
+                .anyMatch(id -> id.getIdNumber().equals(identifier.getIdNumber()));
+        if (exists) {
+            throw new IllegalArgumentException("El identificador " + identifier.getIdNumber() +
+                    " ya está vinculado a esta persona");
+        }
+        identifiers.add(identifier);
+    }
+
+    public void updateContactPoint(ContactPoint newContactPoint) {
+        this.contactPoint = newContactPoint;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public Integer getAge() {
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/OrgUnit.java
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+/**
+ * Aggregate Root: OrgUnit
+ *
+ * Nodo de la jerarquía organizacional (Sucursal, Facultad, Departamento).
+ * Punto de partida para cambios estructurales.
+ *
+ * Invariantes Críticos:
+ * - No Unidades Huérfanas: Toda unidad (excepto raíz) debe pertenecer a una jerarquía
+ * - Árbol único: parent_id define la relación 1:N hacia el padre
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgUnit {
+
+    private UUID unitId;
+    private UUID tenantId;
+    private UUID parentId;  // null si es raíz
+    private String name;
+    private OrgUnitType unitType;
+    private CostCenter costCenter;
+    private String geoCoords;  // TEXT o POINT para geocerca en Santa Cruz
+    private Boolean isRoot;
+
+    public enum OrgUnitType {
+        ADMINISTRATIVE("Administrativa"),
+        ACADEMIC("Académica"),
+        COMMERCIAL("Comercial");
+
+        private final String label;
+
+        OrgUnitType(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public static OrgUnit createRoot(UUID tenantId, String name, OrgUnitType unitType, CostCenter costCenter) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name es requerido");
+        }
+
+        return OrgUnit.builder()
+                .unitId(UUID.randomUUID())
+                .tenantId(tenantId)
+                .parentId(null)
+                .name(name)
+                .unitType(unitType)
+                .costCenter(costCenter)
+                .isRoot(true)
+                .build();
+    }
+
+    public static OrgUnit createChild(UUID tenantId, UUID parentId, String name,
+                                     OrgUnitType unitType, CostCenter costCenter) {
+        if (parentId == null) {
+            throw new IllegalArgumentException("parentId no puede ser nulo para unidades no-raíz");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name es requerido");
+        }
+
+        return OrgUnit.builder()
+                .unitId(UUID.randomUUID())
+                .tenantId(tenantId)
+                .parentId(parentId)
+                .name(name)
+                .unitType(unitType)
+                .costCenter(costCenter)
+                .isRoot(false)
+                .build();
+    }
+
+    public void updateCostCenter(CostCenter newCostCenter) {
+        this.costCenter = newCostCenter;
+    }
+
+    public void updateGeoCoords(String newGeoCoords) {
+        this.geoCoords = newGeoCoords;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/OrgHierarchy.java
+package com.solveria.core.workforce.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Entity: OrgHierarchy
+ *
+ * Define relaciones padre-hijo en la jerarquía.
+ * Tiene identidad porque las jerarquías se versionan en el tiempo (Effective Dating).
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgHierarchy {
+
+    private UUID hierarchyId;
+    private UUID parentUnitId;
+    private UUID childUnitId;
+    private String hierarchyType;  // Administrativa, Funcional, Académica
+    private LocalDate effectiveDate;
+    private LocalDate endDate;
+
+    public static OrgHierarchy create(UUID parentUnitId, UUID childUnitId,
+                                     String hierarchyType, LocalDate effectiveDate) {
+        if (parentUnitId == null || childUnitId == null) {
+            throw new IllegalArgumentException("parentUnitId y childUnitId son requeridos");
+        }
+        if (parentUnitId.equals(childUnitId)) {
+            throw new IllegalArgumentException("Una unidad no puede ser su propio padre");
+        }
+
+        return OrgHierarchy.builder()
+                .hierarchyId(UUID.randomUUID())
+                .parentUnitId(parentUnitId)
+                .childUnitId(childUnitId)
+                .hierarchyType(hierarchyType)
+                .effectiveDate(effectiveDate != null ? effectiveDate : LocalDate.now())
+                .build();
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/Job.java
+package com.solveria.core.workforce.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+/**
+ * Entity/VO: Job
+ *
+ * Descriptor del cargo.
+ * Atributos estandarizados para muchas posiciones.
+ * Se trata como VO o referencia externa (tabla maestra).
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Job {
+
+    private UUID jobId;
+    private String jobCode;
+    private String title;
+    private String gradeBand;  // Banda salarial asociada
+    private String description;
+
+    public static Job create(String jobCode, String title, String gradeBand) {
+        if (jobCode == null || jobCode.isBlank() || title == null || title.isBlank()) {
+            throw new IllegalArgumentException("jobCode y title son requeridos");
+        }
+
+        return Job.builder()
+                .jobId(UUID.randomUUID())
+                .jobCode(jobCode)
+                .title(title)
+                .gradeBand(gradeBand)
+                .build();
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/Position.java
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+/**
+ * Aggregate Root: Position
+ *
+ * Representa la "silla" física o virtual en la organización.
+ * Existe independientemente de si hay alguien ocupándola.
+ *
+ * Invariantes:
+ * - Control de Plazas (Headcount): No se puede exceder el límite de slots
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Position {
+
+    private UUID positionId;
+    private UUID unitId;
+    private UUID jobId;
+    private PositionStatus status;
+    private Boolean isBudgeted;
+    private HeadcountPlan headcountPlan;
+
+    public enum PositionStatus {
+        VACANT("Vacante"),
+        OCCUPIED("Ocupada"),
+        RESERVED("Reservada");
+
+        private final String label;
+
+        PositionStatus(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
+        if (unitId == null || jobId == null || maxSlots == null) {
+            throw new IllegalArgumentException("unitId, jobId y maxSlots son requeridos");
+        }
+        if (maxSlots <= 0) {
+            throw new IllegalArgumentException("maxSlots debe ser mayor a 0");
+        }
+
+        return Position.builder()
+                .positionId(UUID.randomUUID())
+                .unitId(unitId)
+                .jobId(jobId)
+                .status(PositionStatus.VACANT)
+                .isBudgeted(isBudgeted != null ? isBudgeted : false)
+                .headcountPlan(HeadcountPlan.create(maxSlots))
+                .build();
+    }
+
+    public void occupy() {
+        if (!PositionStatus.VACANT.equals(status)) {
+            throw new IllegalStateException("Solo se puede ocupar una posición vacante");
+        }
+        headcountPlan.occupy();
+        this.status = PositionStatus.OCCUPIED;
+    }
+
+    public void vacate() {
+        headcountPlan.vacate();
+        if (headcountPlan.getCurrentSlots() == 0) {
+            this.status = PositionStatus.VACANT;
+        }
+    }
+
+    public void reserve() {
+        if (!PositionStatus.VACANT.equals(status)) {
+            throw new IllegalStateException("Solo se puede reservar una posición vacante");
+        }
+        this.status = PositionStatus.RESERVED;
+    }
+
+    public boolean hasVacancy() {
+        return headcountPlan.hasVacancy();
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/Relationship.java
+package com.solveria.core.workforce.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Aggregate Root: Relationship
+ *
+ * Vínculo legal entre la Person y el Tenant.
+ * Define si el perfil será WorkerProfile o AcademicProfile.
+ * Soporta el "Multi-vínculo" (ej. administrativo y docente simultáneo).
+ *
+ * Invariantes Críticos:
+ * - No Traslape de Vínculos Primarios: Impide dos vínculos laborales primarios
+ *   de tiempo completo activos para evitar contingencias legales por doble percepción
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Relationship {
+
+    private UUID relationshipId;
+    private UUID personId;
+    private UUID tenantId;
+    private RelationshipType relationType;
+    private RelationshipStatus currentStatus;
+    private LocalDate hireDate;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+
+    public enum RelationshipType {
+        LABOR("Laboral"),
+        ACADEMIC("Académico"),
+        INTERNSHIP("Pasantía");
+
+        private final String label;
+
+        RelationshipType(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public enum RelationshipStatus {
+        DRAFT("Draft"),
+        ACTIVE("Activo"),
+        SUSPENDED("Suspendido"),
+        TERMINATED("Terminado");
+
+        private final String label;
+
+        RelationshipStatus(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public static Relationship create(UUID personId, UUID tenantId, RelationshipType relationType,
+                                     LocalDate hireDate) {
+        if (personId == null || tenantId == null || relationType == null) {
+            throw new IllegalArgumentException("personId, tenantId y relationType son requeridos");
+        }
+
+        return Relationship.builder()
+                .relationshipId(UUID.randomUUID())
+                .personId(personId)
+                .tenantId(tenantId)
+                .relationType(relationType)
+                .currentStatus(RelationshipStatus.DRAFT)
+                .hireDate(hireDate)
+                .createdAt(LocalDate.now())
+                .updatedAt(LocalDate.now())
+                .build();
+    }
+
+    public void activate() {
+        if (!RelationshipStatus.DRAFT.equals(currentStatus)) {
+            throw new IllegalStateException("Solo se puede activar una relación en estado DRAFT");
+        }
+        this.currentStatus = RelationshipStatus.ACTIVE;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public void suspend() {
+        this.currentStatus = RelationshipStatus.SUSPENDED;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public void reactivate() {
+        if (!RelationshipStatus.SUSPENDED.equals(currentStatus)) {
+            throw new IllegalStateException("Solo se puede reactivar una relación SUSPENDIDA");
+        }
+        this.currentStatus = RelationshipStatus.ACTIVE;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public void terminate() {
+        this.currentStatus = RelationshipStatus.TERMINATED;
+        this.updatedAt = LocalDate.now();
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/WorkerProfile.java
+package com.solveria.core.workforce.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+/**
+ * Entity: WorkerProfile
+ *
+ * Atributos operativos para roles laborales.
+ * Evoluciona (cambios de nivel, atributos operativos) y mantiene identidad
+ * vinculada a la relación laboral específica.
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class WorkerProfile {
+
+    private UUID profileId;
+    private UUID relationshipId;
+    private String employeeNo;
+    private String department;
+    private String jobTitle;
+
+    public static WorkerProfile create(UUID relationshipId, String employeeNo,
+                                       String department, String jobTitle) {
+        if (relationshipId == null || employeeNo == null || employeeNo.isBlank()) {
+            throw new IllegalArgumentException("relationshipId y employeeNo son requeridos");
+        }
+
+        return WorkerProfile.builder()
+                .profileId(UUID.randomUUID())
+                .relationshipId(relationshipId)
+                .employeeNo(employeeNo)
+                .department(department)
+                .jobTitle(jobTitle)
+                .build();
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/AcademicProfile.java
+package com.solveria.core.workforce.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+/**
+ * Entity: AcademicProfile
+ *
+ * Exclusivo para Tenant Educación.
+ * Gestiona rango académico, carga horaria y materias asignadas.
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AcademicProfile {
+
+    private UUID academicId;
+    private UUID relationshipId;
+    private AcademicRank currentRank;
+    private Integer teachingLoad;  // Límite de carga horaria semestral
+
+    public enum AcademicRank {
+        AUXILIAR("Auxiliar"),
+        ADJUNTO("Adjunto"),
+        TITULAR("Titular"),
+        INVESTIGADOR("Investigador");
+
+        private final String label;
+
+        AcademicRank(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public static AcademicProfile create(UUID relationshipId, AcademicRank initialRank,
+                                        Integer teachingLoad) {
+        if (relationshipId == null || initialRank == null || teachingLoad == null) {
+            throw new IllegalArgumentException("relationshipId, initialRank y teachingLoad son requeridos");
+        }
+        if (teachingLoad <= 0) {
+            throw new IllegalArgumentException("teachingLoad debe ser mayor a 0");
+        }
+
+        return AcademicProfile.builder()
+                .academicId(UUID.randomUUID())
+                .relationshipId(relationshipId)
+                .currentRank(initialRank)
+                .teachingLoad(teachingLoad)
+                .build();
+    }
+
+    public void upgradeRank(AcademicRank newRank) {
+        if (newRank == null) {
+            throw new IllegalArgumentException("newRank no puede ser nulo");
+        }
+        this.currentRank = newRank;
+    }
+
+    public void updateTeachingLoad(Integer newLoad) {
+        if (newLoad == null || newLoad <= 0) {
+            throw new IllegalArgumentException("Teaching load debe ser mayor a 0");
+        }
+        this.teachingLoad = newLoad;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/model/StatusLog.java
+package com.solveria.core.workforce.domain.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Entity: StatusLog
+ *
+ * Trazabilidad inalterable de transiciones de estado.
+ * Requiere identidad para auditoría de transiciones.
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class StatusLog {
+
+    private UUID logId;
+    private UUID relationshipId;
+    private Relationship.RelationshipStatus previousStatus;
+    private Relationship.RelationshipStatus newStatus;
+    private String changeReason;
+    private LocalDate changedAt;
+    private UUID changedBy;
+
+    public static StatusLog create(UUID relationshipId,
+                                   Relationship.RelationshipStatus previousStatus,
+                                   Relationship.RelationshipStatus newStatus,
+                                   String changeReason, UUID changedBy) {
+        if (relationshipId == null || previousStatus == null || newStatus == null) {
+            throw new IllegalArgumentException("relationshipId, previousStatus y newStatus son requeridos");
+        }
+
+        return StatusLog.builder()
+                .logId(UUID.randomUUID())
+                .relationshipId(relationshipId)
+                .previousStatus(previousStatus)
+                .newStatus(newStatus)
+                .changeReason(changeReason)
+                .changedAt(LocalDate.now())
+                .changedBy(changedBy)
+                .build();
+    }
+}
+
+================================================================================
+PARTE 2: EVENT OUTBOX - PATRÓN OUTBOX
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/outbox/EventOutbox.java
+package com.solveria.core.workforce.infrastructure.outbox;
+
+import lombok.*;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+/**
+ * EventOutbox - Patrón Outbox
+ *
+ * Tabla de eventos que garantiza la consistencia eventual.
+ * Toda acción de dominio guarda en la misma transacción JPA:
+ * 1. El estado de la entidad
+ * 2. Un evento en la tabla event_outbox (con campo JSONB para el payload)
+ *
+ * Un Scheduler interno en Spring Boot leerá esta tabla y despachará
+ * eventos nativamente mediante ApplicationEventPublisher.
+ */
+@Entity
+@Table(name = "event_outbox", indexes = {
+        @Index(name = "idx_outbox_published", columnList = "is_published"),
+        @Index(name = "idx_outbox_created", columnList = "created_at")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EventOutbox {
+
+    @Id
+    private UUID eventId;
+
+    @Column(name = "aggregate_type", nullable = false)
+    private String aggregateType;  // ej: "Person", "OrgUnit", "Relationship"
+
+    @Column(name = "aggregate_id", nullable = false)
+    private UUID aggregateId;
+
+    @Column(name = "event_type", nullable = false)
+    private String eventType;  // ej: "PERSON_CREATED", "ORG_UNIT_CREATED"
+
+    @Column(name = "payload", columnDefinition = "JSONB", nullable = false)
+    private String payload;  // JSON serializado del evento
+
+    @Column(name = "is_published", nullable = false)
+    private Boolean isPublished;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "published_at")
+    private LocalDateTime publishedAt;
+
+    public static EventOutbox create(String aggregateType, UUID aggregateId,
+                                    String eventType, String payload) {
+        return EventOutbox.builder()
+                .eventId(UUID.randomUUID())
+                .aggregateType(aggregateType)
+                .aggregateId(aggregateId)
+                .eventType(eventType)
+                .payload(payload)
+                .isPublished(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    public void markAsPublished() {
+        this.isPublished = true;
+        this.publishedAt = LocalDateTime.now();
+    }
+}
+
+================================================================================
+PARTE 3: APPLICATION LAYER - USE CASES
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/usecase/CreatePersonUseCase.java
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import com.solveria.core.workforce.application.dto.CreatePersonRequest;
+import com.solveria.core.workforce.application.dto.PersonResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+
+/**
+ * Use Case: Create Person
+ *
+ * Crea la identidad civil única del ser humano.
+ * No genera un vínculo laboral aún, solo una entidad Person en estado Draft.
+ *
+ * Invariantes Validados:
+ * - Identidad Única: Deduplicación por CI/Pasaporte
+ * - Edad >= 18 años
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CreatePersonUseCase {
+
+    private final PersonRepository personRepository;
+    private final PartyIdentifierRepository identifierRepository;
+    private final EventOutboxRepository eventOutboxRepository;
+    private final PersonMapper personMapper;
+
+    public PersonResponse execute(CreatePersonRequest request) {
+        log.info("event=PERSON_CREATE_REQUEST_RECEIVED firstName={} lastName={}",
+                request.getFirstName(), request.getLastName());
+
+        // Validación: Deduplicación por GlobalID
+        boolean personExists = personRepository.existsByGlobalId(request.getGlobalId());
+        if (personExists) {
+            log.warn("event=PERSON_DEDUPLICATION_MATCH_FOUND globalId={}", request.getGlobalId());
+            throw new PersonAlreadyExistsException("PersonID ya existe: " + request.getGlobalId());
+        }
+
+        // Crear entidad de dominio
+        ContactPoint contact = ContactPoint.create(
+                request.getEmail(),
+                request.getPhone(),
+                request.getAddress()
+        );
+
+        Gender gender = Gender.valueOf(request.getGender().toUpperCase());
+
+        Person person = Person.create(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getBirthDate(),
+                gender,
+                request.getGlobalId(),
+                contact
+        );
+
+        // Guardar entidad
+        Person savedPerson = personRepository.save(personMapper.toPersistenceEntity(person));
+
+        // Generar evento para Outbox
+        String eventPayload = personMapper.toEventPayload(savedPerson);
+        EventOutbox outboxEvent = EventOutbox.create(
+                "Person",
+                savedPerson.getPersonId(),
+                "PERSON_CREATED",
+                eventPayload
+        );
+        eventOutboxRepository.save(outboxEvent);
+
+        log.info("event=PERSON_CREATE_SUCCESS personId={} firstName={}",
+                savedPerson.getPersonId(), savedPerson.getFirstName());
+
+        return personMapper.toResponse(savedPerson);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/usecase/CreateOrgUnitUseCase.java
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import com.solveria.core.workforce.application.dto.CreateOrgUnitRequest;
+import com.solveria.core.workforce.application.dto.OrgUnitResponse;
+import com.solveria.core.security.context.SecurityTenantContext;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+/**
+ * Use Case: Create OrgUnit
+ *
+ * Crea nodos en la jerarquía organizacional.
+ * Valida que no existan unidades huérfanas.
+ *
+ * Validación de Seguridad Multi-Tenant (SoD):
+ * - Obtiene tenantId del contexto de seguridad
+ * - Valida que el parent pertenezca al mismo tenant
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CreateOrgUnitUseCase {
+
+    private final OrgUnitRepository orgUnitRepository;
+    private final EventOutboxRepository eventOutboxRepository;
+    private final OrgUnitMapper orgUnitMapper;
+
+    public OrgUnitResponse executeRoot(CreateOrgUnitRequest request) {
+        // Obtener tenant desde el contexto de seguridad
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getTenantId());
+
+        log.info("event=ORG_UNIT_ROOT_CREATE_REQUEST_RECEIVED name={} tenantId={}",
+                request.getName(), tenantId);
+
+        CostCenter costCenter = CostCenter.create(request.getCostCode(), request.getCostDescription());
+
+        OrgUnit.OrgUnitType unitType = OrgUnit.OrgUnitType.valueOf(request.getUnitType().toUpperCase());
+
+        OrgUnit orgUnit = OrgUnit.createRoot(tenantId, request.getName(), unitType, costCenter);
+
+        OrgUnit savedOrgUnit = orgUnitRepository.save(orgUnitMapper.toPersistenceEntity(orgUnit));
+
+        // Generar evento para Outbox
+        String eventPayload = orgUnitMapper.toEventPayload(savedOrgUnit);
+        EventOutbox outboxEvent = EventOutbox.create(
+                "OrgUnit",
+                savedOrgUnit.getUnitId(),
+                "ORG_UNIT_CREATED",
+                eventPayload
+        );
+        eventOutboxRepository.save(outboxEvent);
+
+        log.info("event=ORG_UNIT_ROOT_CREATE_SUCCESS unitId={} name={}",
+                savedOrgUnit.getUnitId(), savedOrgUnit.getName());
+
+        return orgUnitMapper.toResponse(savedOrgUnit);
+    }
+
+    public OrgUnitResponse executeChild(CreateOrgUnitRequest request, UUID parentId) {
+        // Obtener tenant desde el contexto de seguridad
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getTenantId());
+
+        log.info("event=ORG_UNIT_CHILD_CREATE_REQUEST_RECEIVED name={} parentId={} tenantId={}",
+                request.getName(), parentId, tenantId);
+
+        // Validación: Parent existe Y pertenece al tenant actual
+        // Esto previene que un usuario de un tenant acceda a la jerarquía de otro tenant
+        var parentOrgUnit = orgUnitRepository.findByUnitIdAndTenantId(parentId, tenantId)
+                .orElseThrow(() -> {
+                    log.warn("event=ORG_UNIT_SECURITY_VIOLATION parentId={} tenantId={}",
+                        parentId, tenantId);
+                    return new OrgUnitNotFoundException("OrgUnit padre no encontrado o no pertenece a este tenant");
+                });
+
+        // Invariante: No Unidades Huérfanas
+        if (parentOrgUnit == null) {
+            throw new IllegalStateException("Invariante violada: No Unidades Huérfanas");
+        }
+
+        CostCenter costCenter = CostCenter.create(request.getCostCode(), request.getCostDescription());
+
+        OrgUnit.OrgUnitType unitType = OrgUnit.OrgUnitType.valueOf(request.getUnitType().toUpperCase());
+
+        OrgUnit orgUnit = OrgUnit.createChild(tenantId, parentId, request.getName(), unitType, costCenter);
+
+        OrgUnit savedOrgUnit = orgUnitRepository.save(orgUnitMapper.toPersistenceEntity(orgUnit));
+
+        // Generar evento para Outbox
+        String eventPayload = orgUnitMapper.toEventPayload(savedOrgUnit);
+        EventOutbox outboxEvent = EventOutbox.create(
+                "OrgUnit",
+                savedOrgUnit.getUnitId(),
+                "ORG_UNIT_CREATED",
+                eventPayload
+        );
+        eventOutboxRepository.save(outboxEvent);
+
+        log.info("event=ORG_UNIT_CHILD_CREATE_SUCCESS unitId={} name={} parentId={}",
+                savedOrgUnit.getUnitId(), savedOrgUnit.getName(), parentId);
+
+        return orgUnitMapper.toResponse(savedOrgUnit);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/usecase/CreatePositionUseCase.java
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.domain.model.Position;
+import com.solveria.core.workforce.application.dto.CreatePositionRequest;
+import com.solveria.core.workforce.application.dto.PositionResponse;
+import com.solveria.core.security.context.SecurityTenantContext;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+/**
+ * Use Case: Create Position
+ *
+ * Crea una plaza presupuestada.
+ * Valida que haya presupuesto disponible (especialmente importante para ONGs).
+ *
+ * Validación de Seguridad Multi-Tenant (SoD):
+ * - Obtiene tenantId del contexto de seguridad
+ * - Valida que el OrgUnit pertenezca al tenant actual (previene escalada de privilegios)
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CreatePositionUseCase {
+
+    private final PositionRepository positionRepository;
+    private final OrgUnitRepository orgUnitRepository;
+    private final JobRepository jobRepository;
+    private final EventOutboxRepository eventOutboxRepository;
+    private final PositionMapper positionMapper;
+
+    public PositionResponse execute(CreatePositionRequest request) {
+        // Obtener tenant desde el contexto de seguridad
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getTenantId());
+
+        log.info("event=POSITION_CREATE_REQUEST_RECEIVED unitId={} jobId={} maxSlots={} tenantId={}",
+                request.getUnitId(), request.getJobId(), request.getMaxSlots(), tenantId);
+
+        // Validación: OrgUnit existe Y pertenece al tenant actual
+        // Esto previene que un usuario de un tenant acceda a recursos de otro tenant
+        var orgUnitJpa = orgUnitRepository.findByUnitIdAndTenantId(request.getUnitId(), tenantId)
+                .orElseThrow(() -> {
+                    log.warn("event=POSITION_SECURITY_VIOLATION unitId={} tenantId={}",
+                        request.getUnitId(), tenantId);
+                    return new OrgUnitNotFoundException("OrgUnit no encontrado o no pertenece a este tenant");
+                });
+
+        // Validación: Job existe
+        boolean jobExists = jobRepository.existsById(request.getJobId());
+        if (!jobExists) {
+            throw new JobNotFoundException("Job no encontrado");
+        }
+
+        // Crear entidad de dominio
+        Position position = Position.create(
+                request.getUnitId(),
+                request.getJobId(),
+                request.getIsBudgeted(),
+                request.getMaxSlots()
+        );
+
+        Position savedPosition = positionRepository.save(positionMapper.toPersistenceEntity(position));
+
+        // Generar evento para Outbox
+        String eventPayload = positionMapper.toEventPayload(savedPosition);
+        EventOutbox outboxEvent = EventOutbox.create(
+                "Position",
+                savedPosition.getPositionId(),
+                "POSITION_CREATED",
+                eventPayload
+        );
+        eventOutboxRepository.save(outboxEvent);
+
+        log.info("event=POSITION_CREATE_SUCCESS positionId={} unitId={}",
+                savedPosition.getPositionId(), savedPosition.getUnitId());
+
+        return positionMapper.toResponse(savedPosition);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/usecase/CreateRelationshipUseCase.java
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.WorkerProfile;
+import com.solveria.core.workforce.domain.model.AcademicProfile;
+import com.solveria.core.workforce.application.dto.CreateRelationshipRequest;
+import com.solveria.core.workforce.application.dto.RelationshipResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Use Case: Create Relationship
+ *
+ * Crea el vínculo legal entre la Person y el Tenant.
+ * Valida la Invariante: No Traslape de Vínculos Primarios
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class CreateRelationshipUseCase {
+
+    private final RelationshipRepository relationshipRepository;
+    private final PersonRepository personRepository;
+    private final WorkerProfileRepository workerProfileRepository;
+    private final AcademicProfileRepository academicProfileRepository;
+    private final EventOutboxRepository eventOutboxRepository;
+    private final RelationshipMapper relationshipMapper;
+
+    public RelationshipResponse execute(CreateRelationshipRequest request) {
+        log.info("event=RELATIONSHIP_CREATE_REQUEST_RECEIVED personId={} tenantId={} type={}",
+                request.getPersonId(), request.getTenantId(), request.getRelationType());
+
+        // Validación: Person existe
+        boolean personExists = personRepository.existsById(request.getPersonId());
+        if (!personExists) {
+            throw new PersonNotFoundException("Person no encontrado");
+        }
+
+        // Invariante: No Traslape de Vínculos Primarios
+        Relationship.RelationshipType relType = Relationship.RelationshipType.valueOf(
+                request.getRelationType().toUpperCase()
+        );
+
+        if (Relationship.RelationshipType.LABOR.equals(relType)) {
+            // Buscar vínculos laborales activos primarios
+            boolean hasPrimaryLabor = relationshipRepository
+                    .existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+                            request.getPersonId(),
+                            request.getTenantId(),
+                            Relationship.RelationshipType.LABOR,
+                            Relationship.RelationshipStatus.ACTIVE
+                    );
+
+            if (hasPrimaryLabor) {
+                throw new IllegalStateException(
+                        "Invariante violada: Un colaborador no puede tener dos jefes administrativos simultáneos"
+                );
+            }
+        }
+
+        // Crear entidad Relationship
+        Relationship relationship = Relationship.create(
+                request.getPersonId(),
+                request.getTenantId(),
+                relType,
+                request.getHireDate()
+        );
+
+        Relationship savedRelationship = relationshipRepository
+                .save(relationshipMapper.toPersistenceEntity(relationship));
+
+        // Crear perfil específico (WorkerProfile o AcademicProfile)
+        if (Relationship.RelationshipType.ACADEMIC.equals(relType)) {
+            AcademicProfile academicProfile = AcademicProfile.create(
+                    savedRelationship.getRelationshipId(),
+                    AcademicProfile.AcademicRank.AUXILIAR,
+                    request.getTeachingLoad() != null ? request.getTeachingLoad() : 0
+            );
+            academicProfileRepository.save(academicProfile);
+        } else {
+            WorkerProfile workerProfile = WorkerProfile.create(
+                    savedRelationship.getRelationshipId(),
+                    request.getEmployeeNo(),
+                    request.getDepartment(),
+                    request.getJobTitle()
+            );
+            workerProfileRepository.save(workerProfile);
+        }
+
+        // Generar evento para Outbox
+        String eventPayload = relationshipMapper.toEventPayload(savedRelationship);
+        EventOutbox outboxEvent = EventOutbox.create(
+                "Relationship",
+                savedRelationship.getRelationshipId(),
+                "RELATIONSHIP_CREATED",
+                eventPayload
+        );
+        eventOutboxRepository.save(outboxEvent);
+
+        log.info("event=RELATIONSHIP_CREATE_SUCCESS relationshipId={} personId={}",
+                savedRelationship.getRelationshipId(), savedRelationship.getPersonId());
+
+        return relationshipMapper.toResponse(savedRelationship);
+    }
+}
+
+================================================================================
+PARTE 4: APPLICATION LAYER - DTOs
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/CreatePersonRequest.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.*;
+import java.time.LocalDate;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreatePersonRequest {
+
+    @NotBlank(message = "firstName es requerido")
+    private String firstName;
+
+    @NotBlank(message = "lastName es requerido")
+    private String lastName;
+
+    @NotNull(message = "birthDate es requerido")
+    private LocalDate birthDate;
+
+    @NotBlank(message = "gender es requerido")
+    private String gender;  // MALE, FEMALE, OTHER
+
+    @NotBlank(message = "globalId es requerido")
+    private String globalId;
+
+    @Email(message = "email debe ser válido")
+    private String email;
+
+    private String phone;
+
+    private String address;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/PersonResponse.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PersonResponse {
+
+    private UUID personId;
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private String gender;
+    private String globalId;
+    private Integer age;
+    private String email;
+    private String phone;
+    private String address;
+    private LocalDate createdAt;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/CreateOrgUnitRequest.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotBlank;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateOrgUnitRequest {
+
+    @NotBlank(message = "name es requerido")
+    private String name;
+
+    @NotBlank(message = "unitType es requerido")
+    private String unitType;  // ADMINISTRATIVE, ACADEMIC, COMMERCIAL
+
+    @NotBlank(message = "costCode es requerido")
+    private String costCode;
+
+    private String costDescription;
+
+    private String geoCoords;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/OrgUnitResponse.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgUnitResponse {
+
+    private UUID unitId;
+    private UUID parentId;
+    private String name;
+    private String unitType;
+    private String costCode;
+    private String costDescription;
+    private Boolean isRoot;
+    private String geoCoords;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/CreatePositionRequest.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreatePositionRequest {
+
+    @NotNull(message = "unitId es requerido")
+    private UUID unitId;
+
+    @NotNull(message = "jobId es requerido")
+    private UUID jobId;
+
+    @NotNull(message = "maxSlots es requerido")
+    @Positive(message = "maxSlots debe ser positivo")
+    private Integer maxSlots;
+
+    private Boolean isBudgeted;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/PositionResponse.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PositionResponse {
+
+    private UUID positionId;
+    private UUID unitId;
+    private UUID jobId;
+    private String status;  // VACANT, OCCUPIED, RESERVED
+    private Boolean isBudgeted;
+    private Integer maxSlots;
+    private Integer currentSlots;
+    private Integer availableSlots;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/CreateRelationshipRequest.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateRelationshipRequest {
+
+    @NotNull(message = "personId es requerido")
+    private UUID personId;
+
+    @NotNull(message = "tenantId es requerido")
+    private UUID tenantId;
+
+    @NotNull(message = "relationType es requerido")
+    private String relationType;  // LABOR, ACADEMIC, INTERNSHIP
+
+    private LocalDate hireDate;
+
+    // Para WorkerProfile
+    private String employeeNo;
+    private String department;
+    private String jobTitle;
+
+    // Para AcademicProfile
+    private Integer teachingLoad;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/dto/RelationshipResponse.java
+package com.solveria.core.workforce.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RelationshipResponse {
+
+    private UUID relationshipId;
+    private UUID personId;
+    private UUID tenantId;
+    private String relationType;
+    private String currentStatus;
+    private LocalDate hireDate;
+    private LocalDate createdAt;
+}
+
+================================================================================
+PARTE 5: INFRASTRUCTURE - ENTIDADES JPA
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/jpa/PersonJpa.java
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * PersonJpa - Entidad Global (Sin isolamiento por Tenant)
+ *
+ * Person es un "Registro maestro único" (identidad civil).
+ * Una persona PUEDE tener vínculos (Relationship) con múltiples tenants.
+ * Por lo tanto, NO incluye tenant_id.
+ *
+ * El aislamiento se implementa ÚNICAMENTE en Relationship, OrgUnit y Position.
+ */
+@Entity
+@Table(name = "person", indexes = {
+        @Index(name = "idx_person_global_id", columnList = "global_id", unique = true)
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PersonJpa {
+
+    @Id
+    @Column(name = "person_id")
+    private UUID personId;
+
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Column(name = "birth_date", nullable = false)
+    private LocalDate birthDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    private Gender gender;
+
+    @Column(name = "global_id", nullable = false, unique = true)
+    private String globalId;
+
+    @Embedded
+    private ContactPoint contactPoint;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDate createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDate updatedAt;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/jpa/OrgUnitJpa.java
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.util.UUID;
+
+@Entity
+@Table(name = "org_unit", indexes = {
+        @Index(name = "idx_org_unit_tenant_id", columnList = "tenant_id"),
+        @Index(name = "idx_org_unit_parent_id", columnList = "parent_id")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgUnitJpa {
+
+    @Id
+    @Column(name = "unit_id")
+    private UUID unitId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
+    @Column(name = "parent_id")
+    private UUID parentId;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unit_type")
+    private OrgUnit.OrgUnitType unitType;
+
+    @Embedded
+    private CostCenter costCenter;
+
+    @Column(name = "geo_coords")
+    private String geoCoords;
+
+    @Column(name = "is_root", nullable = false)
+    private Boolean isRoot;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/jpa/PositionJpa.java
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.Position;
+import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.util.UUID;
+
+@Entity
+@Table(name = "position", indexes = {
+        @Index(name = "idx_position_unit_id", columnList = "unit_id"),
+        @Index(name = "idx_position_status", columnList = "pos_status")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PositionJpa {
+
+    @Id
+    @Column(name = "position_id")
+    private UUID positionId;
+
+    @Column(name = "unit_id", nullable = false)
+    private UUID unitId;
+
+    @Column(name = "job_id", nullable = false)
+    private UUID jobId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pos_status", nullable = false)
+    private Position.PositionStatus status;
+
+    @Column(name = "is_budgeted")
+    private Boolean isBudgeted;
+
+    @Embedded
+    private HeadcountPlan headcountPlan;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/jpa/RelationshipJpa.java
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.Relationship;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "relationship", indexes = {
+        @Index(name = "idx_relationship_person_id", columnList = "person_id"),
+        @Index(name = "idx_relationship_tenant_id", columnList = "tenant_id"),
+        @Index(name = "idx_relationship_status", columnList = "current_status")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RelationshipJpa {
+
+    @Id
+    @Column(name = "relationship_id")
+    private UUID relationshipId;
+
+    @Column(name = "person_id", nullable = false)
+    private UUID personId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rel_type", nullable = false)
+    private Relationship.RelationshipType relationType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_status", nullable = false)
+    private Relationship.RelationshipStatus currentStatus;
+
+    @Column(name = "hire_date")
+    private LocalDate hireDate;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDate createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDate updatedAt;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/jpa/WorkerProfileJpa.java
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.util.UUID;
+
+@Entity
+@Table(name = "worker_profile", indexes = {
+        @Index(name = "idx_worker_profile_relationship_id", columnList = "relationship_id", unique = true),
+        @Index(name = "idx_worker_profile_employee_no", columnList = "employee_no")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class WorkerProfileJpa {
+
+    @Id
+    @Column(name = "profile_id")
+    private UUID profileId;
+
+    @Column(name = "relationship_id", nullable = false, unique = true)
+    private UUID relationshipId;
+
+    @Column(name = "employee_no", nullable = false)
+    private String employeeNo;
+
+    @Column(name = "department")
+    private String department;
+
+    @Column(name = "job_title")
+    private String jobTitle;
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/jpa/AcademicProfileJpa.java
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.util.UUID;
+
+@Entity
+@Table(name = "academic_profile", indexes = {
+        @Index(name = "idx_academic_profile_relationship_id", columnList = "relationship_id", unique = true),
+        @Index(name = "idx_academic_profile_rank", columnList = "current_rank")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AcademicProfileJpa {
+
+    @Id
+    @Column(name = "academic_id")
+    private UUID academicId;
+
+    @Column(name = "relationship_id", nullable = false, unique = true)
+    private UUID relationshipId;
+
+    @Column(name = "current_rank")
+    private String currentRank;  // AUXILIAR, ADJUNTO, TITULAR, INVESTIGADOR
+
+    @Column(name = "teaching_load")
+    private Integer teachingLoad;
+}
+
+================================================================================
+PARTE 6: INFRASTRUCTURE - REPOSITORIOS (Spring Data JPA)
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/PersonRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface PersonRepository extends JpaRepository<PersonJpa, UUID> {
+
+    boolean existsByGlobalId(String globalId);
+
+    Optional<PersonJpa> findByGlobalId(String globalId);
+
+    Optional<PersonJpa> findByPersonIdAndTenantId(UUID personId, UUID tenantId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/OrgUnitRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface OrgUnitRepository extends JpaRepository<OrgUnitJpa, UUID> {
+
+    List<OrgUnitJpa> findByParentId(UUID parentId);
+
+    List<OrgUnitJpa> findByTenantIdAndIsRootTrue(UUID tenantId);
+
+    List<OrgUnitJpa> findByTenantId(UUID tenantId);
+
+    /**
+     * Busca una OrgUnit validando que pertenezca al tenant correcto.
+     * Crítico para evitar escalada de privilegios entre tenants.
+     */
+    Optional<OrgUnitJpa> findByUnitIdAndTenantId(UUID unitId, UUID tenantId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/PositionRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface PositionRepository extends JpaRepository<PositionJpa, UUID> {
+
+    List<PositionJpa> findByUnitId(UUID unitId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/RelationshipRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
+import com.solveria.core.workforce.domain.model.Relationship;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface RelationshipRepository extends JpaRepository<RelationshipJpa, UUID> {
+
+    List<RelationshipJpa> findByPersonId(UUID personId);
+
+    List<RelationshipJpa> findByTenantIdAndPersonId(UUID tenantId, UUID personId);
+
+    boolean existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+            UUID personId,
+            UUID tenantId,
+            Relationship.RelationshipType relationType,
+            Relationship.RelationshipStatus currentStatus
+    );
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/EventOutboxRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.outbox.EventOutbox;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface EventOutboxRepository extends JpaRepository<EventOutbox, UUID> {
+
+    List<EventOutbox> findByIsPublishedFalseOrderByCreatedAtAsc();
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/WorkerProfileRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.WorkerProfileJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface WorkerProfileRepository extends JpaRepository<WorkerProfileJpa, UUID> {
+
+    Optional<WorkerProfileJpa> findByRelationshipId(UUID relationshipId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/repository/AcademicProfileRepository.java
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.AcademicProfileJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface AcademicProfileRepository extends JpaRepository<AcademicProfileJpa, UUID> {
+
+    Optional<AcademicProfileJpa> findByRelationshipId(UUID relationshipId);
+}
+
+================================================================================
+PARTE 7: REST CONTROLLERS
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/api/rest/PersonController.java
+package com.solveria.core.workforce.api.rest;
+
+import com.solveria.core.workforce.application.dto.CreatePersonRequest;
+import com.solveria.core.workforce.application.dto.PersonResponse;
+import com.solveria.core.workforce.application.usecase.CreatePersonUseCase;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+/**
+ * REST Endpoint: Person Management
+ *
+ * Base: /api/v1/persons
+ *
+ * Convenciones:
+ * - POST /api/v1/persons → Crear persona
+ * - GET /api/v1/persons/{id} → Obtener persona
+ * - PUT /api/v1/persons/{id} → Actualizar persona
+ * - DELETE /api/v1/persons/{id} → Eliminar persona
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/persons")
+@RequiredArgsConstructor
+@Validated
+public class PersonController {
+
+    private final CreatePersonUseCase createPersonUseCase;
+
+    @PostMapping
+    public ResponseEntity<PersonResponse> createPerson(@Valid @RequestBody CreatePersonRequest request) {
+        log.info("event=API_PERSON_CREATE_REQUEST_RECEIVED firstName={} lastName={}",
+                request.getFirstName(), request.getLastName());
+
+        try {
+            PersonResponse response = createPersonUseCase.execute(request);
+            log.info("event=API_PERSON_CREATE_SUCCESS personId={}", response.getPersonId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("event=API_PERSON_CREATE_ERROR errorCode={} message={}",
+                    "PERSON_CREATE_FAILED", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/api/rest/OrgUnitController.java
+package com.solveria.core.workforce.api.rest;
+
+import com.solveria.core.workforce.application.dto.CreateOrgUnitRequest;
+import com.solveria.core.workforce.application.dto.OrgUnitResponse;
+import com.solveria.core.workforce.application.usecase.CreateOrgUnitUseCase;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+import java.util.UUID;
+
+/**
+ * REST Endpoint: Organization Unit Management
+ *
+ * Base: /api/v1/org-units
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/org-units")
+@RequiredArgsConstructor
+@Validated
+public class OrgUnitController {
+
+    private final CreateOrgUnitUseCase createOrgUnitUseCase;
+
+    @PostMapping("/root")
+    public ResponseEntity<OrgUnitResponse> createRootOrgUnit(
+            @Valid @RequestBody CreateOrgUnitRequest request) {
+
+        log.info("event=API_ORG_UNIT_ROOT_CREATE_REQUEST_RECEIVED name={}",
+                request.getName());
+
+        try {
+            OrgUnitResponse response = createOrgUnitUseCase.executeRoot(request);
+            log.info("event=API_ORG_UNIT_ROOT_CREATE_SUCCESS unitId={}", response.getUnitId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("event=API_ORG_UNIT_ROOT_CREATE_ERROR errorCode={} message={}",
+                    "ORG_UNIT_CREATE_FAILED", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<OrgUnitResponse> createChildOrgUnit(
+            @Valid @RequestBody CreateOrgUnitRequest request,
+            @RequestParam("parentId") UUID parentId) {
+
+        log.info("event=API_ORG_UNIT_CHILD_CREATE_REQUEST_RECEIVED name={} parentId={}",
+                request.getName(), parentId);
+
+        try {
+            OrgUnitResponse response = createOrgUnitUseCase.executeChild(request, parentId);
+            log.info("event=API_ORG_UNIT_CHILD_CREATE_SUCCESS unitId={}", response.getUnitId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("event=API_ORG_UNIT_CHILD_CREATE_ERROR errorCode={} message={}",
+                    "ORG_UNIT_CREATE_FAILED", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/api/rest/PositionController.java
+package com.solveria.core.workforce.api.rest;
+
+import com.solveria.core.workforce.application.dto.CreatePositionRequest;
+import com.solveria.core.workforce.application.dto.PositionResponse;
+import com.solveria.core.workforce.application.usecase.CreatePositionUseCase;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+/**
+ * REST Endpoint: Position Management
+ *
+ * Base: /api/v1/positions
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/positions")
+@RequiredArgsConstructor
+@Validated
+public class PositionController {
+
+    private final CreatePositionUseCase createPositionUseCase;
+
+    @PostMapping
+    public ResponseEntity<PositionResponse> createPosition(
+            @Valid @RequestBody CreatePositionRequest request) {
+
+        log.info("event=API_POSITION_CREATE_REQUEST_RECEIVED unitId={} jobId={} maxSlots={}",
+                request.getUnitId(), request.getJobId(), request.getMaxSlots());
+
+        try {
+            PositionResponse response = createPositionUseCase.execute(request);
+            log.info("event=API_POSITION_CREATE_SUCCESS positionId={}", response.getPositionId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("event=API_POSITION_CREATE_ERROR errorCode={} message={}",
+                    "POSITION_CREATE_FAILED", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/api/rest/RelationshipController.java
+package com.solveria.core.workforce.api.rest;
+
+import com.solveria.core.workforce.application.dto.CreateRelationshipRequest;
+import com.solveria.core.workforce.application.dto.RelationshipResponse;
+import com.solveria.core.workforce.application.usecase.CreateRelationshipUseCase;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+/**
+ * REST Endpoint: Relationship Management
+ *
+ * Base: /api/v1/relationships
+ */
+@Slf4j
+@RestController
+@RequestMapping("/api/v1/relationships")
+@RequiredArgsConstructor
+@Validated
+public class RelationshipController {
+
+    private final CreateRelationshipUseCase createRelationshipUseCase;
+
+    @PostMapping
+    public ResponseEntity<RelationshipResponse> createRelationship(
+            @Valid @RequestBody CreateRelationshipRequest request) {
+
+        log.info("event=API_RELATIONSHIP_CREATE_REQUEST_RECEIVED personId={} tenantId={} type={}",
+                request.getPersonId(), request.getTenantId(), request.getRelationType());
+
+        try {
+            RelationshipResponse response = createRelationshipUseCase.execute(request);
+            log.info("event=API_RELATIONSHIP_CREATE_SUCCESS relationshipId={}", response.getRelationshipId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("event=API_RELATIONSHIP_CREATE_ERROR errorCode={} message={}",
+                    "RELATIONSHIP_CREATE_FAILED", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+}
+
+================================================================================
+NOTAS DE IMPLEMENTACIÓN
+================================================================================
+
+1. **EXCEPCIONES PERSONALIZADAS** (Agregar al proyecto):
+   - PersonAlreadyExistsException
+   - PersonNotFoundException
+   - OrgUnitNotFoundException
+   - JobNotFoundException
+   - Etc.
+
+2. **MAPPERS** (Agregar al proyecto):
+   - PersonMapper (Domain → JPA, Domain → DTO, Domain → Event Outbox)
+   - OrgUnitMapper
+   - PositionMapper
+   - RelationshipMapper
+
+3. **CONFIGURACIÓN SPRING** (Pendiente):
+   - Habilitar transacciones: @EnableTransactionManagement
+   - Configurar Jackson para UUID
+   - Configurar logging con patrón "event=..."
+
+4. **INVARIANTES A VALIDAR EN APLICACIÓN**:
+   - No Unidades Huérfanas ✓ (Validado en CreateOrgUnitUseCase)
+   - Unicidad de Jefe Administrativo (Futuro: LinkedWorkflowComponent)
+   - Control de Plazas ✓ (HeadcountPlan.occupy())
+   - Identity Única ✓ (PersonAlreadyExistsException)
+
+5. **PRÓXIMOS PASOS** (Contexto 2 y superiores):
+   - Implementar Employment Agreement (Contratos)
+   - Implementar Compliance & Policy Engine
+   - Implementar Digital Kardex & Document Compliance
+   - Implementar AccrualVault (Time-Off & Benefits)
+   - Implementar Financial & Social
+
+================================================================================
+FIN BC1: WORKFORCE & ORG MASTER v1.0
+================================================================================
+

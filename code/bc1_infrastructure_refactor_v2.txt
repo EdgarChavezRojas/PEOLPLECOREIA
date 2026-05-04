@@ -1,0 +1,2210 @@
+// --- ARCHIVO: src/main/java/com/solveria/core/security/context/SecurityTenantContext.java ---
+package com.solveria.core.security.context;
+
+/** Contexto de tenant actual. */
+public final class SecurityTenantContext {
+
+    private static final ThreadLocal<String> TENANT_ID = new ThreadLocal<>();
+
+    private SecurityTenantContext() {}
+
+    public static void setTenantId(String tenantId) {
+        TENANT_ID.set(tenantId);
+    }
+
+    public static String getTenantId() {
+        return TENANT_ID.get();
+    }
+
+    public static String getCurrentTenantId() {
+        return TENANT_ID.get();
+    }
+
+    public static void clear() {
+        TENANT_ID.remove();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/domain/model/Person.java ---
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Person {
+
+    private UUID personId;
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private Gender gender;
+    private String globalId;
+    private ContactPoint contactPoint;
+    private List<PartyIdentifier> identifiers;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+
+    @Builder.Default
+    private transient List<String> domainEvents = new ArrayList<>();
+
+    private static final int MINIMUM_AGE = 18;
+
+    public static Person create(String firstName, String lastName, LocalDate birthDate,
+                                Gender gender, String globalId, ContactPoint contactPoint) {
+        Period age = Period.between(birthDate, LocalDate.now());
+        if (age.getYears() < MINIMUM_AGE) {
+            throw new IllegalArgumentException("La persona debe tener minimo " + MINIMUM_AGE + " anos");
+        }
+
+        if (firstName == null || firstName.isBlank() ||
+            lastName == null || lastName.isBlank() ||
+            globalId == null || globalId.isBlank()) {
+            throw new IllegalArgumentException("firstName, lastName y globalId son requeridos");
+        }
+
+        Person person = Person.builder()
+                .personId(UUID.randomUUID())
+                .firstName(firstName)
+                .lastName(lastName)
+                .birthDate(birthDate)
+                .gender(gender)
+                .globalId(globalId)
+                .contactPoint(contactPoint != null ? contactPoint : new ContactPoint())
+                .identifiers(new ArrayList<>())
+                .createdAt(LocalDate.now())
+                .updatedAt(LocalDate.now())
+                .build();
+        person.addDomainEvent("PERSON_CREATED");
+        return person;
+    }
+
+    public void addIdentifier(PartyIdentifier identifier) {
+        if (identifier == null) {
+            throw new IllegalArgumentException("identifier no puede ser nulo");
+        }
+        boolean exists = identifiers.stream()
+                .anyMatch(id -> id.getIdNumber().equals(identifier.getIdNumber()));
+        if (exists) {
+            throw new IllegalArgumentException("El identificador " + identifier.getIdNumber() +
+                    " ya esta vinculado a esta persona");
+        }
+        identifiers.add(identifier);
+        this.updatedAt = LocalDate.now();
+    }
+
+    public void updateContactPoint(ContactPoint newContactPoint) {
+        this.contactPoint = newContactPoint;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public Integer getAge() {
+        return Period.between(birthDate, LocalDate.now()).getYears();
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+    public void addDomainEvent(String eventType) {
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(eventType);
+    }
+
+    public List<String> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return List.of();
+        }
+        List<String> events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/domain/model/OrgUnit.java ---
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgUnit {
+
+    private UUID unitId;
+    private UUID tenantId;
+    private UUID parentId;
+    private String name;
+    private OrgUnitType unitType;
+    private CostCenter costCenter;
+    private String geoCoords;
+    private Boolean isRoot;
+
+    @Builder.Default
+    private List<OrgHierarchy> hierarchies = new ArrayList<>();
+
+    @Builder.Default
+    private transient List<String> domainEvents = new ArrayList<>();
+
+    public enum OrgUnitType {
+        ADMINISTRATIVE("Administrativa"),
+        ACADEMIC("Academica"),
+        COMMERCIAL("Comercial");
+
+        private final String label;
+
+        OrgUnitType(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public static OrgUnit createRoot(UUID tenantId, String name, OrgUnitType unitType, CostCenter costCenter) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name es requerido");
+        }
+
+        OrgUnit orgUnit = OrgUnit.builder()
+                .unitId(UUID.randomUUID())
+                .tenantId(tenantId)
+                .parentId(null)
+                .name(name)
+                .unitType(unitType)
+                .costCenter(costCenter)
+                .isRoot(true)
+                .hierarchies(new ArrayList<>())
+                .build();
+        orgUnit.addDomainEvent("ORG_UNIT_CREATED");
+        return orgUnit;
+    }
+
+    public static OrgUnit createChild(UUID tenantId, UUID parentId, String name,
+                                      OrgUnitType unitType, CostCenter costCenter) {
+        if (parentId == null) {
+            throw new IllegalArgumentException("parentId no puede ser nulo para unidades no-raiz");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name es requerido");
+        }
+
+        OrgUnit orgUnit = OrgUnit.builder()
+                .unitId(UUID.randomUUID())
+                .tenantId(tenantId)
+                .parentId(parentId)
+                .name(name)
+                .unitType(unitType)
+                .costCenter(costCenter)
+                .isRoot(false)
+                .hierarchies(new ArrayList<>())
+                .build();
+        orgUnit.addDomainEvent("ORG_UNIT_CREATED");
+        return orgUnit;
+    }
+
+    public void updateCostCenter(CostCenter newCostCenter) {
+        this.costCenter = newCostCenter;
+    }
+
+    public void updateGeoCoords(String newGeoCoords) {
+        this.geoCoords = newGeoCoords;
+    }
+
+    public void addHierarchy(OrgHierarchy hierarchy) {
+        if (hierarchy == null) {
+            throw new IllegalArgumentException("hierarchy no puede ser nulo");
+        }
+        hierarchies.add(hierarchy);
+    }
+
+    public void addDomainEvent(String eventType) {
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(eventType);
+    }
+
+    public List<String> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return List.of();
+        }
+        List<String> events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/domain/model/Position.java ---
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
+import com.solveria.core.workforce.domain.model.vo.PositionStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Position {
+
+    private UUID positionId;
+    private UUID unitId;
+    private Job job;
+    private PositionStatus status;
+    private Boolean isBudgeted;
+    private HeadcountPlan headcountPlan;
+
+    @Builder.Default
+    private transient List<String> domainEvents = new ArrayList<>();
+
+    public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
+        if (unitId == null || jobId == null || maxSlots == null) {
+            throw new IllegalArgumentException("unitId, jobId y maxSlots son requeridos");
+        }
+        if (maxSlots <= 0) {
+            throw new IllegalArgumentException("maxSlots debe ser mayor a 0");
+        }
+
+        Position position = Position.builder()
+                .positionId(UUID.randomUUID())
+                .unitId(unitId)
+                .job(Job.builder().jobId(jobId).build())
+                .status(PositionStatus.VACANT)
+                .isBudgeted(isBudgeted != null ? isBudgeted : false)
+                .headcountPlan(HeadcountPlan.create(maxSlots))
+                .build();
+        position.addDomainEvent("POSITION_CREATED");
+        return position;
+    }
+
+    public UUID getJobId() {
+        return job != null ? job.getJobId() : null;
+    }
+
+    public void occupy() {
+        if (!PositionStatus.VACANT.equals(status)) {
+            throw new IllegalStateException("Solo se puede ocupar una posicion vacante");
+        }
+        headcountPlan.occupy();
+        this.status = PositionStatus.OCCUPIED;
+    }
+
+    public void vacate() {
+        headcountPlan.vacate();
+        if (headcountPlan.getCurrentSlots() == 0) {
+            this.status = PositionStatus.VACANT;
+        }
+    }
+
+    public void reserve() {
+        if (!PositionStatus.VACANT.equals(status)) {
+            throw new IllegalStateException("Solo se puede reservar una posicion vacante");
+        }
+        this.status = PositionStatus.RESERVED;
+    }
+
+    public boolean hasVacancy() {
+        return headcountPlan.hasVacancy();
+    }
+
+    public void addDomainEvent(String eventType) {
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(eventType);
+    }
+
+    public List<String> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return List.of();
+        }
+        List<String> events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/domain/model/Relationship.java ---
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Relationship {
+
+    private UUID relationshipId;
+    private UUID personId;
+    private UUID tenantId;
+    private RelationshipType relationType;
+    private RelationshipStatus currentStatus;
+    private LocalDate hireDate;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+
+    private WorkerProfile workerProfile;
+    private AcademicProfile academicProfile;
+
+    @Builder.Default
+    private List<StatusLog> statusLogs = new ArrayList<>();
+
+    @Builder.Default
+    private transient List<String> domainEvents = new ArrayList<>();
+
+    public static Relationship create(UUID personId, UUID tenantId, RelationshipType relationType,
+                                      LocalDate hireDate) {
+        if (personId == null || tenantId == null || relationType == null) {
+            throw new IllegalArgumentException("personId, tenantId y relationType son requeridos");
+        }
+
+        Relationship relationship = Relationship.builder()
+                .relationshipId(UUID.randomUUID())
+                .personId(personId)
+                .tenantId(tenantId)
+                .relationType(relationType)
+                .currentStatus(RelationshipStatus.DRAFT)
+                .hireDate(hireDate)
+                .createdAt(LocalDate.now())
+                .updatedAt(LocalDate.now())
+                .statusLogs(new ArrayList<>())
+                .build();
+        relationship.addDomainEvent("RELATIONSHIP_CREATED");
+        return relationship;
+    }
+
+    public void assignWorkerProfile(WorkerProfile profile) {
+        this.workerProfile = profile;
+        this.academicProfile = null;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public void assignAcademicProfile(AcademicProfile profile) {
+        this.academicProfile = profile;
+        this.workerProfile = null;
+        this.updatedAt = LocalDate.now();
+    }
+
+    public void addStatusLog(StatusLog statusLog) {
+        if (statusLog == null) {
+            throw new IllegalArgumentException("statusLog no puede ser nulo");
+        }
+        if (statusLogs == null) {
+            statusLogs = new ArrayList<>();
+        }
+        statusLogs.add(statusLog);
+    }
+
+    public void activate() {
+        if (!RelationshipStatus.DRAFT.equals(currentStatus)) {
+            throw new IllegalStateException("Solo se puede activar una relacion en estado DRAFT");
+        }
+        this.currentStatus = RelationshipStatus.ACTIVE;
+        this.updatedAt = LocalDate.now();
+        addDomainEvent("RELATIONSHIP_ACTIVATED");
+    }
+
+    public void suspend() {
+        this.currentStatus = RelationshipStatus.SUSPENDED;
+        this.updatedAt = LocalDate.now();
+        addDomainEvent("RELATIONSHIP_SUSPENDED");
+    }
+
+    public void reactivate() {
+        if (!RelationshipStatus.SUSPENDED.equals(currentStatus)) {
+            throw new IllegalStateException("Solo se puede reactivar una relacion SUSPENDIDA");
+        }
+        this.currentStatus = RelationshipStatus.ACTIVE;
+        this.updatedAt = LocalDate.now();
+        addDomainEvent("RELATIONSHIP_REACTIVATED");
+    }
+
+    public void terminate() {
+        this.currentStatus = RelationshipStatus.TERMINATED;
+        this.updatedAt = LocalDate.now();
+        addDomainEvent("RELATIONSHIP_TERMINATED");
+    }
+
+    public void addDomainEvent(String eventType) {
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(eventType);
+    }
+
+    public List<String> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return List.of();
+        }
+        List<String> events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/PersonJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "person", indexes = {
+        @Index(name = "idx_person_global_id", columnList = "global_id", unique = true)
+})
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PersonJpa {
+
+    @Id
+    @Column(name = "person_id")
+    private UUID personId;
+
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Column(name = "birth_date", nullable = false)
+    private LocalDate birthDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    private Gender gender;
+
+    @Column(name = "global_id", nullable = false, unique = true)
+    private String globalId;
+
+    @Embedded
+    private ContactPoint contactPoint;
+
+    @OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<PartyIdentifierJpa> identifiers = new ArrayList<>();
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDate createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDate updatedAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        PersonJpa personJpa = (PersonJpa) o;
+        return getPersonId() != null && Objects.equals(getPersonId(), personJpa.getPersonId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/PartyIdentifierJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDate;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "party_identifier", indexes = {
+        @Index(name = "idx_identifier_person_id", columnList = "person_id"),
+        @Index(name = "idx_identifier_id_number", columnList = "id_number", unique = true),
+        @Index(name = "idx_identifier_expiry", columnList = "expiry_date")
+})
+@Getter
+@Setter
+@ToString(exclude = "person")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PartyIdentifierJpa {
+
+    @Id
+    @Column(name = "identifier_id")
+    private UUID identifierId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false)
+    private PersonJpa person;
+
+    @Column(name = "id_type", nullable = false)
+    private String idType;
+
+    @Column(name = "id_number", nullable = false, unique = true)
+    private String idNumber;
+
+    @Column(name = "extension")
+    private String extension;
+
+    @Column(name = "issue_date")
+    private LocalDate issueDate;
+
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDate createdAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        PartyIdentifierJpa that = (PartyIdentifierJpa) o;
+        return getIdentifierId() != null && Objects.equals(getIdentifierId(), that.getIdentifierId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/OrgUnitJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "org_unit", indexes = {
+        @Index(name = "idx_org_unit_tenant_id", columnList = "tenant_id"),
+        @Index(name = "idx_org_unit_parent_id", columnList = "parent_id")
+})
+@Getter
+@Setter
+@ToString(exclude = "orgHierarchies")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgUnitJpa {
+
+    @Id
+    @Column(name = "unit_id")
+    private UUID unitId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
+    @Column(name = "parent_id")
+    private UUID parentId;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unit_type")
+    private OrgUnit.OrgUnitType unitType;
+
+    @Embedded
+    private CostCenter costCenter;
+
+    @Column(name = "geo_coords")
+    private String geoCoords;
+
+    @Column(name = "is_root", nullable = false)
+    private Boolean isRoot;
+
+    @OneToMany(mappedBy = "childUnit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<OrgHierarchyJpa> orgHierarchies = new ArrayList<>();
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        OrgUnitJpa that = (OrgUnitJpa) o;
+        return getUnitId() != null && Objects.equals(getUnitId(), that.getUnitId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/OrgHierarchyJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "org_hierarchy", indexes = {
+        @Index(name = "idx_hierarchy_parent", columnList = "parent_unit_id"),
+        @Index(name = "idx_hierarchy_child", columnList = "child_unit_id"),
+        @Index(name = "idx_hierarchy_effective", columnList = "effective_date")
+})
+@Getter
+@Setter
+@ToString(exclude = "childUnit")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgHierarchyJpa {
+
+    @Id
+    @Column(name = "hierarchy_id")
+    private UUID hierarchyId;
+
+    @Column(name = "parent_unit_id", nullable = false)
+    private UUID parentUnitId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "child_unit_id", nullable = false)
+    private OrgUnitJpa childUnit;
+
+    @Column(name = "hierarchy_type")
+    private String hierarchyType;
+
+    @Column(name = "effective_date", nullable = false)
+    private LocalDate effectiveDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        OrgHierarchyJpa that = (OrgHierarchyJpa) o;
+        return getHierarchyId() != null && Objects.equals(getHierarchyId(), that.getHierarchyId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/PositionJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
+import com.solveria.core.workforce.domain.model.vo.PositionStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "position", indexes = {
+        @Index(name = "idx_position_unit_id", columnList = "unit_id"),
+        @Index(name = "idx_position_status", columnList = "pos_status")
+})
+@Getter
+@Setter
+@ToString(exclude = "job")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class PositionJpa {
+
+    @Id
+    @Column(name = "position_id")
+    private UUID positionId;
+
+    @Column(name = "unit_id", nullable = false)
+    private UUID unitId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id", nullable = false)
+    private JobJpa job;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pos_status", nullable = false)
+    private PositionStatus status;
+
+    @Column(name = "is_budgeted")
+    private Boolean isBudgeted;
+
+    @Embedded
+    private HeadcountPlan headcountPlan;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        PositionJpa that = (PositionJpa) o;
+        return getPositionId() != null && Objects.equals(getPositionId(), that.getPositionId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/RelationshipJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "relationship", indexes = {
+        @Index(name = "idx_relationship_person_id", columnList = "person_id"),
+        @Index(name = "idx_relationship_tenant_id", columnList = "tenant_id"),
+        @Index(name = "idx_relationship_status", columnList = "current_status")
+})
+@Getter
+@Setter
+@ToString(exclude = {"workerProfile", "academicProfile", "statusLogs"})
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class RelationshipJpa {
+
+    @Id
+    @Column(name = "relationship_id")
+    private UUID relationshipId;
+
+    @Column(name = "person_id", nullable = false)
+    private UUID personId;
+
+    @Column(name = "tenant_id", nullable = false)
+    private UUID tenantId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rel_type", nullable = false)
+    private RelationshipType relationType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_status", nullable = false)
+    private RelationshipStatus currentStatus;
+
+    @Column(name = "hire_date")
+    private LocalDate hireDate;
+
+    @OneToOne(mappedBy = "relationship", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private WorkerProfileJpa workerProfile;
+
+    @OneToOne(mappedBy = "relationship", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private AcademicProfileJpa academicProfile;
+
+    @OneToMany(mappedBy = "relationship", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<StatusLogJpa> statusLogs = new ArrayList<>();
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDate createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDate updatedAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        RelationshipJpa that = (RelationshipJpa) o;
+        return getRelationshipId() != null && Objects.equals(getRelationshipId(), that.getRelationshipId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/WorkerProfileJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "worker_profile", indexes = {
+        @Index(name = "idx_worker_profile_relationship_id", columnList = "relationship_id", unique = true),
+        @Index(name = "idx_worker_profile_employee_no", columnList = "employee_no")
+})
+@Getter
+@Setter
+@ToString(exclude = "relationship")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class WorkerProfileJpa {
+
+    @Id
+    @Column(name = "profile_id")
+    private UUID profileId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "relationship_id", nullable = false, unique = true)
+    private RelationshipJpa relationship;
+
+    @Column(name = "employee_no", nullable = false)
+    private String employeeNo;
+
+    @Column(name = "department")
+    private String department;
+
+    @Column(name = "job_title")
+    private String jobTitle;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        WorkerProfileJpa that = (WorkerProfileJpa) o;
+        return getProfileId() != null && Objects.equals(getProfileId(), that.getProfileId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/AcademicProfileJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "academic_profile", indexes = {
+        @Index(name = "idx_academic_profile_relationship_id", columnList = "relationship_id", unique = true),
+        @Index(name = "idx_academic_profile_rank", columnList = "current_rank")
+})
+@Getter
+@Setter
+@ToString(exclude = "relationship")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AcademicProfileJpa {
+
+    @Id
+    @Column(name = "academic_id")
+    private UUID academicId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "relationship_id", nullable = false, unique = true)
+    private RelationshipJpa relationship;
+
+    @Column(name = "current_rank")
+    private String currentRank;
+
+    @Column(name = "teaching_load")
+    private Integer teachingLoad;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        AcademicProfileJpa that = (AcademicProfileJpa) o;
+        return getAcademicId() != null && Objects.equals(getAcademicId(), that.getAcademicId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/jpa/StatusLogJpa.java ---
+package com.solveria.core.workforce.infrastructure.jpa;
+
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.time.LocalDate;
+import java.util.Objects;
+import java.util.UUID;
+
+@Entity
+@Table(name = "status_log", indexes = {
+        @Index(name = "idx_status_log_relationship_id", columnList = "relationship_id"),
+        @Index(name = "idx_status_log_changed_at", columnList = "changed_at")
+})
+@Getter
+@Setter
+@ToString(exclude = "relationship")
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class StatusLogJpa {
+
+    @Id
+    @Column(name = "log_id")
+    private UUID logId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "relationship_id", nullable = false)
+    private RelationshipJpa relationship;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "previous_status")
+    private RelationshipStatus previousStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "new_status", nullable = false)
+    private RelationshipStatus newStatus;
+
+    @Column(name = "change_reason")
+    private String changeReason;
+
+    @Column(name = "changed_at", nullable = false)
+    private LocalDate changedAt;
+
+    @Column(name = "changed_by")
+    private UUID changedBy;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        StatusLogJpa that = (StatusLogJpa) o;
+        return getLogId() != null && Objects.equals(getLogId(), that.getLogId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/repository/PositionRepository.java ---
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface PositionRepository extends JpaRepository<PositionJpa, UUID> {
+
+    @Query(value = """
+            select p.*
+            from position p
+            join org_unit ou on ou.unit_id = p.unit_id
+            where p.position_id = :positionId
+              and ou.tenant_id = :tenantId
+            """, nativeQuery = true)
+    Optional<PositionJpa> findByPositionIdAndTenantId(@Param("positionId") UUID positionId,
+                                                      @Param("tenantId") UUID tenantId);
+
+    @Query(value = """
+            select count(*)
+            from position p
+            join org_unit ou on ou.unit_id = p.unit_id
+            where p.job_id = :jobId
+              and ou.tenant_id = :tenantId
+            """, nativeQuery = true)
+    int countByJobIdAndTenantId(@Param("jobId") UUID jobId,
+                                @Param("tenantId") UUID tenantId);
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/repository/RelationshipRepository.java ---
+package com.solveria.core.workforce.infrastructure.repository;
+
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface RelationshipRepository extends JpaRepository<RelationshipJpa, UUID> {
+
+    List<RelationshipJpa> findByPersonId(UUID personId);
+
+    List<RelationshipJpa> findByTenantIdAndPersonId(UUID tenantId, UUID personId);
+
+    Optional<RelationshipJpa> findByRelationshipIdAndTenantId(UUID relationshipId, UUID tenantId);
+
+    boolean existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+            UUID personId,
+            UUID tenantId,
+            RelationshipType relationType,
+            RelationshipStatus currentStatus
+    );
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/PartyIdentifierMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.domain.model.PartyIdentifier;
+import com.solveria.core.workforce.domain.model.vo.Extension;
+import com.solveria.core.workforce.domain.model.vo.PartyIdentifierType;
+import com.solveria.core.workforce.infrastructure.jpa.PartyIdentifierJpa;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+
+@Mapper(componentModel = "spring")
+public interface PartyIdentifierMapper {
+
+    @Mapping(target = "person", ignore = true)
+    @Mapping(target = "idType", source = "idType", qualifiedByName = "toIdType")
+    @Mapping(target = "extension", source = "extension", qualifiedByName = "toExtension")
+    PartyIdentifierJpa toJpa(PartyIdentifier partyIdentifier);
+
+    @Mapping(target = "personId", source = "person.personId")
+    @Mapping(target = "idType", source = "idType", qualifiedByName = "toIdTypeEnum")
+    @Mapping(target = "extension", source = "extension", qualifiedByName = "toExtensionEnum")
+    PartyIdentifier toDomain(PartyIdentifierJpa jpa);
+
+    @Named("toIdType")
+    default String toIdType(PartyIdentifierType type) {
+        return type != null ? type.name() : null;
+    }
+
+    @Named("toIdTypeEnum")
+    default PartyIdentifierType toIdTypeEnum(String value) {
+        return value != null ? PartyIdentifierType.valueOf(value) : null;
+    }
+
+    @Named("toExtension")
+    default String toExtension(Extension extension) {
+        return extension != null ? extension.name() : null;
+    }
+
+    @Named("toExtensionEnum")
+    default Extension toExtensionEnum(String value) {
+        return value != null ? Extension.valueOf(value) : null;
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/JobMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.domain.model.Job;
+import com.solveria.core.workforce.infrastructure.jpa.JobJpa;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface JobMapper {
+
+    JobJpa toJpa(Job job);
+
+    Job toDomain(JobJpa jpa);
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/StatusLogMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.domain.model.StatusLog;
+import com.solveria.core.workforce.infrastructure.jpa.StatusLogJpa;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring")
+public interface StatusLogMapper {
+
+    @Mapping(target = "relationship", ignore = true)
+    StatusLogJpa toJpa(StatusLog statusLog);
+
+    @Mapping(target = "relationshipId", source = "relationship.relationshipId")
+    StatusLog toDomain(StatusLogJpa jpa);
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/OrgHierarchyMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.domain.model.OrgHierarchy;
+import com.solveria.core.workforce.infrastructure.jpa.OrgHierarchyJpa;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring")
+public interface OrgHierarchyMapper {
+
+    @Mapping(target = "childUnit", ignore = true)
+    OrgHierarchyJpa toJpa(OrgHierarchy orgHierarchy);
+
+    @Mapping(target = "childUnitId", source = "childUnit.unitId")
+    OrgHierarchy toDomain(OrgHierarchyJpa jpa);
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/WorkerProfileMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.domain.model.WorkerProfile;
+import com.solveria.core.workforce.infrastructure.jpa.WorkerProfileJpa;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring")
+public interface WorkerProfileMapper {
+
+    @Mapping(target = "relationship", ignore = true)
+    WorkerProfileJpa toJpa(WorkerProfile workerProfile);
+
+    @Mapping(target = "relationshipId", source = "relationship.relationshipId")
+    WorkerProfile toDomain(WorkerProfileJpa jpa);
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/AcademicProfileMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.domain.model.AcademicProfile;
+import com.solveria.core.workforce.domain.model.vo.AcademicRank;
+import com.solveria.core.workforce.infrastructure.jpa.AcademicProfileJpa;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+
+@Mapper(componentModel = "spring")
+public interface AcademicProfileMapper {
+
+    @Mapping(target = "relationship", ignore = true)
+    @Mapping(target = "currentRank", source = "currentRank", qualifiedByName = "toRank")
+    AcademicProfileJpa toJpa(AcademicProfile academicProfile);
+
+    @Mapping(target = "relationshipId", source = "relationship.relationshipId")
+    @Mapping(target = "currentRank", source = "currentRank", qualifiedByName = "toRankEnum")
+    AcademicProfile toDomain(AcademicProfileJpa jpa);
+
+    @Named("toRank")
+    default String toRank(AcademicRank rank) {
+        return rank != null ? rank.name() : null;
+    }
+
+    @Named("toRankEnum")
+    default AcademicRank toRankEnum(String value) {
+        return value != null ? AcademicRank.valueOf(value) : null;
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/PersonMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.application.dto.PersonResponse;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.infrastructure.jpa.PartyIdentifierJpa;
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+
+@Mapper(componentModel = "spring", uses = {PartyIdentifierMapper.class})
+public interface PersonMapper {
+
+    PersonJpa toJpa(Person person);
+
+    Person toDomain(PersonJpa jpa);
+
+    @Mapping(target = "gender", expression = "java(person.getGender() != null ? person.getGender().name() : null)")
+    @Mapping(target = "email", source = "contactPoint.email")
+    @Mapping(target = "phone", source = "contactPoint.phone")
+    @Mapping(target = "address", source = "contactPoint.address")
+    PersonResponse toResponse(Person person);
+
+    @AfterMapping
+    default void setBackReference(@MappingTarget PersonJpa personJpa) {
+        if (personJpa.getIdentifiers() == null) {
+            return;
+        }
+        for (PartyIdentifierJpa identifier : personJpa.getIdentifiers()) {
+            identifier.setPerson(personJpa);
+        }
+    }
+
+    default String toEventPayload(Person person) {
+        if (person == null) return "{}";
+
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(
+                            java.util.Map.ofEntries(
+                                    java.util.Map.entry("personId", person.getPersonId()),
+                                    java.util.Map.entry("firstName", person.getFirstName()),
+                                    java.util.Map.entry("lastName", person.getLastName()),
+                                    java.util.Map.entry("birthDate", person.getBirthDate().toString()),
+                                    java.util.Map.entry("gender", person.getGender().name()),
+                                    java.util.Map.entry("globalId", person.getGlobalId()),
+                                    java.util.Map.entry("age", person.getAge())));
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando Person a JSON", e);
+        }
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/OrgUnitMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.application.dto.OrgUnitResponse;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.infrastructure.jpa.OrgHierarchyJpa;
+import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+
+@Mapper(componentModel = "spring", uses = {OrgHierarchyMapper.class})
+public interface OrgUnitMapper {
+
+    @Mapping(target = "orgHierarchies", source = "hierarchies")
+    OrgUnitJpa toJpa(OrgUnit orgUnit);
+
+    @Mapping(target = "hierarchies", source = "orgHierarchies")
+    OrgUnit toDomain(OrgUnitJpa jpa);
+
+    @Mapping(target = "unitType", expression = "java(orgUnit.getUnitType() != null ? orgUnit.getUnitType().name() : null)")
+    @Mapping(target = "costCode", source = "costCenter.costCode")
+    @Mapping(target = "costDescription", source = "costCenter.description")
+    OrgUnitResponse toResponse(OrgUnit orgUnit);
+
+    @AfterMapping
+    default void setBackReference(@MappingTarget OrgUnitJpa orgUnitJpa) {
+        if (orgUnitJpa.getOrgHierarchies() == null) {
+            return;
+        }
+        for (OrgHierarchyJpa hierarchy : orgUnitJpa.getOrgHierarchies()) {
+            hierarchy.setChildUnit(orgUnitJpa);
+        }
+    }
+
+    default String toEventPayload(OrgUnit orgUnit) {
+        if (orgUnit == null) return "{}";
+
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(
+                            java.util.Map.ofEntries(
+                                    java.util.Map.entry("unitId", orgUnit.getUnitId()),
+                                    java.util.Map.entry("tenantId", orgUnit.getTenantId()),
+                                    java.util.Map.entry("parentId", orgUnit.getParentId()),
+                                    java.util.Map.entry("name", orgUnit.getName()),
+                                    java.util.Map.entry("unitType", orgUnit.getUnitType().name()),
+                                    java.util.Map.entry("isRoot", orgUnit.getIsRoot())));
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando OrgUnit a JSON", e);
+        }
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/PositionMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.application.dto.PositionResponse;
+import com.solveria.core.workforce.domain.model.Position;
+import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring", uses = {JobMapper.class})
+public interface PositionMapper {
+
+    PositionJpa toJpa(Position position);
+
+    Position toDomain(PositionJpa jpa);
+
+    @Mapping(target = "jobId", source = "job.jobId")
+    @Mapping(target = "status", expression = "java(position.getStatus() != null ? position.getStatus().name() : null)")
+    @Mapping(target = "maxSlots", source = "headcountPlan.maxSlots")
+    @Mapping(target = "currentSlots", source = "headcountPlan.currentSlots")
+    @Mapping(target = "availableSlots", expression = "java(position.getHeadcountPlan() != null ? position.getHeadcountPlan().getAvailableSlots() : null)")
+    PositionResponse toResponse(Position position);
+
+    default String toEventPayload(Position position) {
+        if (position == null) return "{}";
+
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(
+                            java.util.Map.ofEntries(
+                                    java.util.Map.entry("positionId", position.getPositionId()),
+                                    java.util.Map.entry("unitId", position.getUnitId()),
+                                    java.util.Map.entry("jobId", position.getJobId()),
+                                    java.util.Map.entry("isBudgeted", position.getIsBudgeted()),
+                                    java.util.Map.entry("maxSlots", position.getHeadcountPlan().getMaxSlots()),
+                                    java.util.Map.entry("currentSlots", position.getHeadcountPlan().getCurrentSlots())));
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando Position a JSON", e);
+        }
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/mapper/RelationshipMapper.java ---
+package com.solveria.core.workforce.infrastructure.mapper;
+
+import com.solveria.core.workforce.application.dto.RelationshipResponse;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
+import com.solveria.core.workforce.infrastructure.jpa.StatusLogJpa;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+
+@Mapper(componentModel = "spring", uses = {WorkerProfileMapper.class, AcademicProfileMapper.class, StatusLogMapper.class})
+public interface RelationshipMapper {
+
+    RelationshipJpa toJpa(Relationship relationship);
+
+    Relationship toDomain(RelationshipJpa jpa);
+
+    @Mapping(target = "relationType", expression = "java(relationship.getRelationType() != null ? relationship.getRelationType().name() : null)")
+    @Mapping(target = "currentStatus", expression = "java(relationship.getCurrentStatus() != null ? relationship.getCurrentStatus().name() : null)")
+    RelationshipResponse toResponse(Relationship relationship);
+
+    @AfterMapping
+    default void setBackReference(@MappingTarget RelationshipJpa relationshipJpa) {
+        if (relationshipJpa.getWorkerProfile() != null) {
+            relationshipJpa.getWorkerProfile().setRelationship(relationshipJpa);
+        }
+        if (relationshipJpa.getAcademicProfile() != null) {
+            relationshipJpa.getAcademicProfile().setRelationship(relationshipJpa);
+        }
+        if (relationshipJpa.getStatusLogs() != null) {
+            for (StatusLogJpa statusLog : relationshipJpa.getStatusLogs()) {
+                statusLog.setRelationship(relationshipJpa);
+            }
+        }
+    }
+
+    default String toEventPayload(Relationship relationship) {
+        if (relationship == null) return "{}";
+
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper()
+                    .writeValueAsString(
+                            java.util.Map.ofEntries(
+                                    java.util.Map.entry("relationshipId", relationship.getRelationshipId()),
+                                    java.util.Map.entry("personId", relationship.getPersonId()),
+                                    java.util.Map.entry("tenantId", relationship.getTenantId()),
+                                    java.util.Map.entry("relationType", relationship.getRelationType().name()),
+                                    java.util.Map.entry("currentStatus", relationship.getCurrentStatus().name()),
+                                    java.util.Map.entry("hireDate", relationship.getHireDate() != null ? relationship.getHireDate().toString() : null)));
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando Relationship a JSON", e);
+        }
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/adapter/PersonRepositoryAdapter.java ---
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
+import com.solveria.core.workforce.infrastructure.mapper.PersonMapper;
+import com.solveria.core.workforce.infrastructure.repository.PersonRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PersonRepositoryAdapter implements PersonRepositoryPort {
+
+    private final PersonRepository personRepository;
+    private final PersonMapper personMapper;
+    private final EventOutboxPort eventOutboxPort;
+
+    @Override
+    @Transactional
+    public Person save(Person person) {
+        PersonJpa personJpa = personMapper.toJpa(person);
+        PersonJpa savedPersonJpa = personRepository.save(personJpa);
+        Person savedPerson = personMapper.toDomain(savedPersonJpa);
+
+        for (String eventType : person.pullDomainEvents()) {
+            eventOutboxPort.publish(
+                    "Person",
+                    savedPerson.getPersonId(),
+                    eventType,
+                    personMapper.toEventPayload(savedPerson)
+            );
+        }
+
+        return savedPerson;
+    }
+
+    @Override
+    public Optional<Person> findByGlobalId(String globalId) {
+        return personRepository.findByGlobalId(globalId)
+                .map(personMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByGlobalId(String globalId) {
+        return personRepository.existsByGlobalId(globalId);
+    }
+
+    @Override
+    public Optional<Person> findByPersonId(UUID personId) {
+        return personRepository.findById(personId)
+                .map(personMapper::toDomain);
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/adapter/OrgUnitRepositoryAdapter.java ---
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
+import com.solveria.core.workforce.infrastructure.mapper.OrgUnitMapper;
+import com.solveria.core.workforce.infrastructure.repository.OrgUnitRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class OrgUnitRepositoryAdapter implements OrgUnitRepositoryPort {
+
+    private final OrgUnitRepository orgUnitRepository;
+    private final OrgUnitMapper orgUnitMapper;
+    private final EventOutboxPort eventOutboxPort;
+
+    @Override
+    @Transactional
+    public OrgUnit save(OrgUnit orgUnit) {
+        OrgUnitJpa orgUnitJpa = orgUnitMapper.toJpa(orgUnit);
+        OrgUnitJpa savedOrgUnitJpa = orgUnitRepository.save(orgUnitJpa);
+        OrgUnit savedOrgUnit = orgUnitMapper.toDomain(savedOrgUnitJpa);
+
+        for (String eventType : orgUnit.pullDomainEvents()) {
+            eventOutboxPort.publish(
+                    "OrgUnit",
+                    savedOrgUnit.getUnitId(),
+                    eventType,
+                    orgUnitMapper.toEventPayload(savedOrgUnit)
+            );
+        }
+
+        return savedOrgUnit;
+    }
+
+    @Override
+    public Optional<OrgUnit> findByUnitIdAndTenantId(UUID unitId, UUID tenantId) {
+        UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        if (!currentTenantId.equals(tenantId)) {
+            return Optional.empty();
+        }
+        return orgUnitRepository.findByUnitIdAndTenantId(unitId, currentTenantId)
+                .map(orgUnitMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByUnitIdAndTenantId(UUID unitId, UUID tenantId) {
+        UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        if (!currentTenantId.equals(tenantId)) {
+            return false;
+        }
+        return orgUnitRepository.findByUnitIdAndTenantId(unitId, currentTenantId).isPresent();
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/adapter/PositionRepositoryAdapter.java ---
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.workforce.application.port.PositionRepositoryPort;
+import com.solveria.core.workforce.domain.model.Position;
+import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
+import com.solveria.core.workforce.infrastructure.mapper.PositionMapper;
+import com.solveria.core.workforce.infrastructure.repository.PositionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PositionRepositoryAdapter implements PositionRepositoryPort {
+
+    private final PositionRepository positionRepository;
+    private final PositionMapper positionMapper;
+    private final EventOutboxPort eventOutboxPort;
+
+    @Override
+    @Transactional
+    public Position save(Position position) {
+        PositionJpa positionJpa = positionMapper.toJpa(position);
+        PositionJpa savedPositionJpa = positionRepository.save(positionJpa);
+        Position savedPosition = positionMapper.toDomain(savedPositionJpa);
+
+        for (String eventType : position.pullDomainEvents()) {
+            eventOutboxPort.publish(
+                    "Position",
+                    savedPosition.getPositionId(),
+                    eventType,
+                    positionMapper.toEventPayload(savedPosition)
+            );
+        }
+
+        return savedPosition;
+    }
+
+    @Override
+    public Optional<Position> findByPositionIdAndTenantId(UUID positionId, UUID tenantId) {
+        UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        if (!currentTenantId.equals(tenantId)) {
+            return Optional.empty();
+        }
+        return positionRepository.findByPositionIdAndTenantId(positionId, currentTenantId)
+                .map(positionMapper::toDomain);
+    }
+
+    @Override
+    public int countByJobIdAndTenantId(UUID jobId, UUID tenantId) {
+        UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        if (!currentTenantId.equals(tenantId)) {
+            return 0;
+        }
+        return positionRepository.countByJobIdAndTenantId(jobId, currentTenantId);
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/infrastructure/adapter/RelationshipRepositoryAdapter.java ---
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
+import com.solveria.core.workforce.infrastructure.mapper.RelationshipMapper;
+import com.solveria.core.workforce.infrastructure.repository.RelationshipRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+import java.util.UUID;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort {
+
+    private final RelationshipRepository relationshipRepository;
+    private final RelationshipMapper relationshipMapper;
+    private final EventOutboxPort eventOutboxPort;
+
+    @Override
+    @Transactional
+    public Relationship save(Relationship relationship) {
+        RelationshipJpa relationshipJpa = relationshipMapper.toJpa(relationship);
+        RelationshipJpa savedRelationshipJpa = relationshipRepository.save(relationshipJpa);
+        Relationship savedRelationship = relationshipMapper.toDomain(savedRelationshipJpa);
+
+        for (String eventType : relationship.pullDomainEvents()) {
+            eventOutboxPort.publish(
+                    "Relationship",
+                    savedRelationship.getRelationshipId(),
+                    eventType,
+                    relationshipMapper.toEventPayload(savedRelationship)
+            );
+        }
+
+        return savedRelationship;
+    }
+
+    @Override
+    public Optional<Relationship> findByRelationshipIdAndTenantId(UUID relationshipId, UUID tenantId) {
+        UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        if (!currentTenantId.equals(tenantId)) {
+            return Optional.empty();
+        }
+        return relationshipRepository.findByRelationshipIdAndTenantId(relationshipId, currentTenantId)
+                .map(relationshipMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsPrimaryRelationshipForPersonInTenant(UUID personId, UUID tenantId) {
+        UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        if (!currentTenantId.equals(tenantId)) {
+            return false;
+        }
+        return relationshipRepository.existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+                personId,
+                currentTenantId,
+                RelationshipType.LABOR,
+                RelationshipStatus.ACTIVE
+        );
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/application/usecase/CreatePersonUseCase.java ---
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.dto.CreatePersonRequest;
+import com.solveria.core.workforce.application.dto.PersonResponse;
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.exception.PersonAlreadyExistsException;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import com.solveria.core.workforce.infrastructure.mapper.PersonMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CreatePersonUseCase {
+
+    private final PersonRepositoryPort personRepositoryPort;
+    private final PersonMapper personMapper;
+
+    @Transactional
+    public PersonResponse execute(CreatePersonRequest request) {
+        if (personRepositoryPort.existsByGlobalId(request.getGlobalId())) {
+            throw new PersonAlreadyExistsException("PersonID ya existe: " + request.getGlobalId());
+        }
+
+        ContactPoint contact = ContactPoint.create(
+                request.getEmail(),
+                request.getPhone(),
+                request.getAddress()
+        );
+
+        Gender gender = Gender.valueOf(request.getGender().toUpperCase());
+
+        Person person = Person.create(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getBirthDate(),
+                gender,
+                request.getGlobalId(),
+                contact
+        );
+
+        Person savedPerson = personRepositoryPort.save(person);
+
+        log.info("event=PERSON_CREATE_SUCCESS personId={} firstName={}",
+                savedPerson.getPersonId(), savedPerson.getFirstName());
+
+        return personMapper.toResponse(savedPerson);
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/application/usecase/CreateOrgUnitUseCase.java ---
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.dto.CreateOrgUnitRequest;
+import com.solveria.core.workforce.application.dto.OrgUnitResponse;
+import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
+import com.solveria.core.workforce.domain.exception.OrgUnitNotFoundException;
+import com.solveria.core.workforce.domain.model.OrgHierarchy;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import com.solveria.core.workforce.infrastructure.mapper.OrgUnitMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CreateOrgUnitUseCase {
+
+    private final OrgUnitRepositoryPort orgUnitRepositoryPort;
+    private final OrgUnitMapper orgUnitMapper;
+
+    @Transactional
+    public OrgUnitResponse executeRoot(CreateOrgUnitRequest request) {
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        OrgUnit orgUnit = this.createAndSaveOrgUnit(tenantId, null, request);
+        return orgUnitMapper.toResponse(orgUnit);
+    }
+
+    @Transactional
+    public OrgUnitResponse executeChild(CreateOrgUnitRequest request, UUID parentId) {
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+        orgUnitRepositoryPort.findByUnitIdAndTenantId(parentId, tenantId)
+                .orElseThrow(() -> new OrgUnitNotFoundException("OrgUnit padre no encontrado o no pertenece a este tenant"));
+
+        OrgUnit orgUnit = this.createAndSaveOrgUnit(tenantId, parentId, request);
+        return orgUnitMapper.toResponse(orgUnit);
+    }
+
+    private OrgUnit createAndSaveOrgUnit(UUID tenantId, UUID parentId, CreateOrgUnitRequest request) {
+        CostCenter costCenter = CostCenter.create(request.getCostCode(), request.getCostDescription());
+        OrgUnit.OrgUnitType unitType = OrgUnit.OrgUnitType.valueOf(request.getUnitType().toUpperCase());
+
+        OrgUnit orgUnit = (parentId == null)
+                ? OrgUnit.createRoot(tenantId, request.getName(), unitType, costCenter)
+                : OrgUnit.createChild(tenantId, parentId, request.getName(), unitType, costCenter);
+
+        if (parentId != null) {
+            orgUnit.addHierarchy(OrgHierarchy.create(parentId, orgUnit.getUnitId(), "ADMINISTRATIVE", LocalDate.now()));
+        }
+
+        return orgUnitRepositoryPort.save(orgUnit);
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/application/usecase/CreatePositionUseCase.java ---
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.dto.CreatePositionRequest;
+import com.solveria.core.workforce.application.dto.PositionResponse;
+import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
+import com.solveria.core.workforce.application.port.PositionRepositoryPort;
+import com.solveria.core.workforce.domain.exception.OrgUnitNotFoundException;
+import com.solveria.core.workforce.domain.model.Position;
+import com.solveria.core.workforce.infrastructure.mapper.PositionMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CreatePositionUseCase {
+
+    private final PositionRepositoryPort positionRepositoryPort;
+    private final OrgUnitRepositoryPort orgUnitRepositoryPort;
+    private final PositionMapper positionMapper;
+
+    @Transactional
+    public PositionResponse execute(CreatePositionRequest request) {
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+        orgUnitRepositoryPort.findByUnitIdAndTenantId(request.getUnitId(), tenantId)
+                .orElseThrow(() -> new OrgUnitNotFoundException("OrgUnit no encontrado o no pertenece a este tenant"));
+
+        Position position = Position.create(
+                request.getUnitId(),
+                request.getJobId(),
+                request.getIsBudgeted(),
+                request.getMaxSlots()
+        );
+
+        Position savedPosition = positionRepositoryPort.save(position);
+        return positionMapper.toResponse(savedPosition);
+    }
+}
+
+// --- ARCHIVO: src/main/java/com/solveria/core/workforce/application/usecase/CreateRelationshipUseCase.java ---
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.dto.CreateRelationshipRequest;
+import com.solveria.core.workforce.application.dto.RelationshipResponse;
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.PersonNotFoundException;
+import com.solveria.core.workforce.domain.model.AcademicProfile;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.StatusLog;
+import com.solveria.core.workforce.domain.model.WorkerProfile;
+import com.solveria.core.workforce.domain.model.vo.AcademicRank;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import com.solveria.core.workforce.infrastructure.mapper.RelationshipMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CreateRelationshipUseCase {
+
+    private final RelationshipRepositoryPort relationshipRepositoryPort;
+    private final PersonRepositoryPort personRepositoryPort;
+    private final RelationshipMapper relationshipMapper;
+
+    @Transactional
+    public RelationshipResponse execute(CreateRelationshipRequest request) {
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+        if (!tenantId.equals(request.getTenantId())) {
+            throw new IllegalStateException("Tenant inconsistente entre request y contexto de seguridad");
+        }
+
+        personRepositoryPort.findByPersonId(request.getPersonId())
+                .orElseThrow(() -> new PersonNotFoundException("Person no encontrado"));
+
+        RelationshipType relType = RelationshipType.valueOf(request.getRelationType().toUpperCase());
+
+        if (RelationshipType.LABOR.equals(relType)
+                && relationshipRepositoryPort.existsPrimaryRelationshipForPersonInTenant(request.getPersonId(), tenantId)) {
+            throw new IllegalStateException(
+                    "Invariante violada: un colaborador no puede tener dos vinculos primarios activos en el tenant"
+            );
+        }
+
+        Relationship relationship = Relationship.create(
+                request.getPersonId(),
+                tenantId,
+                relType,
+                request.getHireDate()
+        );
+
+        if (RelationshipType.ACADEMIC.equals(relType)) {
+            relationship.assignAcademicProfile(AcademicProfile.create(
+                    relationship.getRelationshipId(),
+                    AcademicRank.AUXILIAR,
+                    request.getTeachingLoad() != null ? request.getTeachingLoad() : 20
+            ));
+        } else {
+            relationship.assignWorkerProfile(WorkerProfile.create(
+                    relationship.getRelationshipId(),
+                    request.getEmployeeNo(),
+                    request.getDepartment(),
+                    request.getJobTitle()
+            ));
+        }
+
+        relationship.addStatusLog(StatusLog.create(
+                relationship.getRelationshipId(),
+                null,
+                RelationshipStatus.DRAFT,
+                "Relacion creada",
+                null
+        ));
+
+        Relationship savedRelationship = relationshipRepositoryPort.save(relationship);
+
+        log.info("event=RELATIONSHIP_CREATE_SUCCESS relationshipId={} personId={}",
+                savedRelationship.getRelationshipId(), savedRelationship.getPersonId());
+
+        return relationshipMapper.toResponse(savedRelationship);
+    }
+}
+

@@ -1,0 +1,929 @@
+================================================================================
+BC1: WORKFORCE & ORG MASTER - PUERTOS, INTERF ACES Y MAPPERS
+Versión: v1.0-Complementario
+Fecha: 2026-04-24
+================================================================================
+
+PARTE 1: APPLICATION LAYER - PUERTOS (INTERFACES)
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/port/PersonRepository.java
+package com.solveria.core.workforce.application.port;
+
+import com.solveria.core.workforce.domain.model.Person;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Puerto de salida: Persistencia de Person
+ *
+ * Esta interfaz define los métodos que necesita el Use Case para
+ * persistir entidades de dominio. La implementación real está en
+ * infrastructure.repository.PersonRepository (Spring Data JPA).
+ */
+public interface PersonRepositoryPort {
+
+    Person save(Person person);
+
+    Optional<Person> findById(UUID personId);
+
+    Optional<Person> findByGlobalId(String globalId);
+
+    boolean existsByGlobalId(String globalId);
+
+    void delete(UUID personId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/port/OrgUnitRepository.java
+package com.solveria.core.workforce.application.port;
+
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Puerto de salida: Persistencia de OrgUnit
+ */
+public interface OrgUnitRepositoryPort {
+
+    OrgUnit save(OrgUnit orgUnit);
+
+    Optional<OrgUnit> findById(UUID unitId);
+
+    List<OrgUnit> findByParentId(UUID parentId);
+
+    List<OrgUnit> findByTenantIdAndIsRootTrue(UUID tenantId);
+
+    List<OrgUnit> findByTenantId(UUID tenantId);
+
+    void delete(UUID unitId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/port/PositionRepository.java
+package com.solveria.core.workforce.application.port;
+
+import com.solveria.core.workforce.domain.model.Position;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Puerto de salida: Persistencia de Position
+ */
+public interface PositionRepositoryPort {
+
+    Position save(Position position);
+
+    Optional<Position> findById(UUID positionId);
+
+    List<Position> findByUnitId(UUID unitId);
+
+    void delete(UUID positionId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/port/RelationshipRepository.java
+package com.solveria.core.workforce.application.port;
+
+import com.solveria.core.workforce.domain.model.Relationship;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Puerto de salida: Persistencia de Relationship
+ */
+public interface RelationshipRepositoryPort {
+
+    Relationship save(Relationship relationship);
+
+    Optional<Relationship> findById(UUID relationshipId);
+
+    List<Relationship> findByPersonId(UUID personId);
+
+    List<Relationship> findByTenantIdAndPersonId(UUID tenantId, UUID personId);
+
+    void delete(UUID relationshipId);
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/application/port/EventOutboxPort.java
+package com.solveria.core.workforce.application.port;
+
+import com.solveria.core.workforce.infrastructure.outbox.EventOutbox;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Puerto de salida: Gestión del Outbox
+ *
+ * Define cómo se persisten y consultan los eventos en la tabla event_outbox.
+ */
+public interface EventOutboxPort {
+
+    EventOutbox save(EventOutbox event);
+
+    Optional<EventOutbox> findById(UUID eventId);
+
+    List<EventOutbox> findUnpublished();
+
+    void markAsPublished(UUID eventId);
+}
+
+================================================================================
+PARTE 2: INFRASTRUCTURE - MAPPERS
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/PersonMapper.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
+import com.solveria.core.workforce.application.dto.PersonResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Mapper: Domain Person ↔ JPA PersonJpa ↔ DTO PersonResponse
+ *
+ * Responsable de convertir entre capas:
+ * - Domain Model → JPA Entity (persistencia)
+ * - JPA Entity → Domain Model (lectura)
+ * - Domain Model → DTO Response (API REST)
+ * - Domain Model → Event Outbox Payload (eventos)
+ */
+@Component
+@RequiredArgsConstructor
+public class PersonMapper {
+
+    private final ObjectMapper objectMapper;
+
+    /**
+     * Convierte Domain Person a JPA PersonJpa para persistencia
+     */
+    public PersonJpa toPersistenceEntity(Person person) {
+        if (person == null) return null;
+
+        return PersonJpa.builder()
+                .personId(person.getPersonId())
+                .firstName(person.getFirstName())
+                .lastName(person.getLastName())
+                .birthDate(person.getBirthDate())
+                .gender(person.getGender())
+                .globalId(person.getGlobalId())
+                .contactPoint(person.getContactPoint())
+                .createdAt(person.getCreatedAt())
+                .updatedAt(person.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Convierte JPA PersonJpa a Domain Person
+     */
+    public Person toDomain(PersonJpa jpa) {
+        if (jpa == null) return null;
+
+        return Person.builder()
+                .personId(jpa.getPersonId())
+                .firstName(jpa.getFirstName())
+                .lastName(jpa.getLastName())
+                .birthDate(jpa.getBirthDate())
+                .gender(jpa.getGender())
+                .globalId(jpa.getGlobalId())
+                .contactPoint(jpa.getContactPoint())
+                .createdAt(jpa.getCreatedAt())
+                .updatedAt(jpa.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Convierte Domain Person a DTO PersonResponse para REST
+     */
+    public PersonResponse toResponse(Person person) {
+        if (person == null) return null;
+
+        return PersonResponse.builder()
+                .personId(person.getPersonId())
+                .firstName(person.getFirstName())
+                .lastName(person.getLastName())
+                .birthDate(person.getBirthDate())
+                .gender(person.getGender().name())
+                .globalId(person.getGlobalId())
+                .age(person.getAge())
+                .email(person.getContactPoint() != null ? person.getContactPoint().getEmail() : null)
+                .phone(person.getContactPoint() != null ? person.getContactPoint().getPhone() : null)
+                .address(person.getContactPoint() != null ? person.getContactPoint().getAddress() : null)
+                .createdAt(person.getCreatedAt())
+                .build();
+    }
+
+    /**
+     * Convierte Domain Person a JSON payload para Outbox
+     */
+    public String toEventPayload(Person person) {
+        if (person == null) return "{}";
+
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("personId", person.getPersonId());
+            payload.put("firstName", person.getFirstName());
+            payload.put("lastName", person.getLastName());
+            payload.put("birthDate", person.getBirthDate().toString());
+            payload.put("gender", person.getGender().name());
+            payload.put("globalId", person.getGlobalId());
+            payload.put("age", person.getAge());
+
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando Person a JSON", e);
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/OrgUnitMapper.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
+import com.solveria.core.workforce.application.dto.OrgUnitResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Mapper: Domain OrgUnit ↔ JPA OrgUnitJpa ↔ DTO OrgUnitResponse
+ */
+@Component
+@RequiredArgsConstructor
+public class OrgUnitMapper {
+
+    private final ObjectMapper objectMapper;
+
+    public OrgUnitJpa toPersistenceEntity(OrgUnit orgUnit) {
+        if (orgUnit == null) return null;
+
+        return OrgUnitJpa.builder()
+                .unitId(orgUnit.getUnitId())
+                .tenantId(orgUnit.getTenantId())
+                .parentId(orgUnit.getParentId())
+                .name(orgUnit.getName())
+                .unitType(orgUnit.getUnitType())
+                .costCenter(orgUnit.getCostCenter())
+                .geoCoords(orgUnit.getGeoCoords())
+                .isRoot(orgUnit.getIsRoot())
+                .build();
+    }
+
+    public OrgUnit toDomain(OrgUnitJpa jpa) {
+        if (jpa == null) return null;
+
+        return OrgUnit.builder()
+                .unitId(jpa.getUnitId())
+                .tenantId(jpa.getTenantId())
+                .parentId(jpa.getParentId())
+                .name(jpa.getName())
+                .unitType(jpa.getUnitType())
+                .costCenter(jpa.getCostCenter())
+                .geoCoords(jpa.getGeoCoords())
+                .isRoot(jpa.getIsRoot())
+                .build();
+    }
+
+    public OrgUnitResponse toResponse(OrgUnit orgUnit) {
+        if (orgUnit == null) return null;
+
+        return OrgUnitResponse.builder()
+                .unitId(orgUnit.getUnitId())
+                .parentId(orgUnit.getParentId())
+                .name(orgUnit.getName())
+                .unitType(orgUnit.getUnitType().name())
+                .costCode(orgUnit.getCostCenter() != null ? orgUnit.getCostCenter().getCostCode() : null)
+                .costDescription(orgUnit.getCostCenter() != null ? orgUnit.getCostCenter().getDescription() : null)
+                .isRoot(orgUnit.getIsRoot())
+                .geoCoords(orgUnit.getGeoCoords())
+                .build();
+    }
+
+    public String toEventPayload(OrgUnit orgUnit) {
+        if (orgUnit == null) return "{}";
+
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("unitId", orgUnit.getUnitId());
+            payload.put("tenantId", orgUnit.getTenantId());
+            payload.put("parentId", orgUnit.getParentId());
+            payload.put("name", orgUnit.getName());
+            payload.put("unitType", orgUnit.getUnitType().name());
+            payload.put("isRoot", orgUnit.getIsRoot());
+
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando OrgUnit a JSON", e);
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/PositionMapper.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solveria.core.workforce.domain.model.Position;
+import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
+import com.solveria.core.workforce.application.dto.PositionResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Mapper: Domain Position ↔ JPA PositionJpa ↔ DTO PositionResponse
+ */
+@Component
+@RequiredArgsConstructor
+public class PositionMapper {
+
+    private final ObjectMapper objectMapper;
+
+    public PositionJpa toPersistenceEntity(Position position) {
+        if (position == null) return null;
+
+        return PositionJpa.builder()
+                .positionId(position.getPositionId())
+                .unitId(position.getUnitId())
+                .jobId(position.getJobId())
+                .status(position.getStatus())
+                .isBudgeted(position.getIsBudgeted())
+                .headcountPlan(position.getHeadcountPlan())
+                .build();
+    }
+
+    public Position toDomain(PositionJpa jpa) {
+        if (jpa == null) return null;
+
+        return Position.builder()
+                .positionId(jpa.getPositionId())
+                .unitId(jpa.getUnitId())
+                .jobId(jpa.getJobId())
+                .status(jpa.getStatus())
+                .isBudgeted(jpa.getIsBudgeted())
+                .headcountPlan(jpa.getHeadcountPlan())
+                .build();
+    }
+
+    public PositionResponse toResponse(Position position) {
+        if (position == null) return null;
+
+        return PositionResponse.builder()
+                .positionId(position.getPositionId())
+                .unitId(position.getUnitId())
+                .jobId(position.getJobId())
+                .status(position.getStatus().name())
+                .isBudgeted(position.getIsBudgeted())
+                .maxSlots(position.getHeadcountPlan().getMaxSlots())
+                .currentSlots(position.getHeadcountPlan().getCurrentSlots())
+                .availableSlots(position.getHeadcountPlan().getAvailableSlots())
+                .build();
+    }
+
+    public String toEventPayload(Position position) {
+        if (position == null) return "{}";
+
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("positionId", position.getPositionId());
+            payload.put("unitId", position.getUnitId());
+            payload.put("jobId", position.getJobId());
+            payload.put("status", position.getStatus().name());
+            payload.put("isBudgeted", position.getIsBudgeted());
+            payload.put("maxSlots", position.getHeadcountPlan().getMaxSlots());
+            payload.put("currentSlots", position.getHeadcountPlan().getCurrentSlots());
+
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando Position a JSON", e);
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/RelationshipMapper.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
+import com.solveria.core.workforce.application.dto.RelationshipResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Mapper: Domain Relationship ↔ JPA RelationshipJpa ↔ DTO RelationshipResponse
+ */
+@Component
+@RequiredArgsConstructor
+public class RelationshipMapper {
+
+    private final ObjectMapper objectMapper;
+
+    public RelationshipJpa toPersistenceEntity(Relationship relationship) {
+        if (relationship == null) return null;
+
+        return RelationshipJpa.builder()
+                .relationshipId(relationship.getRelationshipId())
+                .personId(relationship.getPersonId())
+                .tenantId(relationship.getTenantId())
+                .relationType(relationship.getRelationType())
+                .currentStatus(relationship.getCurrentStatus())
+                .hireDate(relationship.getHireDate())
+                .createdAt(relationship.getCreatedAt())
+                .updatedAt(relationship.getUpdatedAt())
+                .build();
+    }
+
+    public Relationship toDomain(RelationshipJpa jpa) {
+        if (jpa == null) return null;
+
+        return Relationship.builder()
+                .relationshipId(jpa.getRelationshipId())
+                .personId(jpa.getPersonId())
+                .tenantId(jpa.getTenantId())
+                .relationType(jpa.getRelationType())
+                .currentStatus(jpa.getCurrentStatus())
+                .hireDate(jpa.getHireDate())
+                .createdAt(jpa.getCreatedAt())
+                .updatedAt(jpa.getUpdatedAt())
+                .build();
+    }
+
+    public RelationshipResponse toResponse(Relationship relationship) {
+        if (relationship == null) return null;
+
+        return RelationshipResponse.builder()
+                .relationshipId(relationship.getRelationshipId())
+                .personId(relationship.getPersonId())
+                .tenantId(relationship.getTenantId())
+                .relationType(relationship.getRelationType().name())
+                .currentStatus(relationship.getCurrentStatus().name())
+                .hireDate(relationship.getHireDate())
+                .createdAt(relationship.getCreatedAt())
+                .build();
+    }
+
+    public String toEventPayload(Relationship relationship) {
+        if (relationship == null) return "{}";
+
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("relationshipId", relationship.getRelationshipId());
+            payload.put("personId", relationship.getPersonId());
+            payload.put("tenantId", relationship.getTenantId());
+            payload.put("relationType", relationship.getRelationType().name());
+            payload.put("currentStatus", relationship.getCurrentStatus().name());
+            payload.put("hireDate", relationship.getHireDate().toString());
+
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            throw new RuntimeException("Error serializando Relationship a JSON", e);
+        }
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/WorkerProfileMapper.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.workforce.domain.model.WorkerProfile;
+import com.solveria.core.workforce.infrastructure.jpa.WorkerProfileJpa;
+import org.springframework.stereotype.Component;
+
+/**
+ * Mapper: Domain WorkerProfile ↔ JPA WorkerProfileJpa
+ */
+@Component
+public class WorkerProfileMapper {
+
+    public WorkerProfileJpa toPersistenceEntity(WorkerProfile workerProfile) {
+        if (workerProfile == null) return null;
+
+        return WorkerProfileJpa.builder()
+                .profileId(workerProfile.getProfileId())
+                .relationshipId(workerProfile.getRelationshipId())
+                .employeeNo(workerProfile.getEmployeeNo())
+                .department(workerProfile.getDepartment())
+                .jobTitle(workerProfile.getJobTitle())
+                .build();
+    }
+
+    public WorkerProfile toDomain(WorkerProfileJpa jpa) {
+        if (jpa == null) return null;
+
+        return WorkerProfile.builder()
+                .profileId(jpa.getProfileId())
+                .relationshipId(jpa.getRelationshipId())
+                .employeeNo(jpa.getEmployeeNo())
+                .department(jpa.getDepartment())
+                .jobTitle(jpa.getJobTitle())
+                .build();
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/AcademicProfileMapper.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.workforce.domain.model.AcademicProfile;
+import com.solveria.core.workforce.infrastructure.jpa.AcademicProfileJpa;
+import org.springframework.stereotype.Component;
+
+/**
+ * Mapper: Domain AcademicProfile ↔ JPA AcademicProfileJpa
+ */
+@Component
+public class AcademicProfileMapper {
+
+    public AcademicProfileJpa toPersistenceEntity(AcademicProfile academicProfile) {
+        if (academicProfile == null) return null;
+
+        return AcademicProfileJpa.builder()
+                .academicId(academicProfile.getAcademicId())
+                .relationshipId(academicProfile.getRelationshipId())
+                .currentRank(academicProfile.getCurrentRank() != null ?
+                    academicProfile.getCurrentRank().name() : null)
+                .teachingLoad(academicProfile.getTeachingLoad())
+                .build();
+    }
+
+    public AcademicProfile toDomain(AcademicProfileJpa jpa) {
+        if (jpa == null) return null;
+
+        return AcademicProfile.builder()
+                .academicId(jpa.getAcademicId())
+                .relationshipId(jpa.getRelationshipId())
+                .currentRank(jpa.getCurrentRank() != null ?
+                    AcademicProfile.AcademicRank.valueOf(jpa.getCurrentRank()) : null)
+                .teachingLoad(jpa.getTeachingLoad())
+                .build();
+    }
+}
+
+================================================================================
+PARTE 3: EXCEPCIONES PERSONALIZADAS
+================================================================================
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/SolverException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción base del dominio
+ *
+ * Todas las excepciones del core heredan de esta clase.
+ * Permite manejo centralizado y coherente de errores.
+ */
+public class SolverException extends RuntimeException {
+
+    private static final long serialVersionUID = 1L;
+    private final String errorCode;
+
+    public SolverException(String errorCode) {
+        super(errorCode);
+        this.errorCode = errorCode;
+    }
+
+    public SolverException(String errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
+    public SolverException(String errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/PersonAlreadyExistsException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción: Persona ya existe (deduplicación)
+ *
+ * Levantada cuando se intenta crear una Person con un globalId ya existente.
+ */
+public class PersonAlreadyExistsException extends SolverException {
+
+    private static final long serialVersionUID = 1L;
+
+    public PersonAlreadyExistsException(String message) {
+        super("PERSON_DEDUPLICATION_MATCH_FOUND", message);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/PersonNotFoundException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción: Persona no encontrada
+ */
+public class PersonNotFoundException extends SolverException {
+
+    private static final long serialVersionUID = 1L;
+
+    public PersonNotFoundException(String message) {
+        super("PERSON_NOT_FOUND", message);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/OrgUnitNotFoundException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción: Unidad organizativa no encontrada
+ */
+public class OrgUnitNotFoundException extends SolverException {
+
+    private static final long serialVersionUID = 1L;
+
+    public OrgUnitNotFoundException(String message) {
+        super("ORG_UNIT_NOT_FOUND", message);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/JobNotFoundException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción: Job (Cargo) no encontrado
+ */
+public class JobNotFoundException extends SolverException {
+
+    private static final long serialVersionUID = 1L;
+
+    public JobNotFoundException(String message) {
+        super("JOB_NOT_FOUND", message);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/HeadcountExceededException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción: Control de Plazas - No hay slots disponibles
+ *
+ * Invariante: Control de Plazas (Headcount):
+ * Impide asignar personal a una posición sin plaza vacante autorizada presupuestariamente.
+ */
+public class HeadcountExceededException extends SolverException {
+
+    private static final long serialVersionUID = 1L;
+
+    public HeadcountExceededException(String message) {
+        super("HEADCOUNT_EXCEEDED", message);
+    }
+}
+
+// Ruta: core-platform/src/main/java/com/solveria/core/workforce/domain/exception/InvalidRelationshipException.java
+package com.solveria.core.workforce.domain.exception;
+
+/**
+ * Excepción: Invariante de Relación Laboral violada
+ *
+ * Ej: No Traslape de Vínculos Primarios
+ */
+public class InvalidRelationshipException extends SolverException {
+
+    private static final long serialVersionUID = 1L;
+
+    public InvalidRelationshipException(String message) {
+        super("INVALID_RELATIONSHIP", message);
+    }
+}
+
+================================================================================
+PARTE 4: CONFIGURACIÓN SPRING (application.yml)
+================================================================================
+
+// Ubicación: core-platform/src/main/resources/application.yml
+
+spring:
+  application:
+    name: solveria-core-platform
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL12Dialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/core_hr_db
+    username: postgres
+    password: postgres
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+logging:
+  level:
+    com.solveria: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+================================================================================
+PARTE 5: pom.xml - DEPENDENCIAS ADICIONALES
+================================================================================
+
+<!-- Ubicación: core-platform/pom.xml -->
+
+<!-- Spring Data JPA -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+
+<!-- PostgreSQL Driver -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>42.7.0</version>
+    <scope>runtime</scope>
+</dependency>
+
+<!-- Lombok -->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.30</version>
+    <scope>provided</scope>
+</dependency>
+
+<!-- Validation -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+
+<!-- Jackson -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.15.3</version>
+</dependency>
+
+<!-- Logging -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-logging</artifactId>
+</dependency>
+
+<!-- Web -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+================================================================================
+CHECKLIST DE IMPLEMENTACIÓN - PASOS SIGUIENTES
+================================================================================
+
+1. **Crear excepciones personalizadas**:
+   ✓ SolverException
+   ✓ PersonAlreadyExistsException
+   ✓ PersonNotFoundException
+   ✓ OrgUnitNotFoundException
+   ✓ JobNotFoundException
+   ✓ HeadcountExceededException
+   ✓ InvalidRelationshipException
+
+2. **Crear mappers**:
+   ✓ PersonMapper
+   ✓ OrgUnitMapper
+   ✓ PositionMapper
+   ✓ RelationshipMapper
+   ✓ WorkerProfileMapper
+   ✓ AcademicProfileMapper
+
+3. **Configurar Spring**:
+   - [ ] Agregar dependencias al pom.xml
+   - [ ] Crear application.yml con propiedades de BD
+   - [ ] Configurar logging con patrón "event=..."
+   - [ ] Habilitar @EnableTransactionManagement
+
+4. **Implementar tablas en BD**:
+   - [ ] CREATE TABLE person
+   - [ ] CREATE TABLE org_unit
+   - [ ] CREATE TABLE position
+   - [ ] CREATE TABLE relationship
+   - [ ] CREATE TABLE event_outbox
+   - [ ] Crear índices según especificación
+
+5. **Ajustes de Application Layer**:
+   - [ ] Inyectar repositorios en Use Cases corregidamente
+   - [ ] Implementar logging con patrón "event=..."
+   - [ ] Agregar handling de excepciones
+
+6. **Agregar Global Exception Handler**:
+   ```java
+   @ControllerAdvice
+   public class GlobalExceptionHandler {
+       // Manejo centralizado de excepciones
+   }
+   ```
+
+7. **Agregar i18n para mensajes**:
+   - [ ] Crear messages_es.properties
+   - [ ] Crear messages_en.properties
+   - [ ] Mapear error codes a mensajes
+
+8. **Crear EventOutbox Scheduler**:
+   ```java
+   @Component
+   @Scheduled(fixedDelay = 5000)
+   public class EventOutboxScheduler {
+       // Publicar eventos no publicados
+   }
+   ```
+
+9. **Agregar trazabilidad multi-tenant**:
+   - [ ] Interceptor HTTP para inyectar X-Tenant-ID
+   - [ ] Filtrar datos por tenantId en todas las queries
+
+10. **Testing**:
+    - [ ] Unit tests para Domain Models
+    - [ ] Integration tests para Use Cases
+    - [ ] Contract tests (Pact) con otros módulos
+
+================================================================================
+GUÍA DE INTEGRACIÓN CON IAM-SERVICE
+================================================================================
+
+Para validaciones que requieran permisos, inyecta el puerto:
+
+```java
+public interface IamServicePort {
+    boolean hasPermission(UUID userId, String permission);
+    User getCurrentUser();
+}
+```
+
+Implementación en infrastructure (llama a iam-service):
+
+```java
+@Component
+public class IamServiceAdapter implements IamServicePort {
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Override
+    public boolean hasPermission(UUID userId, String permission) {
+        // Llamada HTTP o intra-proceso (sin JWT para comunicación interna)
+    }
+}
+```
+
+================================================================================
+NOTAS FINALES
+================================================================================
+
+1. **Patrón Outbox**: Los eventos se persisten ANTES de ser publicados,
+   asegurando consistencia eventual.
+
+2. **Multi-Tenant**: Todos los queries filtran por tenantId.
+   Cada entidad transaccional DEBE tener tenant_id.
+
+3. **Invariantes**: Implementadas en el Domain Model (lógica defensiva).
+
+4. **Efectivity Dating**: Las adendas/cambios se versionan sin sobrescribir.
+
+5. **Segregación de Funciones (SoD)**: Validada en use cases (creador ≠ aprobador).
+
+================================================================================
+FIN - BC1 WORKFORCE & ORG MASTER - PUERTOS, INTERFACES Y MAPPERS v1.0
+================================================================================
+
