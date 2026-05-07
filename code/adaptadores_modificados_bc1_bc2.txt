@@ -1,0 +1,262 @@
+// File: core-plataform/core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/PersonRepositoryAdapter.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.workforce.port.EventOutboxPort;
+import com.solveria.core.workforce.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
+import com.solveria.core.workforce.infrastructure.mapper.PersonMapper;
+import com.solveria.core.workforce.infrastructure.repository.PersonRepository;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PersonRepositoryAdapter implements PersonRepositoryPort {
+
+  private final PersonRepository personRepository;
+  private final PersonMapper personMapper;
+  private final EventOutboxPort eventOutboxPort;
+
+  @Override
+  @Transactional
+  public Person save(Person person) {
+    PersonJpa personJpa = personMapper.toJpa(person);
+    PersonJpa savedPersonJpa = personRepository.save(personJpa);
+    Person savedPerson = personMapper.toDomain(savedPersonJpa);
+
+    for (DomainEvent event : person.pullDomainEvents()) {
+      eventOutboxPort.publish(
+          "Person",
+          savedPerson.getPersonId(),
+          event.getClass().getSimpleName(),
+          personMapper.toEventPayload(savedPerson));
+    }
+
+    return savedPerson;
+  }
+
+  @Override
+  public Optional<Person> findByGlobalId(String globalId) {
+    return personRepository.findByGlobalId(globalId).map(personMapper::toDomain);
+  }
+
+  @Override
+  public boolean existsByGlobalId(String globalId) {
+    return personRepository.existsByGlobalId(globalId);
+  }
+
+  @Override
+  public Optional<Person> findByPersonId(UUID personId) {
+    return personRepository.findById(personId).map(personMapper::toDomain);
+  }
+}
+
+// File: core-plataform/core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/RelationshipRepositoryAdapter.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.port.EventOutboxPort;
+import com.solveria.core.workforce.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
+import com.solveria.core.workforce.infrastructure.mapper.RelationshipMapper;
+import com.solveria.core.workforce.infrastructure.repository.RelationshipRepository;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort {
+
+  private final RelationshipRepository relationshipRepository;
+  private final RelationshipMapper relationshipMapper;
+  private final EventOutboxPort eventOutboxPort;
+
+  @Override
+  @Transactional
+  public Relationship save(Relationship relationship) {
+    RelationshipJpa relationshipJpa = relationshipMapper.toJpa(relationship);
+    RelationshipJpa savedRelationshipJpa = relationshipRepository.save(relationshipJpa);
+    Relationship savedRelationship = relationshipMapper.toDomain(savedRelationshipJpa);
+
+    for (DomainEvent event : relationship.pullDomainEvents()) {
+      eventOutboxPort.publish(
+          "Relationship",
+          savedRelationship.getRelationshipId(),
+          event.getClass().getSimpleName(),
+          relationshipMapper.toEventPayload(savedRelationship));
+    }
+
+    return savedRelationship;
+  }
+
+  @Override
+  public Optional<Relationship> findByRelationshipIdAndTenantId(
+      UUID relationshipId, UUID tenantId) {
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    if (!currentTenantId.equals(tenantId)) {
+      return Optional.empty();
+    }
+    return relationshipRepository
+        .findByRelationshipIdAndTenantId(relationshipId, currentTenantId)
+        .map(relationshipMapper::toDomain);
+  }
+
+  @Override
+  public boolean existsPrimaryRelationshipForPersonInTenant(UUID personId, UUID tenantId) {
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    if (!currentTenantId.equals(tenantId)) {
+      return false;
+    }
+    return relationshipRepository.existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+        personId, currentTenantId, RelationshipType.LABOR, RelationshipStatus.ACTIVE);
+  }
+}
+
+// File: core-plataform/core-platform/src/main/java/com/solveria/core/workforce/infrastructure/adapter/OrgUnitRepositoryAdapter.java
+package com.solveria.core.workforce.infrastructure.adapter;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.port.EventOutboxPort;
+import com.solveria.core.workforce.port.OrgUnitRepositoryPort;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
+import com.solveria.core.workforce.infrastructure.mapper.OrgUnitMapper;
+import com.solveria.core.workforce.infrastructure.repository.OrgUnitRepository;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class OrgUnitRepositoryAdapter implements OrgUnitRepositoryPort {
+
+  private final OrgUnitRepository orgUnitRepository;
+  private final OrgUnitMapper orgUnitMapper;
+  private final EventOutboxPort eventOutboxPort;
+
+  @Override
+  @Transactional
+  public OrgUnit save(OrgUnit orgUnit) {
+    OrgUnitJpa orgUnitJpa = orgUnitMapper.toJpa(orgUnit);
+    OrgUnitJpa savedOrgUnitJpa = orgUnitRepository.save(orgUnitJpa);
+    OrgUnit savedOrgUnit = orgUnitMapper.toDomain(savedOrgUnitJpa);
+
+    for (DomainEvent event : orgUnit.pullDomainEvents()) {
+      eventOutboxPort.publish(
+          "OrgUnit",
+          savedOrgUnit.getUnitId(),
+          event.getClass().getSimpleName(),
+          orgUnitMapper.toEventPayload(savedOrgUnit));
+    }
+
+    return savedOrgUnit;
+  }
+
+  @Override
+  public Optional<OrgUnit> findByUnitIdAndTenantId(UUID unitId, UUID tenantId) {
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    if (!currentTenantId.equals(tenantId)) {
+      return Optional.empty();
+    }
+    return orgUnitRepository
+        .findByUnitIdAndTenantId(unitId, currentTenantId)
+        .map(orgUnitMapper::toDomain);
+  }
+
+  @Override
+  public boolean existsByUnitIdAndTenantId(UUID unitId, UUID tenantId) {
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    if (!currentTenantId.equals(tenantId)) {
+      return false;
+    }
+    return orgUnitRepository.findByUnitIdAndTenantId(unitId, currentTenantId).isPresent();
+  }
+}
+
+// File: core-plataform/core-platform/src/main/java/com/solveria/core/legal/infrastructure/adapter/ContractRepositoryAdapter.java
+package com.solveria.core.legal.infrastructure.adapter;
+
+import com.solveria.core.legal.application.port.ContractRepositoryPort;
+import com.solveria.core.legal.domain.model.Contract;
+import com.solveria.core.legal.domain.model.vo.ContractType;
+import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
+import com.solveria.core.legal.infrastructure.mapper.ContractMapper;
+import com.solveria.core.legal.infrastructure.repository.ContractRepository;
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.workforce.port.EventOutboxPort;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class ContractRepositoryAdapter implements ContractRepositoryPort {
+
+  private final ContractRepository contractRepository;
+  private final ContractMapper contractMapper;
+  private final EventOutboxPort eventOutboxPort;
+
+  @Override
+  @Transactional
+  public void save(Contract contract) {
+    ContractJpa contractJpa = contractMapper.toJpa(contract);
+    ContractJpa savedJpa = contractRepository.save(contractJpa);
+    Contract savedContract = contractMapper.toDomain(savedJpa);
+    List<DomainEvent> events = contract.pullDomainEvents();
+
+    for (DomainEvent event : events) {
+      eventOutboxPort.publish(
+          "Contract",
+          savedContract.getContractId(),
+          contractMapper.resolveEventType(event),
+          contractMapper.toEventPayload(savedContract, event));
+    }
+  }
+
+  @Override
+  public Optional<Contract> findById(UUID contractId) {
+    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    return contractRepository
+        .findByContractIdAndTenantId(contractId, currentTenantId)
+        .map(contractMapper::toDomain);
+  }
+
+  @Override
+  public List<Contract> findFixedTermContractsExpiringBetween(LocalDate from, LocalDate to) {
+    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    return contractRepository
+        .findExpiringContracts(ContractType.PLAZO_FIJO, from, to, currentTenantId)
+        .stream()
+        .map(contractMapper::toDomain)
+        .toList();
+  }
+}
+

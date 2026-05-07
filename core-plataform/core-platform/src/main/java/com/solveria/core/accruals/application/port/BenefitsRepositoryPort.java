@@ -1,0 +1,25 @@
+package com.solveria.core.accruals.application.port;
+
+import com.solveria.core.accruals.domain.model.BenefitAccrual;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.model.vo.BenefitType;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface BenefitsRepositoryPort {
+
+  HolidayCalendar saveHoliday(HolidayCalendar holiday);
+
+  List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate);
+
+  QuinquenioProvision saveQuinquenio(QuinquenioProvision provision);
+
+  Optional<QuinquenioProvision> findQuinquenioByRelationshipId(UUID relationshipId);
+
+  BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual);
+
+  Optional<BenefitAccrual> findBenefitAccrual(BenefitType benefitType, int fiscalYear);
+}
