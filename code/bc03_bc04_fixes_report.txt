@@ -1,0 +1,201 @@
+================================================================================
+ BC-03 & BC-04 FIXES REPORT — AUDIT CORRECTIONS
+ Generated: 2026-05-06T19:37-04:00
+================================================================================
+
+TABLE OF CONTENTS
+─────────────────
+ FIX 1: CheckOffboardingAssetsService.java — Dead variable eliminated
+ FIX 2: BolivianSeniorityScale.java — NEW domain policy (DS 21060)
+ FIX 3: AccrualBalance.java — Hardcoded ternary replaced
+
+================================================================================
+ FIX 1: CheckOffboardingAssetsService.java
+ Path: dossier/application/service/CheckOffboardingAssetsService.java
+ Issue: enrichedEvent instantiated but never used (dead variable)
+ Fix: Serialize enrichedEvent fields into outbox payload
+================================================================================
+
+--- BEFORE (DEFECTIVE) ---
+
+  private void publishBlockedEvent(CheckOffboardingAssetsCommand command) {
+    List<UUID> unreturnedIds = assignedAssetRepository.findPendingAssetIds(command.workerId());
+    OffboardingBlockedByAssetsEvent enrichedEvent =
+        OffboardingBlockedByAssetsEvent.now(command.workerId(), unreturnedIds);
+                                         // ^^^ DEAD VARIABLE — never read
+    String payload;
+    try {
+      payload =
+          objectMapper.writeValueAsString(
+              Map.of(
+                  "workerId", command.workerId(),       // <-- manual field, not from event
+                  "tenantId", command.tenantId(),
+                  "unreturnedAssetIds", unreturnedIds,  // <-- raw local var, not from event
+                  "eventType", DossierEventType.OFFBOARDING_BLOCKED_BY_ASSETS.name()));
+    ...
+
+--- AFTER (CORRECTED) ---
+
+  private void publishBlockedEvent(CheckOffboardingAssetsCommand command) {
+    List<UUID> unreturnedIds = assignedAssetRepository.findPendingAssetIds(command.workerId());
+    OffboardingBlockedByAssetsEvent enrichedEvent =
+        OffboardingBlockedByAssetsEvent.now(command.workerId(), unreturnedIds);
+
+    String payload;
+    try {
+      payload =
+          objectMapper.writeValueAsString(
+              Map.of(
+                  "personId", enrichedEvent.personId(),
+                  "unreturnedAssetIds", enrichedEvent.unreturnedAssetIds(),
+                  "occurredAt", enrichedEvent.occurredAt().toString(),
+                  "tenantId", command.tenantId(),
+                  "eventType", DossierEventType.OFFBOARDING_BLOCKED_BY_ASSETS.name()));
+    } catch (Exception e) {
+      payload = "{}";
+    }
+    eventOutboxPort.publish(
+        "AssignedAsset",
+        command.workerId(),
+        DossierEventType.OFFBOARDING_BLOCKED_BY_ASSETS.name(),
+        payload);
+  }
+
+================================================================================
+ FIX 2: BolivianSeniorityScale.java [NEW FILE]
+ Path: accruals/domain/policy/BolivianSeniorityScale.java
+ Issue: DS 21060 scale was hardcoded as magic numbers in AccrualBalance
+ Fix: Extracted to a NavigableMap-backed domain policy class
+================================================================================
+
+package com.solveria.core.accruals.domain.policy;
+
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+
+/**
+ * Escala de Bono de Antigüedad según D.S. 21060 (Bolivia).
+ *
+ * <p>Define los porcentajes sobre el Salario Mínimo Nacional (SMN)
+ * que corresponden a cada tramo de antigüedad laboral.
+ *
+ * <pre>
+ *   2-4  años  →  5%
+ *   5-7  años  → 11%
+ *   8-10 años  → 18%
+ *  11-14 años  → 26%
+ *  15-19 años  → 34%
+ *  20-24 años  → 42%
+ *  25+  años   → 50%
+ * </pre>
+ */
+public final class BolivianSeniorityScale {
+
+  /**
+   * NavigableMap donde la key es el año mínimo del tramo
+   * y el value es el porcentaje de bono (como BigDecimal).
+   * floorEntry(years) retorna el tramo aplicable.
+   */
+  private static final NavigableMap<Integer, BigDecimal> SCALE;
+
+  static {
+    TreeMap<Integer, BigDecimal> map = new TreeMap<>();
+    map.put(2, new BigDecimal("5"));
+    map.put(5, new BigDecimal("11"));
+    map.put(8, new BigDecimal("18"));
+    map.put(11, new BigDecimal("26"));
+    map.put(15, new BigDecimal("34"));
+    map.put(20, new BigDecimal("42"));
+    map.put(25, new BigDecimal("50"));
+    SCALE = Collections.unmodifiableNavigableMap(map);
+  }
+
+  private BolivianSeniorityScale() {}
+
+  /**
+   * Retorna el porcentaje de bono de antigüedad para los años dados.
+   *
+   * @param yearsOfService años de antigüedad (debe ser >= 0)
+   * @return porcentaje como BigDecimal (ej. "5", "11"), o BigDecimal.ZERO si < 2 años
+   */
+  public static BigDecimal bonusPercentageFor(int yearsOfService) {
+    if (yearsOfService < 2) {
+      return BigDecimal.ZERO;
+    }
+    var entry = SCALE.floorEntry(yearsOfService);
+    return entry != null ? entry.getValue() : BigDecimal.ZERO;
+  }
+
+  /**
+   * Retorna el multiplicador entero del SMN para el SeniorityMilestoneReachedEvent.
+   *
+   * <p>Convención: el multiplicador es el porcentaje truncado a entero (5, 11, 18, 26, 34, 42, 50).
+   * Retorna 0 si la antigüedad no alcanza el mínimo de 2 años.
+   *
+   * @param yearsOfService años de antigüedad
+   * @return multiplicador entero, o 0 si no aplica
+   */
+  public static int smMultiplierFor(int yearsOfService) {
+    return bonusPercentageFor(yearsOfService).intValue();
+  }
+}
+
+================================================================================
+ FIX 3: AccrualBalance.java — addSeniorityMilestone() method
+ Path: accruals/domain/model/AccrualBalance.java
+ Issue: Hardcoded ternary chain with magic numbers
+ Fix: Delegates to BolivianSeniorityScale.smMultiplierFor()
+================================================================================
+
+--- BEFORE (DEFECTIVE) ---
+
+  public void addSeniorityMilestone(SeniorityMilestone milestone) {
+    ...
+    seniorityMilestones.add(milestone);
+    int years = milestone.monthsCompleted() / 12;
+    int smMultiplier = years >= 25 ? 26 : years >= 20 ? 22 : years >= 15 ? 18
+        : years >= 10 ? 14 : years >= 5 ? 10 : years >= 2 ? 5 : 0;
+                    // ^^^ MAGIC NUMBERS — wrong values (26,22,18,14,10,5)
+                    //     vs correct DS 21060 (50,42,34,26,18,11,5)
+    if (smMultiplier > 0) {
+      addDomainEvent(SeniorityMilestoneReachedEvent.now(
+          relationshipId, years, smMultiplier));
+    }
+  }
+
+--- AFTER (CORRECTED) ---
+
+  // NEW IMPORT:
+  import com.solveria.core.accruals.domain.policy.BolivianSeniorityScale;
+
+  public void addSeniorityMilestone(SeniorityMilestone milestone) {
+    if (milestone == null) {
+      throw new IllegalArgumentException("milestone is required");
+    }
+    if (seniorityMilestones == null) {
+      seniorityMilestones = new ArrayList<>();
+    }
+    seniorityMilestones.add(milestone);
+    int years = milestone.monthsCompleted() / 12;
+    int smMultiplier = BolivianSeniorityScale.smMultiplierFor(years);
+    if (smMultiplier > 0) {
+      addDomainEvent(SeniorityMilestoneReachedEvent.now(
+          relationshipId, years, smMultiplier));
+    }
+  }
+
+================================================================================
+ DEFECT-TO-FIX TRACEABILITY
+================================================================================
+
+ DEFECT                                      | FILE                              | FIX
+ ────────────────────────────────────────────────────────────────────────────────────────
+ Dead variable: enrichedEvent never read     | CheckOffboardingAssetsService.java | Serialize event fields into payload
+ Magic numbers in ternary (wrong DS 21060)   | AccrualBalance.java                | Delegate to BolivianSeniorityScale
+ No domain structure for DS 21060 scale      | (none existed)                     | NEW: BolivianSeniorityScale.java
+
+================================================================================
+ END OF FIXES REPORT
+================================================================================

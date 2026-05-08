@@ -36,14 +36,73 @@
 
 ## Eventos de Dominio
 
-* **`ONBOARDING_COMPLETED` (Async):** Pilar 4 validado. Activa nómina/Scheduling y entrega equipos.
-* **`OFFBOARDING_INITIATED` (Sync/Bloqueante):** Dispara cálculo P15 y P17, bloquea accesos y grilla.
-* **`DATA_CHANGE_REQUESTED / REJECTED` (Async):** Modificación ESS pendiente de revisión.
-* **`DISCIPLINARY_ACTION_REPORTED / MEMORANDUM_ISSUED` (Sync):** Crea PDF Inalterable y alerta sobre historial disciplinario.
-* **`MEMORANDUM_ACKNOWLEDGED` (Sync):** Firma en ESS cierra notificación legal.
-* **`DISCIPLINARY_THRESHOLD_REACHED` (Async):** Alerta IA (ej. 3 memorandos en 6 meses -> Despido Justificado).
-* **`SUBSTITUTION_INITIATED / COMPLETED` (Sync):** Asigna TemporaryAssignment y calcula recargos.
-* **`CERTIFICATE_REQUESTED / GENERATED / VALIDATED_EXTERNALLY` (Async):** Genera PDF/QR validable externamente si Kardex no está bloqueado.
+**6. Contexto: Intelligent Interaction (Experiencia y Procesos Orquestados)**
+
+**Eventos que cierran procesos de usuario o disparan interacciones inteligentes.**
+
+**ONBOARDING\_COMPLETED**
+
+- **Gatillo y Naturaleza (Async): Se dispara automáticamente cuando el motor de estados confirma que los 4 pilares están validados: Identidad (Persona), Vínculo (Relationship), Reglas (Contract) y Ubicación (Position).**
+- **Lógica Funcional y Efectos: Activa la elegibilidad en el motor de Payroll y Scheduling. Notifica al módulo de Assets para la entrega de equipos.**
+- **UI e IA:**
+  - **UI: Confeti visual en el ESS y habilitación del carnet digital.**
+  - **IA: Genera un "Perfil de Riesgo de Deserción Temprana" comparando el tiempo de onboarding con la media del tenant.**
+- **Invariantes: Impide que un empleado reciba sueldo sin tener un contrato firmado y una posición asignada.**
+
+**OFFBOARDING\_INITIATED**
+
+- **Gatillo y Naturaleza (Sync): Registro manual de la baja. Es Sincrónico para bloquear inmediatamente la creación de nuevos turnos en el futuro.**
+- **Lógica Funcional: Dispara el cálculo de la P15 (Promedio 90 días) y P17 (Finiquito). Notifica a TI para la suspensión de accesos en la effective\_to.**
+- **UI e IA:**
+  - **IA: Análisis de sentimiento en la causa de baja para detectar problemas de liderazgo en unidades específicas.**
+- **Impacto en Invariantes: Bloquea cualquier intento de pago de "Bono de Antigüedad" posterior a la fecha de cese.**
+
+**DATA\_CHANGE\_REQUESTED / REJECTED**
+
+- **Gatillo y Naturaleza (Async): Solicitud desde el ESS por el empleado.**
+- **Lógica Funcional: Los cambios no impactan PersonMaster hasta que RRHH valide el respaldo (ej. Certificado de matrimonio para cambio de apellido).**
+- **UI e IA:**
+  - **UI: Línea de tiempo que muestra el estado "Pendiente de validación".**
+- **Invariantes: Garantiza la Inalterabilidad de Auditoría: no se puede cambiar un dato civil sin una evidencia documental vinculada.**
+
+**DISCIPLINARY\_ACTION\_REPORTED / MEMORANDUM\_ISSUED**
+
+- **Gatillo y Naturaleza (Sync): Reporte de falta por un supervisor (MSS).**
+- **Lógica Funcional: Genera una entrada en el Digital Kardex. Si es MEMORANDUM\_ISSUED, se crea el PDF inalterable con Hash SHA-256.**
+- **Localización: En Bolivia, este evento es la base legal para el despido justificado (Art. 16 LGT). El sistema debe clasificar si la falta es "Grave" según el Reglamento Interno del Tenant.**
+- **Impacto en Invariantes: Ningún memorándum puede eliminarse una vez emitido; solo puede anularse con una nota de rectificación.**
+
+**MEMORANDUM\_ACKNOWLEDGED**
+
+- **Gatillo y Naturaleza (Sync): Firma digital o acuse de recibo del empleado en el ESS.**
+- **Lógica Funcional: Cierra el ciclo de notificación legal. Si el empleado rechaza la firma, el sistema habilita el flujo de "Notificación por Testigos".**
+- **UI e IA:**
+  - **IA: Identifica si el empleado tiene un patrón de "Faltas próximas a feriados de Santa Cruz" (ej. 24 de septiembre).**
+
+**DISCIPLINARY\_THRESHOLD\_REACHED**
+
+- **Gatillo y Naturaleza (Async): Motor de reglas de cumplimiento.**
+- **Lógica Funcional: Alerta automática cuando un empleado acumula (ej.) 3 memorandos por la misma causa en 6 meses.**
+- **UI e IA:**
+  - **UI: Alerta roja al Gerente de RRHH: "Riesgo Legal: Posibilidad de Despido Justificado".**
+- **Impacto en Invariantes: Protege la regla de "Proporcionalidad": Alerta si se intenta despedir sin el historial documental necesario.**
+
+**SUBSTITUTION\_INITIATED / COMPLETED**
+
+- **Gatillo y Naturaleza (Sync): Asignación temporal de una plaza por ausencia del titular.**
+- **Lógica Funcional: Crea una TemporaryAssignment. Calcula el "Recargo por Suplencia" (Diferencia salarial).**
+- **Diseño para Localización: En Universidades, este evento gestiona el "Docente Reemplazante" por materia, vinculando el AcademicProfile temporalmente al grupo.**
+- **Invariantes: Evita que el suplente adquiera derechos de "Plazo Indefinido" en la plaza si la suplencia excede los límites de la política del tenant.**
+
+**CERTIFICATE\_REQUESTED / GENERATED / VALIDATED\_EXTERNALLY**
+
+- **Gatillo y Naturaleza (Async): Solicitud autónoma del empleado.**
+- **Lógica Funcional: El sistema extrae datos de Person, Contract y Payroll para generar el PDF. El QR apunta a una URL de validación pública (Zero-Trust).**
+- **UI e IA:**
+  - **UI: Descarga inmediata en PDF.**
+  - **IA: Detecta si hay una alta demanda de certificados para "Entidades Bancarias", sugiriendo una tendencia de sobre-endeudamiento en la plantilla.**
+- **Invariantes: Solo se generan certificados si el empleado no tiene bloqueos por documentos vencidos en el Digital Kardex.**
+
 
 ---
 

@@ -68,19 +68,90 @@
 
 ## Eventos de Dominio
 
-* **`PERSON_CREATED` (Sync):** Crea la raíz de identidad civil. Estado Draft.
-* **`PERSON_MASTER_CREATED` (Async):** Eleva estado a Master tras validación. Notifica al Kardex.
-* **`PERSON_DEDUPLICATION_MATCH_FOUND` (Sync/Bloqueante):** Detiene flujo al detectar CI duplicado. Crítico para reingresos y mantener antigüedad.
-* **`PERSON_UPDATED` (Async):** Notifica a Payroll/Kardex tras cambios en datos maestros.
-* **`RELATIONSHIP_CREATED` (Sync):** Disparado por Onboarding aprobado. Crea vínculo legal.
-* **`RELATIONSHIP_REACTIVATED` (Sync):** Disparado por reincorporaciones. Restablece relación y línea de antigüedad.
-* **`RELATIONSHIP_ENDED` (Sync):** Inicia Offboarding. Activa cronómetro 15 días (Finiquito) y notifica Assets.
-* **`ORG_UNIT_ASSIGNED_CHANGED` (Async):** Actualiza imputación analítica tras transferencias internas.
-* **`ORG_UNIT_GEOGRAPHIC_MOVED` (Async):** Actualiza coordenadas y alerta sobre cambios en tasas regionales (INFOCAL).
-* **`POSITION_ASSIGNED` (Sync):** Vincula al trabajador con una plaza presupuestada.
-* **`POSITION_VACATED` (Async):** Notifica a Reclutamiento que la plaza está disponible.
-* **`ACADEMIC_PROFILE_RANK_UPDATED` (Sync):** (Educación) Actualiza categoría del docente y dispara adenda salarial automática.
+ **PERSON\_CREATED**
+- **Gatillo y Naturaleza: Sincrónico. Se dispara manualmente desde el módulo de reclutamiento o vía API desde un ATS externo al registrar los datos básicos de un ciudadano.**
+- **Lógica Funcional: Crea la raíz de identidad civil. Es el "ancla" que sobrevive a cualquier contrato. No genera un vínculo laboral aún, solo una entidad Person en estado Draft.**
+- **UI e IA:**
+- **UI: Formulario de alta rápida con validación de máscara para CI/Pasaporte.**
+- **IA: El motor de *Data Quality* califica la completitud del perfil para predecir la viabilidad del proceso de contratación.**
+- **Localización: El sistema debe permitir tipos de identidad bolivianos (CI con complemento) y extranjeros (Pasaporte).**
+- **Invariantes: Garantiza la creación de un GlobalID único antes de proceder a cualquier validación de duplicidad.**
+- **PERSON\_MASTER\_CREATED**
+- **Gatillo y Naturaleza: Asincrónico. Se dispara tras la validación exitosa de la identidad contra fuentes oficiales o procesos internos de auditoría.**
+- **Lógica Funcional: Eleva el estado de la persona a Master. Este evento notifica al Digital Kardex para que genere la estructura de carpetas necesaria para los documentos obligatorios.**
+- **UI e IA:**
+- **UI: El perfil del usuario muestra un check de "Identidad Verificada".**
+- **IA: Identifica patrones demográficos (edad, ubicación) para sugerir beneficios o seguros de salud adecuados.**
+- **Localización: Valida que el CI tenga el formato correcto según el departamento emisor en Bolivia.**
+- **Invariantes: Protege la regla de Identidad Única: una persona física solo posee un registro maestro en el sistema.**
+- **PERSON\_DEDUPLICATION\_MATCH\_FOUND**
+- **Gatillo y Naturaleza: Sincrónico (Bloqueante). Se dispara automáticamente cuando el motor de reglas detecta un CI o pasaporte ya existente en la base de datos histórica.**
+- **Lógica Funcional: Detiene el flujo de creación. Es crítico para el reingreso de personal, ya que permite recuperar la antigüedad acumulada para el Bono de Antigüedad e Indemnización.**
+- **UI e IA:**
+- **UI: Modal de bloqueo que muestra el perfil existente y solicita permiso para realizar un *Merge* o reactivación.**
+- **IA: Realiza *Fuzzy Matching* en nombres y fechas de nacimiento para detectar duplicados incluso con errores de digitación en el CI.**
+- **Invariantes: Evita registros duplicados que causarían pagos dobles de beneficios sociales o inconsistencias en la Gestora Pública.**
+- **PERSON\_UPDATED**
+- **Gatillo y Naturaleza: Asincrónico. Se dispara tras la edición de datos maestros (apellidos por matrimonio, cambio de domicilio o estado civil).**
+- **Lógica Funcional: Notifica a los módulos de Payroll (para RC-IVA) y Digital Kardex (para solicitar nuevos documentos como el Certificado de Matrimonio).**
+- **UI e IA:**
+- **UI: Feed de auditoría visual indicando el "antes" y el "después".**
+- **IA: Si el cambio de domicilio es a otro departamento (ej. de Santa Cruz a La Paz), la IA sugiere revisar las políticas de INFOCAL regional.**
+- **Invariantes: Mantiene la integridad del historial (Effective Dating). El cambio no borra el dato anterior, crea una nueva versión con fecha de vigencia.**
+- **RELATIONSHIP\_CREATED**
+- **Gatillo y Naturaleza: Sincrónico. Disparado por la aprobación final del flujo de *Onboarding*.**
+- **Lógica Funcional: Crea el vínculo legal entre la Person y el Tenant. Define si el perfil será WorkerProfile o AcademicProfile.**
+- **UI e IA:**
+- **UI: El estado del colaborador cambia a Onboarding o Active.**
+- **IA: Predice el tiempo estimado de rampa (Onboarding time) basado en el tipo de tenant (Retail es más rápido que Educación).**
+- **Invariantes: Valida la regla de No Traslape de Vínculos Primarios para evitar contingencias legales por doble percepción.**
+- **RELATIONSHIP\_REACTIVATED**
+- **Gatillo y Naturaleza: Sincrónico. Disparado en casos de reincorporación tras bajas largas o reingresos tras finiquitos previos.**
+- **Lógica Funcional: Restablece la relación y dispara el recálculo de la línea de tiempo de antigüedad en el AccrualVault.**
+- **Localización: En Bolivia, el sistema debe verificar si el reingreso ocurre en menos de 90 días para determinar si la antigüedad se mantiene ininterrumpida.**
+- **Invariantes: Protege la continuidad laboral para el cálculo de vacaciones (P13) y quinquenios (P8).**
+- **RELATIONSHIP\_ENDED**
+- **Gatillo y Naturaleza: Sincrónico (Inicia el Offboarding). Disparado por renuncia, despido o fallecimiento.**
+- **Lógica Funcional: Cierra el expediente y activa el cronómetro de 15 días calendario para el pago del Finiquito (P17). Notifica al módulo de Assets para la devolución de equipos.**
+- **UI e IA:**
+- **IA: Análisis de *Churn* para identificar si la salida se debe a factores de clima laboral o competitividad salarial.**
+- **Invariantes: Libera la plaza en el Headcount Management y bloquea accesos al ESS.**
 
+**ORG\_UNIT\_ASSIGNED\_CHANGED**
+
+- **Gatillo y Naturaleza: Asincrónico. Disparado por una transferencia interna (movimiento entre sucursales o departamentos).**
+- **Lógica Funcional: Actualiza la imputación analítica en Budget Control. El costo laboral se moverá de un centro de costos a otro.**
+- **Localización: Si el cambio es entre tiendas de Retail en Santa Cruz, se prorratea el costo entre tiendas para el P&L mensual.**
+- **Invariantes: Garantiza la regla de No Unidades Huérfanas: el colaborador siempre debe pertenecer a un nodo jerárquico.**
+
+**ORG\_UNIT\_GEOGRAPHIC\_MOVED**
+
+- **Gatillo y Naturaleza: Asincrónico. Disparado cuando una unidad administrativa física se traslada (ej. la sede central se muda de zona).**
+- **Lógica Funcional: Actualiza las coordenadas para el módulo de marcación por geocerca (Time & Attendance).**
+- **Localización: Afecta el cálculo de INFOCAL si la unidad sale del departamento de Santa Cruz (tasa del 1% deja de aplicar).**
+
+**POSITION\_ASSIGNED**
+
+- **Gatillo y Naturaleza: Sincrónico. Vincula oficialmente al trabajador con una plaza presupuestada.**
+- **Lógica Funcional: Valida que la posición tenga presupuesto y que el sueldo pactado sea >= Bs 3.300 (SMN 2026).**
+- **UI e IA:**
+  - **UI: Actualización del organigrama en tiempo real.**
+- **Invariantes: Control de Plazas (Headcount): impide asignar personal si no hay plazas vacantes autorizadas.**
+
+**POSITION\_VACATED**
+
+- **Gatillo y Naturaleza: Asincrónico. Disparado cuando una persona deja su puesto (promoción o retiro).**
+- **Lógica Funcional: Notifica a Reclutamiento (ATS) que la plaza está disponible para ser publicada.**
+- **UI e IA:**
+  - **IA: Recomienda candidatos internos para sucesión basados en el Talent Inventory.**
+
+**ACADEMIC\_PROFILE\_RANK\_UPDATED**
+
+- **Gatillo y Naturaleza: Sincrónico (Tenant Educación). Disparado por la aprobación de un ascenso en el escalafón docente por méritos académicos.**
+- **Lógica Funcional: Actualiza la categoría del docente (ej. de Auxiliar a Titular). Dispara automáticamente una adenda salarial por cambio de rango.**
+- **UI e IA:**
+  - **UI: Notificación de felicitación al docente en su ESS.**
+- **Invariantes: Valida que el docente tenga los títulos académicos necesarios registrados y validados en el Kardex Digital antes de permitir el ascenso.**
 ---
 
 ## Diccionario de Datos

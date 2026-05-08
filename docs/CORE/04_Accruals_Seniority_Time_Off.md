@@ -50,16 +50,91 @@
 
 ## Eventos de Dominio
 
-* **`LEAVE_REQUEST_SUBMITTED` (Sync):** Crea transacción Pending. Soft-Booking de días.
-* **`LEAVE_REQUEST_MANAGER_APPROVED / REJECTED` (Async):** Aprobación MSS, notifica a Scheduling.
-* **`VACATION_BALANCE_THRESHOLD_LOW` (Sync/Bloqueante):** Intercepta si días pedidos > saldo.
-* **`ACCRUAL_BALANCE_DEDUCTED` (Async):** Hard-Deduction irreversible en el Vault.
-* **`RANK_UPGRADE_ELIGIBILITY_REACHED` (Async):** Motor cronológico de Educación. Notifica a Comisión.
-* **`QUINQUENIO_ELIGIBILITY_REACHED` (Async):** Habilita derecho de cobro a 60 meses. Notifica Finanzas.
-* **`QUINQUENIO_REQUESTED` (Sync):** Inicia cronómetro de 30 días para pago.
-* **`QUINQUENIO_CALCULATION_FINALIZED` (Async):** Calcula promedio de los últimos 3 meses (Total Ganado).
-* **`QUINQUENIO_PAYMENT_OVERDUE` (Async):** Alerta crítica día 31. Aplica Multa 30% automáticamente.
-* **`QUINQUENIO_PAYMENT_PROCESSED` (Sync):** Resetea contador en Vault, mantiene antigüedad.
+**4. Contexto: Accruals & Time-Off (Reloj Legal de Beneficios)**
+
+**Eventos de acumulación de derechos por el paso del tiempo y solicitudes de ausencia.**
+
+**LEAVE\_REQUEST\_SUBMITTED**
+
+- **Gatillo y Naturaleza (Sync): Acción manual del colaborador desde el ESS (Self-Service). Es Sincrónico para validar disponibilidad inmediata en el AccrualVault antes de permitir el envío.**
+- **Lógica Funcional y Efectos: Crea una LeaveTransaction en estado Pending. El sistema realiza una "Reserva" (Soft-Booking) de días en el saldo para evitar solicitudes duplicadas que excedan el cupo.**
+- **UI e IA:**
+  - **UI: Calendario interactivo con feriados de Santa Cruz resaltados (24 de septiembre).**
+  - **IA: Detecta si la fecha solicitada coincide con picos históricos de rotación o demanda en Retail, sugiriendo al supervisor la viabilidad de la aprobación.**
+- **Localización: Valida automáticamente si el tipo de permiso (maternidad, duelo, nupcias) requiere carga de evidencia en el Digital Kardex.**
+- **Invariantes: No permite solicitudes en fechas pasadas sin un rol de "Admin Override" con auditoría.**
+
+**LEAVE\_REQUEST\_MANAGER\_APPROVED / REJECTED**
+
+- **Gatillo y Naturaleza (Async): Acción del supervisor vía MSS (Manager Self-Service). Es Asincrónico para permitir la orquestación de notificaciones.**
+- **Lógica Funcional:**
+  - **Approved: Cambia el estado de la transacción a Approved. Si la fecha de inicio es menor a 48h, notifica a Scheduling para buscar un suplente.**
+  - **Rejected: Libera la "Reserva" (Soft-Booking) en el vault.**
+- **UI e IA:**
+  - **UI: Notificación Push inmediata al empleado.**
+  - **IA: Aprende los motivos de rechazo comunes del manager para optimizar futuras solicitudes.**
+- **Invariantes: Un manager no puede aprobar su propia solicitud (Segregación de Funciones).**
+
+**VACATION\_BALANCE\_THRESHOLD\_LOW**
+
+- **Gatillo y Naturaleza (Sync): Motor de reglas del AccrualVault durante la solicitud.**
+- **Lógica Funcional: Intercepta la solicitud si Saldo\_Actual - Días\_Solicitados < 0.**
+- **UI e IA:**
+  - **UI: Bloqueo del botón "Enviar" con tooltip: "Días insuficientes". En ONGs, puede permitir saldo negativo si existe una política de "Anticipo de Vacaciones" vinculada al proyecto.**
+  - **IA: Estima en cuántos meses el empleado recuperará el saldo necesario basado en su tasa de devengamiento (15, 20 o 30 días según antigüedad).**
+
+**ACCRUAL\_BALANCE\_DEDUCTED**
+
+- **Gatillo y Naturaleza (Async): Registro contable final tras la aprobación de la ausencia o el cierre del periodo.**
+- **Lógica Funcional: Impacta el AccrualVault de forma definitiva (Hard-Deduction). Genera un asiento de auditoría inalterable.**
+- **Impacto en Invariantes: Garantiza que la suma de todos los movimientos de salida coincida con la reducción del saldo maestro.**
+
+**Seniority Milestones (Quinquenios y Escalafón)**
+
+` `**RANK\_UPGRADE\_ELIGIBILITY\_REACHED**
+
+- **Gatillo y Naturaleza (Async): Motor cronológico de Educación.**
+- **Lógica Funcional: El sistema detecta que el docente cumplió los años requeridos en su categoría actual. Notifica a la Comisión Académica.**
+- **UI e IA:**
+  - **UI: Alerta en el dashboard de RRHH: "Docente elegible para ascenso de escalafón".**
+  - **IA: Analiza si el docente tiene los certificados de postgrado validados en el Kardex para confirmar el ascenso automático.**
+- **Invariantes: El cambio de rango no ocurre hasta que se registre el evento ACADEMIC\_PROFILE\_RANK\_UPDATED.**
+
+**QUINQUENIO\_ELIGIBILITY\_REACHED**
+
+- **Gatillo y Naturaleza (Async): Disparado al cumplir 60 meses de antigüedad ininterrumpida.**
+- **Lógica Funcional: Habilita el derecho al cobro de la indemnización acumulada. Notifica proactivamente a Finanzas para la provisión de fondos.**
+- **Localización: En Bolivia, el quinquenio es un derecho consolidado a los 5 años, independientemente de si el empleado continúa trabajando.**
+- **Impacto en Invariantes: Inderogabilidad: El sistema no permite "resetear" la antigüedad para el Bono de Antigüedad, solo para la bolsa de indemnización.**
+
+**QUINQUENIO\_REQUESTED**
+
+- **Gatillo y Naturaleza (Sync): Firma digital de la solicitud por el empleado en el ESS.**
+- **Lógica Funcional: Inicia el cronómetro legal de 30 días calendario para el pago (P8). Bloquea cualquier modificación retroactiva en el salario del último trimestre.**
+- **Invariantes: Solo se puede solicitar si la antigüedad es un múltiplo exacto de 60 meses o superior.**
+
+**QUINQUENIO\_CALCULATION\_FINALIZED**
+
+- **Gatillo y Naturaleza (Async): Motor de Payroll.**
+- **Lógica Funcional: Calcula el promedio del "Total Ganado" de los últimos 3 meses (90 días).**
+- **UI e IA:**
+  - **IA: Identifica si hubo incrementos salariales atípicos en los últimos 3 meses que pudieran inflar el quinquenio (Riesgo de fraude interno).**
+- **Invariantes: Base Inviolable: El cálculo debe incluir todas las variables (comisiones, recargos) percibidas en el trimestre anterior.**
+
+**QUINQUENIO\_PAYMENT\_OVERDUE**
+
+- **Gatillo y Naturaleza (Async): Alerta crítica al cumplir 31 días desde la solicitud sin registro de pago.**
+- **Lógica Funcional: Aplica automáticamente la Multa del 30% sobre el monto total de la indemnización, según normativa boliviana.**
+- **UI e IA:**
+  - **UI: Alerta roja "Nivel Crítico" enviada a la Gerencia General y Legal.**
+- **Invariantes: El sistema no permite ignorar la multa una vez disparada, asegurando cumplimiento legal estricto.**
+
+**QUINQUENIO\_PAYMENT\_PROCESSED**
+
+- **Gatillo y Naturaleza (Sync): Registro del comprobante de transferencia o cheque.**
+- **Lógica Funcional: Resetea el contador de quinquenios en el AccrualVault. Archiva la liquidación como evidencia legal.**
+- **Impacto en Invariantes: El pago de quinquenio no rompe la continuidad laboral; la fecha de ingreso original se mantiene inalterable para el escalafón y las vacaciones.**
+
 
 ---
 

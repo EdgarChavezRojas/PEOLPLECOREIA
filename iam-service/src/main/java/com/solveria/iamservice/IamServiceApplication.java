@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
         exclude = {
@@ -17,6 +18,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
             RedisRepositoriesAutoConfiguration.class
         })
 @EnableConfigurationProperties(JwtProperties.class)
+@EnableScheduling
 public class IamServiceApplication {
 
     public static void main(String[] args) {

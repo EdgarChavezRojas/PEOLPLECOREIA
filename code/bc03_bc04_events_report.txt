@@ -1,0 +1,494 @@
+================================================================================
+ BC-03 & BC-04 ENRICHED DOMAIN EVENTS — MANDATORY CODE DUMP REPORT
+ Generated: 2026-05-06T19:27-04:00
+================================================================================
+
+TABLE OF CONTENTS
+─────────────────
+ TASK 1: NEW EVENT RECORDS (7 files)
+   1.1  BC-03: DocumentRecordedEvent.java
+   1.2  BC-03: DocentAcademicTitleVerifiedEvent.java
+   1.3  BC-03: OffboardingBlockedByAssetsEvent.java
+   1.4  BC-04: SeniorityMilestoneReachedEvent.java
+   1.5  BC-04: AccrualBalanceUpdatedEvent.java
+   1.6  BC-04: QuinquenioEligibilityReachedEvent.java
+   1.7  BC-04: QuinquenioPaymentOverdueEvent.java
+
+ TASK 2: MODIFIED FILES — EVENT EMISSION INJECTION (6 files)
+   2.1  DocumentRecord.java — record(), approve()
+   2.2  CheckOffboardingAssetsService.java — publishBlockedEvent()
+   2.3  AccrualBalance.java — accrueVacation(), addSeniorityMilestone()
+   2.4  QuinquenioProvision.java — markEligible(), evaluatePenalty()
+   2.5  QuinquenioPolicy.java — PENALTY_RATE constant
+   2.6  AssignedAssetRepositoryPort.java — findPendingAssetIds()
+
+================================================================================
+ TASK 1: NEW EVENT RECORDS
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.1  BC-03: DocumentRecordedEvent.java
+ Path: dossier/domain/event/DocumentRecordedEvent.java
+ Trigger: UploadToDigitalKardex
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.dossier.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * Emitido al cargar un documento al Digital Kardex.
+ * Trigger: UploadToDigitalKardex.
+ * Contiene el hash SHA-256 para garantizar inalterabilidad ante auditorías.
+ */
+public record DocumentRecordedEvent(
+    UUID documentId,
+    UUID personId,
+    String sha256Hash,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public DocumentRecordedEvent {
+    if (documentId == null) {
+      throw new IllegalArgumentException("documentId es requerido");
+    }
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (sha256Hash == null || sha256Hash.isBlank()) {
+      throw new IllegalArgumentException("sha256Hash es requerido");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+  }
+
+  public static DocumentRecordedEvent now(UUID documentId, UUID personId, String sha256Hash) {
+    return new DocumentRecordedEvent(documentId, personId, sha256Hash, Instant.now());
+  }
+}
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.2  BC-03: DocentAcademicTitleVerifiedEvent.java
+ Path: dossier/domain/event/DocentAcademicTitleVerifiedEvent.java
+ Trigger: EducationPolicyValidation
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.dossier.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * Emitido al validar un título académico docente contra Provisión Nacional.
+ * Trigger: EducationPolicyValidation.
+ * Habilita posibles ascensos de categoría docente en el motor de Escalafón.
+ */
+public record DocentAcademicTitleVerifiedEvent(
+    UUID personId,
+    String titleLevel,
+    boolean provNacional,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public DocentAcademicTitleVerifiedEvent {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (titleLevel == null || titleLevel.isBlank()) {
+      throw new IllegalArgumentException("titleLevel es requerido");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+  }
+
+  public static DocentAcademicTitleVerifiedEvent now(
+      UUID personId, String titleLevel, boolean provNacional) {
+    return new DocentAcademicTitleVerifiedEvent(personId, titleLevel, provNacional, Instant.now());
+  }
+}
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.3  BC-03: OffboardingBlockedByAssetsEvent.java
+ Path: dossier/domain/event/OffboardingBlockedByAssetsEvent.java
+ Trigger: RelationshipTerminationInitiated
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.dossier.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Emitido cuando el offboarding se bloquea por activos sin devolver.
+ * Trigger: RelationshipTerminationInitiated.
+ * El proceso de liquidación (Finiquito) no puede avanzar a "Aprobado"
+ * si existen activos marcados como "En Custodia".
+ */
+public record OffboardingBlockedByAssetsEvent(
+    UUID personId,
+    List<UUID> unreturnedAssetIds,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public OffboardingBlockedByAssetsEvent {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (unreturnedAssetIds == null || unreturnedAssetIds.isEmpty()) {
+      throw new IllegalArgumentException("unreturnedAssetIds es requerido y no puede estar vacío");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+    unreturnedAssetIds = List.copyOf(unreturnedAssetIds);
+  }
+
+  public static OffboardingBlockedByAssetsEvent now(UUID personId, List<UUID> unreturnedAssetIds) {
+    return new OffboardingBlockedByAssetsEvent(personId, unreturnedAssetIds, Instant.now());
+  }
+}
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.4  BC-04: SeniorityMilestoneReachedEvent.java
+ Path: accruals/domain/event/SeniorityMilestoneReachedEvent.java
+ Trigger: MonthlyAccrualTick
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.accruals.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * Emitido al alcanzar un hito de antigüedad durante el tick mensual de accrual.
+ * Trigger: MonthlyAccrualTick.
+ * expectedSmMultiplier indica el multiplicador de Salario Mínimo esperado
+ * para el cálculo del Bono de Antigüedad.
+ */
+public record SeniorityMilestoneReachedEvent(
+    UUID personId,
+    int newSeniorityYears,
+    int expectedSmMultiplier,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public SeniorityMilestoneReachedEvent {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (newSeniorityYears <= 0) {
+      throw new IllegalArgumentException("newSeniorityYears debe ser positivo");
+    }
+    if (expectedSmMultiplier <= 0) {
+      throw new IllegalArgumentException("expectedSmMultiplier debe ser positivo");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+  }
+
+  public static SeniorityMilestoneReachedEvent now(
+      UUID personId, int newSeniorityYears, int expectedSmMultiplier) {
+    return new SeniorityMilestoneReachedEvent(
+        personId, newSeniorityYears, expectedSmMultiplier, Instant.now());
+  }
+}
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.5  BC-04: AccrualBalanceUpdatedEvent.java
+ Path: accruals/domain/event/AccrualBalanceUpdatedEvent.java
+ Trigger: VacationAccrued
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.accruals.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * Emitido cuando el saldo de un beneficio acumulable se actualiza.
+ * Trigger: VacationAccrued.
+ * Refleja el nuevo balance tras el devengamiento de vacaciones u otros beneficios.
+ */
+public record AccrualBalanceUpdatedEvent(
+    UUID personId,
+    String benefitType,
+    BigDecimal newBalance,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public AccrualBalanceUpdatedEvent {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (benefitType == null || benefitType.isBlank()) {
+      throw new IllegalArgumentException("benefitType es requerido");
+    }
+    if (newBalance == null) {
+      throw new IllegalArgumentException("newBalance es requerido");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+  }
+
+  public static AccrualBalanceUpdatedEvent now(
+      UUID personId, String benefitType, BigDecimal newBalance) {
+    return new AccrualBalanceUpdatedEvent(personId, benefitType, newBalance, Instant.now());
+  }
+}
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.6  BC-04: QuinquenioEligibilityReachedEvent.java
+ Path: accruals/domain/event/QuinquenioEligibilityReachedEvent.java
+ Trigger: 60MonthsSeniorityDetected
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.accruals.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Emitido al detectar 60 meses de antigüedad ininterrumpida.
+ * Trigger: 60MonthsSeniorityDetected.
+ * Habilita el derecho al cobro de la indemnización acumulada (Quinquenio).
+ * En Bolivia, el quinquenio es un derecho consolidado a los 5 años.
+ */
+public record QuinquenioEligibilityReachedEvent(
+    UUID personId,
+    LocalDate milestoneDate,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public QuinquenioEligibilityReachedEvent {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (milestoneDate == null) {
+      throw new IllegalArgumentException("milestoneDate es requerido");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+  }
+
+  public static QuinquenioEligibilityReachedEvent now(UUID personId, LocalDate milestoneDate) {
+    return new QuinquenioEligibilityReachedEvent(personId, milestoneDate, Instant.now());
+  }
+}
+
+────────────────────────────────────────────────────────────────────────────────
+ 1.7  BC-04: QuinquenioPaymentOverdueEvent.java
+ Path: accruals/domain/event/QuinquenioPaymentOverdueEvent.java
+ Trigger: Day31WithoutPayment
+────────────────────────────────────────────────────────────────────────────────
+
+package com.solveria.core.accruals.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * Emitido al cumplir 31 días desde la solicitud sin registro de pago.
+ * Trigger: Day31WithoutPayment.
+ * Aplica automáticamente la Multa del 30% sobre el monto total de la indemnización,
+ * según normativa boliviana. El sistema no permite ignorar la multa una vez disparada.
+ */
+public record QuinquenioPaymentOverdueEvent(
+    UUID personId,
+    UUID provisionId,
+    BigDecimal penaltyAmount,
+    Instant occurredAt
+) implements DomainEvent {
+
+  public QuinquenioPaymentOverdueEvent {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido");
+    }
+    if (provisionId == null) {
+      throw new IllegalArgumentException("provisionId es requerido");
+    }
+    if (penaltyAmount == null || penaltyAmount.signum() <= 0) {
+      throw new IllegalArgumentException("penaltyAmount debe ser positivo");
+    }
+    if (occurredAt == null) {
+      throw new IllegalArgumentException("occurredAt es requerido");
+    }
+  }
+
+  public static QuinquenioPaymentOverdueEvent now(
+      UUID personId, UUID provisionId, BigDecimal penaltyAmount) {
+    return new QuinquenioPaymentOverdueEvent(personId, provisionId, penaltyAmount, Instant.now());
+  }
+}
+
+================================================================================
+ TASK 2: MODIFIED FILES — EVENT EMISSION INJECTION SNIPPETS
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+ 2.1  DocumentRecord.java — MODIFIED SNIPPETS
+ Path: dossier/domain/model/DocumentRecord.java
+────────────────────────────────────────────────────────────────────────────────
+
+>>> NEW IMPORTS ADDED:
+  import com.solveria.core.dossier.domain.event.DocentAcademicTitleVerifiedEvent;
+  import com.solveria.core.dossier.domain.event.DocumentRecordedEvent;
+
+>>> record() method — LINES ADDED after line 75:
+    record.addDomainEvent(DossierEvent.now(DossierEventType.DOCUMENT_RECORDED));
++   record.addDomainEvent(DocumentRecordedEvent.now(
++       record.getDocId(), relationshipId, metadata.hashSha256()));
+    return record;
+
+>>> approve() method — LINES ADDED after line 86:
+    if (docCategory == DocumentCategory.ACADEMIC) {
+      addDomainEvent(DossierEvent.now(DossierEventType.DOCENT_ACADEMIC_TITLE_VERIFIED));
++     addDomainEvent(DocentAcademicTitleVerifiedEvent.now(
++         relationshipId, docType, true));
+    }
+
+────────────────────────────────────────────────────────────────────────────────
+ 2.2  CheckOffboardingAssetsService.java — MODIFIED SNIPPETS
+ Path: dossier/application/service/CheckOffboardingAssetsService.java
+────────────────────────────────────────────────────────────────────────────────
+
+>>> NEW IMPORTS ADDED:
+  import com.solveria.core.dossier.domain.event.OffboardingBlockedByAssetsEvent;
+  import java.util.List;
+  import java.util.UUID;
+
+>>> publishBlockedEvent() method — LINES ADDED at top of method:
+  private void publishBlockedEvent(CheckOffboardingAssetsCommand command) {
++   List<UUID> unreturnedIds = assignedAssetRepository.findPendingAssetIds(command.workerId());
++   OffboardingBlockedByAssetsEvent enrichedEvent =
++       OffboardingBlockedByAssetsEvent.now(command.workerId(), unreturnedIds);
++
+    String payload;
+    try {
+      payload =
+          objectMapper.writeValueAsString(
+              Map.of(
+                  "workerId", command.workerId(),
+                  "tenantId", command.tenantId(),
++                 "unreturnedAssetIds", unreturnedIds,
+                  "eventType", DossierEventType.OFFBOARDING_BLOCKED_BY_ASSETS.name()));
+
+────────────────────────────────────────────────────────────────────────────────
+ 2.3  AccrualBalance.java — MODIFIED SNIPPETS
+ Path: accruals/domain/model/AccrualBalance.java
+────────────────────────────────────────────────────────────────────────────────
+
+>>> NEW IMPORTS ADDED:
+  import com.solveria.core.accruals.domain.event.AccrualBalanceUpdatedEvent;
+  import com.solveria.core.accruals.domain.event.SeniorityMilestoneReachedEvent;
+
+>>> accrueVacation() method — LINES ADDED after line 139:
+    currentBalance = currentBalance.add(BigDecimal.valueOf(days));
+    lastAccrualDate = accrualDate != null ? accrualDate : LocalDate.now();
++   addDomainEvent(AccrualBalanceUpdatedEvent.now(
++       relationshipId, balanceType.name(), currentBalance));
+
+>>> addSeniorityMilestone() method — LINES ADDED after line 151:
+    seniorityMilestones.add(milestone);
++   int years = milestone.monthsCompleted() / 12;
++   int smMultiplier = years >= 25 ? 26 : years >= 20 ? 22 : years >= 15 ? 18
++       : years >= 10 ? 14 : years >= 5 ? 10 : years >= 2 ? 5 : 0;
++   if (smMultiplier > 0) {
++     addDomainEvent(SeniorityMilestoneReachedEvent.now(
++         relationshipId, years, smMultiplier));
++   }
+
+────────────────────────────────────────────────────────────────────────────────
+ 2.4  QuinquenioProvision.java — MODIFIED SNIPPETS
+ Path: accruals/domain/model/QuinquenioProvision.java
+────────────────────────────────────────────────────────────────────────────────
+
+>>> NEW IMPORTS ADDED:
+  import com.solveria.core.accruals.domain.event.QuinquenioEligibilityReachedEvent;
+  import com.solveria.core.accruals.domain.event.QuinquenioPaymentOverdueEvent;
+
+>>> markEligible() method — LINES ADDED after line 61:
+  public void markEligible() {
+    addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_ELIGIBILITY_REACHED));
++   addDomainEvent(QuinquenioEligibilityReachedEvent.now(
++       relationshipId, LocalDate.now()));
+  }
+
+>>> evaluatePenalty() method — LINES ADDED after line 84:
+    if (QuinquenioPolicy.isPaymentOverdue(requestDate, today, paymentDate)) {
+      penaltyActive = true;
+      addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_OVERDUE));
++     BigDecimal penalty = totalAccumulated.multiply(QuinquenioPolicy.PENALTY_RATE);
++     addDomainEvent(QuinquenioPaymentOverdueEvent.now(
++         relationshipId, provisionId, penalty));
+    }
+
+────────────────────────────────────────────────────────────────────────────────
+ 2.5  QuinquenioPolicy.java — MODIFIED SNIPPET
+ Path: accruals/domain/policy/QuinquenioPolicy.java
+────────────────────────────────────────────────────────────────────────────────
+
+>>> NEW IMPORT ADDED:
+  import java.math.BigDecimal;
+
+>>> CONSTANT ADDED:
++ /** Multa del 30% según normativa boliviana (Art. 9 DS 28699). */
++ public static final BigDecimal PENALTY_RATE = new BigDecimal("0.30");
+
+────────────────────────────────────────────────────────────────────────────────
+ 2.6  AssignedAssetRepositoryPort.java — MODIFIED SNIPPET
+ Path: dossier/application/port/AssignedAssetRepositoryPort.java
+────────────────────────────────────────────────────────────────────────────────
+
+>>> NEW IMPORT ADDED:
+  import java.util.List;
+
+>>> METHOD ADDED:
++ List<UUID> findPendingAssetIds(UUID workerId);
+
+================================================================================
+ EVENT-TO-TRIGGER MAPPING MATRIX
+================================================================================
+
+ EVENT NAME                         | BC  | TRIGGER                        | EMISSION SITE
+ ─────────────────────────────────────────────────────────────────────────────────────────────
+ DocumentRecordedEvent              | 03  | UploadToDigitalKardex          | DocumentRecord.record()
+ DocentAcademicTitleVerifiedEvent   | 03  | EducationPolicyValidation      | DocumentRecord.approve()
+ OffboardingBlockedByAssetsEvent    | 03  | RelationshipTerminationInit    | CheckOffboardingAssetsService
+ SeniorityMilestoneReachedEvent     | 04  | MonthlyAccrualTick             | AccrualBalance.addSeniorityMilestone()
+ AccrualBalanceUpdatedEvent         | 04  | VacationAccrued                | AccrualBalance.accrueVacation()
+ QuinquenioEligibilityReachedEvent  | 04  | 60MonthsSeniorityDetected      | QuinquenioProvision.markEligible()
+ QuinquenioPaymentOverdueEvent      | 04  | Day31WithoutPayment            | QuinquenioProvision.evaluatePenalty()
+
+================================================================================
+ NOTES
+================================================================================
+ 1. All 7 event records implement DomainEvent (occurredAt() contract).
+ 2. Zero JPA/Spring annotations in domain/event records — domain purity preserved.
+ 3. Enriched events are emitted ALONGSIDE existing type-only events (DossierEvent/AccrualEvent),
+    not replacing them. This maintains backward compatibility with existing outbox subscribers.
+ 4. SeniorityMilestoneReachedEvent.expectedSmMultiplier uses the Bolivian DS 21060 scale:
+    2-4y=5%, 5-7y=11%, 8-10y=18%, 11-14y=26%, 15-19y=34%, 20-24y=42%, 25+y=50%
+    mapped to integer multiplier factor per SMN base.
+ 5. QuinquenioPaymentOverdueEvent.penaltyAmount = totalAccumulated * 0.30 (Art. 9 DS 28699).
+ 6. AssignedAssetRepositoryPort.findPendingAssetIds() was added to the port interface.
+    The infrastructure adapter will need implementation (out of scope for this task).
+================================================================================
+ END OF REPORT
+================================================================================

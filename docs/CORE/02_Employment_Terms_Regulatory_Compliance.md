@@ -50,14 +50,101 @@
 
 ## Eventos de Dominio
 
-* **`CONTRACT_DRAFTED` (Sync):** Crea contrato en estado latente. Bloquea la Position y reserva fondos.
-* **`CONTRACT_APPROVED` (Async):** Formaliza el vínculo tras SoD. Genera DocumentRecord.
-* **`CONTRACT_LEGAL_PISO_VIOLATED` (Sync/Bloqueante):** Intercepta salario < Bs 3.300.
-* **`CONTRACT_TÁCITA_RECONDUCCIÓN_RISK` (Async):** Disparado a los T-90 días del vencimiento del plazo fijo.
-* **`MAX_RENEWALS_REACHED` (Sync/Bloqueante):** Bloquea si contrato llega a 2 renovaciones de plazo fijo.
-* **`ADENDUM_APPROVAL_REQUIRED` (Sync):** Crea adenda Pending, mantiene actual Active.
-* **`ADDENDUM_SALARY_ADJUSTMENT_APPROVED` (Async):** Actualiza básico, recalcula Bono de Antigüedad y RC-IVA proyectado.
-* **`CONTRACT_TERMINATED` (Sync/Async):** Cambia a Terminated, notifica bajas y dispara Finiquito.
+**Eventos que dictan las reglas de juego para Tiempo, Nómina y Auditoría Legal.**
+
+**CONTRACT\_DRAFTED**
+
+**Registro del objeto legal en estado latente.**
+
+- **Gatillo y Naturaleza (Sync): Acción manual del Analista de RRHH o automatismo del módulo de Reclutamiento (ATS). Es Sincrónico para validar que la Position esté vacante antes de permitir el borrador.**
+- **Lógica Funcional y Efectos Colaterales: Crea un Contract en estado Draft. Bloquea la Position para que no se asigne a otro candidato. El módulo de Budget Control recibe una reserva preventiva de fondos (Pre-encumbrance).**
+- **UI e IA:**
+  - **UI: Indicador de "Posición Reservada".**
+  - **IA: El sistema analiza si el sueldo propuesto está alineado con la banda salarial (Grade/Band) del cargo para evitar inequidades internas.**
+- **Localización: Se parametriza el tipo de contrato (Indefinido, Plazo Fijo, Obra). En ONGs, se exige el ID del Proyecto/Donante como metadato obligatorio.**
+- **Impacto en Invariantes: Protege la "Control de Plazas": No se puede draftear un contrato si el *headcount* está al 100%.**
+
+**CONTRACT\_APPROVED**
+
+**Formalización del vínculo tras la Segregación de Funciones (SoD).**
+
+- **Gatillo y Naturaleza (Async): Aprobación por un usuario de mayor jerarquía (Gerente de RRHH o Finanzas). Es Asincrónico para la cadena de notificaciones, pero Sincrónico para la persistencia del estado.**
+- **Lógica Funcional: Cambia el estado a Approved. Genera el DocumentRecord en el Digital Kardex. Si la effective\_from es hoy, activa automáticamente la Relationship a Active.**
+- **UI e IA:**
+  - **UI: Check de validación verde. Generación automática del PDF con firma digital o QR de validación.**
+  - **IA: Registra el tiempo de ciclo desde el borrador hasta la aprobación para KPIs de eficiencia de contratación.**
+- **Diseño para Localización: Si el empleado está en Santa Cruz y el Tenant es Corporativo, se inyecta la regla del Aporte INFOCAL (1%) en el motor de nómina para este contrato.**
+- **Impacto en Invariantes: Cumple con la "Segregación de Funciones": Un contrato no puede ser aprobado por la misma persona que lo drafteó.**
+
+` `**CONTRACT\_LEGAL\_PISO\_VIOLATED**
+
+**Salvaguarda contra la ilegalidad salarial.**
+
+- **Gatillo y Naturaleza (Sync): Motor de reglas de cumplimiento (Compliance Engine). Es Sincrónico y Bloqueante.**
+- **Lógica Funcional: Intercepta cualquier intento de guardar un salario menor al SMN vigente ($Bs. 3.300$). Detiene la transacción y registra un log de intento de violación normativa.**
+- **UI e IA:**
+  - **UI: Banner de error crítico: "Violación de Ley: El haber básico no puede ser inferior a Bs. 3.300".**
+  - **IA: Genera un insight de riesgo legal para el Tenant, alertando sobre posibles multas administrativas.**
+- **Diseño para Localización: El valor del SMN ($Bs. 3.300$) es una variable global versionada. Si el gobierno decreta un incremento, se actualiza la política y el evento reacciona al nuevo umbral.**
+- **Impacto en Invariantes: Protege el "Piso Salarial Legal".**
+
+**CONTRACT\_TÁCITA\_RECONDUCCIÓN\_RISK**
+
+**Alerta preventiva de conversión de contrato.**
+
+- **Gatillo y Naturaleza (Async): Proceso programado (Cron Job) que escanea contratos de Plazo Fijo.**
+- **Lógica Funcional: Se dispara a los $T-90$ días de la fecha de vencimiento. Envía alertas al supervisor y a RRHH.**
+- **UI e IA:**
+  - **UI: Widget en el Dashboard: "Contratos con riesgo de reconducción".**
+  - **IA: Predice el impacto financiero si el contrato se vuelve indefinido (Cálculo de provisión de indemnización por años de servicio).**
+- **Diseño para Localización: Basado en el Art. 12 de la LGT boliviana. El sistema diferencia si es el primer o segundo contrato a plazo fijo.**
+- **Impacto en Invariantes: Mantiene la "Integridad Temporal": Evita que el sistema mantenga contratos vencidos activos sin adenda.**
+
+**MAX\_RENEWALS\_REACHED**
+
+**Bloqueo de fraude a la ley por renovaciones sucesivas.**
+
+- **Gatillo y Naturaleza (Sync): Motor de reglas al intentar crear una nueva adenda de prórroga. Sincrónico y Bloqueante.**
+- **Lógica Funcional: Si el contrato ha llegado a 2 renovaciones de plazo fijo (límite en Bolivia), bloquea cualquier opción que no sea "Conversión a Indefinido" o "Terminación".**
+- **UI e IA:**
+  - **UI: Opción de "Extender Plazo Fijo" deshabilitada con tooltip explicativo sobre el límite legal.**
+- **Localización: Implementación estricta de la jurisprudencia boliviana sobre fraude a la ley en contratos sucesivos.**
+- **Impacto en Invariantes: Garantiza que la "Naturaleza del Vínculo" sea legalmente coherente.**
+
+**ADENDUM\_APPROVAL\_REQUIRED**
+
+**Control de cambios en las condiciones pactadas.**
+
+- **Gatillo y Naturaleza (Sync): Modificación de salario, cargo o jornada en un contrato activo.**
+- **Lógica Funcional: Crea una versión Pending de la adenda. Mantiene la versión actual del contrato como Active hasta que la adenda sea aprobada.**
+- **UI e IA:**
+  - **UI: Comparativa visual "Lado a Lado" (Antes vs. Después) para el aprobador.**
+- **Diseño para Localización: Si el cambio es de Santa Cruz a otra ciudad, alerta sobre cambios en feriados regionales y aportes patronales específicos.**
+- **Impacto en Invariantes: Soporta el "Effective Dating": Los cambios no sobreescriben, crean una nueva línea de tiempo.**
+
+**ADDENDUM\_SALARY\_ADJUSTMENT\_APPROVED**
+
+**Impacto financiero y recalibración de beneficios.**
+
+- **Gatillo y Naturaleza (Async): Aprobación final de la adenda salarial.**
+- **Lógica Funcional: Actualiza el haber básico. Notifica al módulo de Seniority & Benefits para recalcular el Bono de Antigüedad (especialmente si el SMN cambió).**
+- **UI e IA:**
+  - **IA: Calcula la "Deriva Salarial": ¿Cuánto aumentó el costo total de la planilla con este ajuste?**
+- **Diseño para Localización: Recalcula el RC-IVA bajo la "Ley de Transparencia" (13% real) para mostrar al empleado su nuevo sueldo neto estimado.**
+- **Impacto en Invariantes: Actualiza la "Base de Cálculo Inviolable" para futuras indemnizaciones.**
+
+**CONTRACT\_TERMINATED**
+
+**Cierre de obligaciones y activación de liquidación.**
+
+- **Gatillo y Naturaleza (Sync/Async): Registro de baja (Renuncia, Despido, Fin de Contrato).**
+- **Lógica Funcional: Cambia el estado a Terminated. Notifica a Social Security & Tax para la baja en la Gestora/Caja. Dispara el workflow de Finiquito con un cronómetro de 15 días.**
+- **UI e IA:**
+  - **UI: Checklist de "Offboarding" (Entrega de activos, firma de finiquito).**
+  - **IA: Análisis de causa raíz de la baja (Entrevista de salida digital) para detectar fugas de talento.**
+- **Diseño para Localización: Calcula automáticamente si corresponde Desahucio (3 salarios) en caso de despido injustificado según ley boliviana.**
+- **Impacto en Invariantes: Libera la Position y desactiva la Relationship para evitar pagos en el siguiente ciclo de nómina.**
+
 
 ---
 
