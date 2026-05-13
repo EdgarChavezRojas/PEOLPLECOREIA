@@ -10,7 +10,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "prl_payroll_approval")
 public class PayrollApprovalJpa extends BaseEntity {
-
+    @Column(name = "payroll_approval_id", updatable = false, columnDefinition = "UUID")
+    private UUID payrollApprovalId;
     @Column(name = "run_ref", nullable = false)
     private UUID runRef;
 
@@ -28,7 +29,8 @@ public class PayrollApprovalJpa extends BaseEntity {
 
     @Column(name = "sod_violation_flag", nullable = false)
     private Boolean sodViolationFlag;
-
+    public UUID getPayrollApprovalId() { return payrollApprovalId; }
+    public void setPayrollApprovalId(UUID payrollApprovalId) { this.payrollApprovalId = payrollApprovalId; }
     public UUID getRunRef() { return runRef; }
     public void setRunRef(UUID runRef) { this.runRef = runRef; }
     public String getStatus() { return status; }

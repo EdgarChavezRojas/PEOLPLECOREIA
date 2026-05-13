@@ -15,13 +15,21 @@ import lombok.NoArgsConstructor;
 public class BenefitAccrual {
 
   private UUID benefitId;
+  private UUID relationshipId;
   private BenefitType benefitType;
   private int fiscalYear;
   private BigDecimal accruedAmount;
   private UUID tenantId;
 
   public static BenefitAccrual open(
-      BenefitType benefitType, int fiscalYear, BigDecimal accruedAmount, UUID tenantId) {
+      UUID relationshipId,
+      BenefitType benefitType,
+      int fiscalYear,
+      BigDecimal accruedAmount,
+      UUID tenantId) {
+    if (relationshipId == null) {
+      throw new IllegalArgumentException("relationshipId is required");
+    }
     if (benefitType == null) {
       throw new IllegalArgumentException("benefitType is required");
     }
@@ -36,6 +44,7 @@ public class BenefitAccrual {
     }
     return BenefitAccrual.builder()
         .benefitId(UUID.randomUUID())
+        .relationshipId(relationshipId)
         .benefitType(benefitType)
         .fiscalYear(fiscalYear)
         .accruedAmount(accruedAmount)

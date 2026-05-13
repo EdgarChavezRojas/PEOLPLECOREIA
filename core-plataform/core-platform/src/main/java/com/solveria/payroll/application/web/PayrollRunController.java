@@ -7,6 +7,8 @@ import com.solveria.payroll.application.port.inbound.ApprovePayrollUseCase;
 import com.solveria.payroll.application.port.inbound.ClosePayrollUseCase;
 import com.solveria.payroll.application.port.inbound.GeneratePayrollUseCase;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

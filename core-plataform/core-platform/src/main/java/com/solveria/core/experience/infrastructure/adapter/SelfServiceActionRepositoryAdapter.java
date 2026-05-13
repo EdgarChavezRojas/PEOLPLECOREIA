@@ -1,6 +1,5 @@
 package com.solveria.core.experience.infrastructure.adapter;
 
-import com.solveria.core.experience.application.port.out.EventOutboxPort;
 import com.solveria.core.experience.application.port.out.SelfServiceActionPO;
 import com.solveria.core.experience.domain.model.SelfServiceAction;
 import com.solveria.core.experience.infrastructure.jpa.SelfServiceActionJpa;
@@ -11,6 +10,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,16 +34,8 @@ public class SelfServiceActionRepositoryAdapter implements SelfServiceActionPO {
   public void save(SelfServiceAction action) {
     List<DomainEvent> events = action.pullDomainEvents();
     SelfServiceActionJpa jpa = mapper.toJpa(action);
-    SelfServiceActionJpa savedJpa = repository.save(jpa);
-    SelfServiceAction saved = mapper.toDomain(savedJpa);
-
-    for (DomainEvent event : events) {
-      eventOutboxPort.publish(
-          "SelfServiceAction",
-          saved.getActionId(),
-          mapper.resolveEventType(event),
-          mapper.toEventPayload(saved, event));
-    }
+     repository.save(jpa);
+    eventOutboxPort.publish(events);
   }
 
   @Override

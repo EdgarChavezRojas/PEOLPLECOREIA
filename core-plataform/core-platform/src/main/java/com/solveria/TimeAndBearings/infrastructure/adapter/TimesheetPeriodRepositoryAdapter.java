@@ -38,8 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Component
 @Transactional
-public class TimesheetPeriodRepositoryAdapter
-        implements TimesheetPeriodRepositoryPort, AttendanceLedgerConsolidationPort {
+public class TimesheetPeriodRepositoryAdapter implements TimesheetPeriodRepositoryPort, AttendanceLedgerConsolidationPort {
 
     private final TimesheetPeriodSpringRepository springRepository;
     private final TimesheetPeriodMapper mapper;
@@ -188,5 +187,10 @@ public class TimesheetPeriodRepositoryAdapter
         //      closed_at = :serverNow WHERE org_unit_id IN (...) AND work_date BETWEEN ...
         //      AND status <> 'CLOSED'
         return 0;
+    }
+
+    @Override
+    public List<EmployeeDailySummary> computeEmployeeDailySummaries(UUID orgUnitId, LocalDate workDate) {
+        return List.of();//revisar este metodo
     }
 }

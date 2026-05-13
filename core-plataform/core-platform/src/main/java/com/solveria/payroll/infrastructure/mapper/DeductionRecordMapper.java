@@ -13,7 +13,7 @@ public interface DeductionRecordMapper {
     @Mapping(target = "isAutomatic", source = "automatic")
     DeductionRecordJpa toJpa(DeductionRecord domain);
 
-    @Mapping(target = "amount", expression = "java(new com.solveria.core.payroll.domain.model.vo.DeductionAmount(jpa.getAmount()))")
+    @Mapping(target = "amount", expression = "java(new com.solveria.payroll.domain.model.vo.DeductionAmount(jpa.getAmount()))")
     @Mapping(target = "isAutomatic", source = "isAutomatic")
     DeductionRecord toDomain(DeductionRecordJpa jpa);
 }

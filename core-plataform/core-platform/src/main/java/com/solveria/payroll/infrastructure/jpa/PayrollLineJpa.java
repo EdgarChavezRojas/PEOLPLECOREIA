@@ -8,7 +8,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "prl_payroll_line")
 public class PayrollLineJpa extends BaseEntity {
-
+    @Column(name = "line_id", updatable = false, columnDefinition = "UUID")
+    private UUID lineId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "run_id")
     private PayrollRunJpa payrollRun;
@@ -36,7 +37,8 @@ public class PayrollLineJpa extends BaseEntity {
 
     @Column(name = "tenant_id")
     private String tenantId;
-
+    public UUID getLineId() { return lineId; }
+    public void setLineId(UUID lineId) { this.lineId = lineId; }
     public PayrollRunJpa getPayrollRun() { return payrollRun; }
     public void setPayrollRun(PayrollRunJpa payrollRun) { this.payrollRun = payrollRun; }
 

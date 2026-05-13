@@ -1,0 +1,858 @@
+﻿
+// PATH: domain\event\QuinquenioRequestedEvent.java
+package com.solveria.core.financial.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Evento (Async): Quinquenio solicitado â€” inicia cronÃ³metro de 30 dÃ­as para pago.
+ * Trigger: Empleado cumple 60 meses continuos de antigÃ¼edad.
+ *
+ * <p>El quinquenio es exento de RC-IVA y deducciones de Gestora.
+ * El paymentDeadline marca la fecha lÃ­mite legal para efectivizar el pago.
+ */
+public record QuinquenioRequestedEvent(
+    UUID personId,
+    BigDecimal quinquenioAmount,
+    BigDecimal averageSalary,
+    LocalDate paymentDeadline,
+    Instant occurredAt)
+    implements DomainEvent {
+
+  public QuinquenioRequestedEvent(
+      UUID personId,
+      BigDecimal quinquenioAmount,
+      BigDecimal averageSalary,
+      LocalDate paymentDeadline) {
+    this(personId, quinquenioAmount, averageSalary, paymentDeadline, Instant.now());
+  }
+}
+
+
+// ============================================================================
+
+// PATH: domain\event\UfvMaintenanceAppliedEvent.java
+package com.solveria.core.financial.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+
+/**
+ * Evento (Async): Mantenimiento de Valor UFV aplicado a saldos de provisiones y crÃ©dito fiscal.
+ * Trigger: Cierre de perÃ­odo contable mensual.
+ *
+ * <p>El factor de actualizaciÃ³n se calcula como ufvFinal / ufvInicial del perÃ­odo.
+ */
+public record UfvMaintenanceAppliedEvent(
+    LocalDate periodStart,
+    LocalDate periodEnd,
+    BigDecimal ufvInicial,
+    BigDecimal ufvFinal,
+    BigDecimal adjustmentFactor,
+    String tenantId,
+    Instant occurredAt)
+    implements DomainEvent {
+
+  public UfvMaintenanceAppliedEvent(
+      LocalDate periodStart,
+      LocalDate periodEnd,
+      BigDecimal ufvInicial,
+      BigDecimal ufvFinal,
+      BigDecimal adjustmentFactor,
+      String tenantId) {
+    this(periodStart, periodEnd, ufvInicial, ufvFinal, adjustmentFactor, tenantId, Instant.now());
+  }
+}
+
+
+// ============================================================================
+
+// PATH: domain\event\PrimaCalculatedEvent.java
+package com.solveria.core.financial.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.Instant;
+
+/**
+ * Evento (Async): Prima Anual / DistribuciÃ³n de Utilidades calculada para un Tenant.
+ * Trigger: Cierre fiscal anual con utilidad neta positiva.
+ *
+ * <p>Invariante P2: Si el Tenant es ONG/FundaciÃ³n o EducaciÃ³n, el monto serÃ¡ ZERO (exenciÃ³n total).
+ * Para Retail/Corporativo, el pozo legal es mÃ¡ximo 25% de la utilidad neta, distribuido
+ * equitativamente si no cubre 1 sueldo por empleado.
+ */
+public record PrimaCalculatedEvent(
+    String tenantId,
+    int fiscalYear,
+    BigDecimal utilidadNeta,
+    BigDecimal poolAmount,
+    BigDecimal perEmployeeAmount,
+    int eligibleCount,
+    boolean prorateApplied,
+    Instant occurredAt)
+    implements DomainEvent {
+
+  public PrimaCalculatedEvent(
+      String tenantId,
+      int fiscalYear,
+      BigDecimal utilidadNeta,
+      BigDecimal poolAmount,
+      BigDecimal perEmployeeAmount,
+      int eligibleCount,
+      boolean prorateApplied) {
+    this(
+        tenantId,
+        fiscalYear,
+        utilidadNeta,
+        poolAmount,
+        perEmployeeAmount,
+        eligibleCount,
+        prorateApplied,
+        Instant.now());
+  }
+}
+
+
+// ============================================================================
+
+// PATH: domain\model\vo\UfvProviderUnavailableException.java
+package com.solveria.core.financial.domain.model.vo;
+
+/**
+ * ExcepciÃ³n de dominio: El proveedor de cotizaciÃ³n UFV (Banco Central de Bolivia)
+ * no estÃ¡ disponible o no respondiÃ³ dentro del timeout establecido (5 segundos).
+ *
+ * <p>Clase pura sin anotaciones de infraestructura.
+ */
+public class UfvProviderUnavailableException extends RuntimeException {
+
+  public UfvProviderUnavailableException(String message) {
+    super(message);
+  }
+
+  public UfvProviderUnavailableException(String message, Throwable cause) {
+    super(message, cause);
+  }
+}
+
+
+// ============================================================================
+
+// PATH: application\port\UfvQuotationPort.java
+package com.solveria.core.financial.application.port;
+
+import com.solveria.core.financial.domain.model.vo.UfvProviderUnavailableException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+/**
+ * Secondary Port: ObtenciÃ³n de cotizaciÃ³n UFV del Banco Central de Bolivia.
+ *
+ * <p>El adaptador debe implementar timeout estricto de 5 segundos.
+ * Si el proveedor no responde, lanza {@link UfvProviderUnavailableException}.
+ */
+public interface UfvQuotationPort {
+
+  /**
+   * Obtiene el valor de la UFV para una fecha determinada.
+   *
+   * @param date Fecha de consulta
+   * @return Valor de la UFV en Bolivianos
+   * @throws UfvProviderUnavailableException si el servicio del BCB no responde
+   */
+  BigDecimal getUfvValue(LocalDate date) throws UfvProviderUnavailableException;
+}
+
+
+// ============================================================================
+
+// PATH: application\usecase\ProcessQuinquenioPaymentUseCase.java
+package com.solveria.core.financial.application.usecase;
+
+import com.solveria.core.financial.domain.event.QuinquenioRequestedEvent;
+import com.solveria.core.financial.domain.model.vo.IndemnizableTrimSnapshot;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Use Case: Procesar Pago de Quinquenio (standalone, sin desvinculaciÃ³n).
+ *
+ * <p>Flujo:
+ * 1. Recibe personId y datos salariales de los Ãºltimos 3 meses.
+ * 2. Valida elegibilidad: el empleado debe tener >= 60 meses continuos de antigÃ¼edad.
+ * 3. Calcula base: Promedio Total Ganado de Ãºltimos 3 meses (P15, via IndemnizableTrimSnapshot).
+ * 4. CÃ¡lculo total: Promedio Ã— 5.
+ * 5. Invariante: NO aplica deducciones de ley (exento de RC-IVA y Gestora).
+ * 6. Dispara evento QuinquenioRequestedEvent con cronÃ³metro de 30 dÃ­as para pago.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ProcessQuinquenioPaymentUseCase extends DomainRoot {
+
+  /** Meses continuos mÃ­nimos requeridos para elegibilidad de quinquenio. */
+  private static final int REQUIRED_CONTINUOUS_MONTHS = 60;
+
+  /** Multiplicador legal del quinquenio (5 salarios promedio). */
+  private static final BigDecimal QUINQUENIO_MULTIPLIER = new BigDecimal("5");
+
+  /** DÃ­as calendario para plazo de pago del quinquenio. */
+  private static final int PAYMENT_DEADLINE_DAYS = 30;
+
+  /**
+   * Procesa el cÃ¡lculo del quinquenio para un empleado elegible.
+   *
+   * @param personId ID del empleado
+   * @param continuousMonths Meses continuos de antigÃ¼edad del empleado
+   * @param lastThreeMonthsBase Sueldo base de los Ãºltimos 3 meses (cronolÃ³gico)
+   * @param lastThreeMonthsOthers Otros conceptos de los Ãºltimos 3 meses (cronolÃ³gico)
+   * @return Monto total del quinquenio (ZERO si no elegible)
+   */
+  @Transactional
+  public BigDecimal execute(
+      UUID personId,
+      int continuousMonths,
+      List<BigDecimal> lastThreeMonthsBase,
+      List<BigDecimal> lastThreeMonthsOthers) {
+
+    log.info(
+        "event=PROCESS_QUINQUENIO_START personId={} continuousMonths={}",
+        personId,
+        continuousMonths);
+
+    // --- Paso 2: Validar elegibilidad (60 meses continuos) ---
+    if (continuousMonths < REQUIRED_CONTINUOUS_MONTHS) {
+      log.info(
+          "event=QUINQUENIO_NOT_ELIGIBLE personId={} continuousMonths={} required={}",
+          personId,
+          continuousMonths,
+          REQUIRED_CONTINUOUS_MONTHS);
+      return BigDecimal.ZERO;
+    }
+
+    // --- Paso 3: CÃ¡lculo Promedio (P15) via IndemnizableTrimSnapshot ---
+    IndemnizableTrimSnapshot trimSnapshot =
+        IndemnizableTrimSnapshot.build(lastThreeMonthsBase, lastThreeMonthsOthers);
+
+    BigDecimal averageSalary = trimSnapshot.averageIndemnizable();
+    log.info("event=QUINQUENIO_AVERAGE_CALCULATED personId={} average={}", personId, averageSalary);
+
+    if (averageSalary.compareTo(BigDecimal.ZERO) <= 0) {
+      log.warn("event=QUINQUENIO_INVALID_AVERAGE personId={} average={}", personId, averageSalary);
+      return BigDecimal.ZERO;
+    }
+
+    // --- Paso 4: CÃ¡lculo total = Promedio Ã— 5 ---
+    BigDecimal quinquenioAmount =
+        averageSalary
+            .multiply(QUINQUENIO_MULTIPLIER)
+            .setScale(2, RoundingMode.HALF_UP);
+
+    log.info(
+        "event=QUINQUENIO_CALCULATED personId={} amount={} multiplier={}",
+        personId,
+        quinquenioAmount,
+        QUINQUENIO_MULTIPLIER);
+
+    // --- Invariante: Exento de RC-IVA y Gestora (no se aplican deducciones) ---
+
+    // --- Paso 6: Disparar evento con cronÃ³metro de 30 dÃ­as ---
+    LocalDate paymentDeadline = LocalDate.now().plusDays(PAYMENT_DEADLINE_DAYS);
+
+    registerEvent(
+        new QuinquenioRequestedEvent(personId, quinquenioAmount, averageSalary, paymentDeadline));
+
+    log.info(
+        "event=QUINQUENIO_REQUESTED personId={} amount={} deadline={}",
+        personId,
+        quinquenioAmount,
+        paymentDeadline);
+
+    return quinquenioAmount;
+  }
+}
+
+
+// ============================================================================
+
+// PATH: application\usecase\ApplyUfvMaintenanceUseCase.java
+package com.solveria.core.financial.application.usecase;
+
+import com.solveria.core.financial.application.port.UfvQuotationPort;
+import com.solveria.core.financial.domain.event.UfvMaintenanceAppliedEvent;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Use Case: Aplicar Mantenimiento de Valor UFV a provisiones y crÃ©dito fiscal.
+ *
+ * <p>Flujo:
+ * 1. Recibe fecha inicio y fin del perÃ­odo.
+ * 2. Consulta UfvQuotationPort para obtener UFV inicial y final.
+ * 3. Calcula factor de actualizaciÃ³n: ufvFinal / ufvInicial.
+ * 4. Actualiza saldos de provisiones/crÃ©dito fiscal multiplicando por el factor.
+ * 5. Dispara evento UfvMaintenanceAppliedEvent.
+ *
+ * <p>Si el proveedor BCB no responde, se propaga UfvProviderUnavailableException.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class ApplyUfvMaintenanceUseCase extends DomainRoot {
+
+  /** Escala para el factor de actualizaciÃ³n UFV (8 decimales de precisiÃ³n). */
+  private static final int UFV_FACTOR_SCALE = 8;
+
+  private final UfvQuotationPort ufvQuotationPort;
+
+  /**
+   * Aplica el mantenimiento de valor UFV para el perÃ­odo indicado.
+   *
+   * @param periodStart Fecha inicio del perÃ­odo
+   * @param periodEnd Fecha fin del perÃ­odo
+   * @param currentProvisionBalance Saldo actual de provisiones a actualizar
+   * @param currentFiscalCredit CrÃ©dito fiscal actual a actualizar
+   * @param tenantId Identificador del Tenant
+   * @return Resultado con los saldos actualizados y el factor aplicado
+   */
+  @Transactional
+  public UfvMaintenanceResult execute(
+      LocalDate periodStart,
+      LocalDate periodEnd,
+      BigDecimal currentProvisionBalance,
+      BigDecimal currentFiscalCredit,
+      String tenantId) {
+
+    log.info(
+        "event=UFV_MAINTENANCE_START periodStart={} periodEnd={} tenantId={}",
+        periodStart,
+        periodEnd,
+        tenantId);
+
+    // --- Paso 2: Obtener cotizaciones UFV ---
+    BigDecimal ufvInicial = ufvQuotationPort.getUfvValue(periodStart);
+    BigDecimal ufvFinal = ufvQuotationPort.getUfvValue(periodEnd);
+
+    log.info(
+        "event=UFV_QUOTATIONS_RETRIEVED ufvInicial={} ufvFinal={}",
+        ufvInicial,
+        ufvFinal);
+
+    // --- Paso 3: Calcular factor de actualizaciÃ³n ---
+    if (ufvInicial.compareTo(BigDecimal.ZERO) <= 0) {
+      log.warn("event=UFV_INVALID_INITIAL_VALUE ufvInicial={}", ufvInicial);
+      throw new IllegalStateException("UFV inicial debe ser mayor a cero");
+    }
+
+    BigDecimal adjustmentFactor =
+        ufvFinal.divide(ufvInicial, UFV_FACTOR_SCALE, RoundingMode.HALF_UP);
+
+    log.info("event=UFV_FACTOR_CALCULATED factor={}", adjustmentFactor);
+
+    // --- Paso 4: Actualizar saldos ---
+    BigDecimal updatedProvisions =
+        currentProvisionBalance
+            .multiply(adjustmentFactor)
+            .setScale(2, RoundingMode.HALF_UP);
+
+    BigDecimal updatedFiscalCredit =
+        currentFiscalCredit
+            .multiply(adjustmentFactor)
+            .setScale(2, RoundingMode.HALF_UP);
+
+    log.info(
+        "event=UFV_BALANCES_UPDATED provisions={} fiscalCredit={}",
+        updatedProvisions,
+        updatedFiscalCredit);
+
+    // --- Paso 5: Disparar evento ---
+    registerEvent(
+        new UfvMaintenanceAppliedEvent(
+            periodStart, periodEnd, ufvInicial, ufvFinal, adjustmentFactor, tenantId));
+
+    log.info(
+        "event=UFV_MAINTENANCE_APPLIED tenantId={} factor={}",
+        tenantId,
+        adjustmentFactor);
+
+    return new UfvMaintenanceResult(
+        adjustmentFactor, updatedProvisions, updatedFiscalCredit, ufvInicial, ufvFinal);
+  }
+
+  /** Resultado del mantenimiento de valor UFV con saldos actualizados. */
+  public record UfvMaintenanceResult(
+      BigDecimal adjustmentFactor,
+      BigDecimal updatedProvisionBalance,
+      BigDecimal updatedFiscalCredit,
+      BigDecimal ufvInicial,
+      BigDecimal ufvFinal) {}
+}
+
+
+// ============================================================================
+
+// PATH: application\usecase\CalculateAnnualAguinaldoUseCase.java
+package com.solveria.core.financial.application.usecase;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Use Case: CÃ¡lculo de Aguinaldo NavideÃ±o masivo por Tenant.
+ *
+ * <p>Flujo:
+ * 1. Recibe tenantId y aÃ±o fiscal.
+ * 2. Filtra elegibles: empleados >= 1 mes trabajado, obreros >= 3 meses.
+ * 3. Base de cÃ¡lculo (P15): Promedio Total Ganado de Septiembre, Octubre, Noviembre.
+ * 4. CÃ¡lculo: Proporcional en duodÃ©cimas si meses trabajados < 12, caso contrario 1 sueldo promedio.
+ * 5. Invariante Multa (P16): Si LocalDate.now() > 20 Diciembre, multiplicar el pago final por 2.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CalculateAnnualAguinaldoUseCase {
+
+  /** Meses mÃ­nimos para elegibilidad de empleados. */
+  private static final int MIN_MONTHS_EMPLEADO = 1;
+
+  /** Meses mÃ­nimos para elegibilidad de obreros. */
+  private static final int MIN_MONTHS_OBRERO = 3;
+
+  /** Total de duodÃ©cimas en un aÃ±o. */
+  private static final BigDecimal TWELVE = new BigDecimal("12");
+
+  /** Factor de multa por pago tardÃ­o (P16: despuÃ©s del 20 de Diciembre). */
+  private static final BigDecimal PENALTY_MULTIPLIER = new BigDecimal("2");
+
+  /** DÃ­a lÃ­mite de diciembre para pago sin penalizaciÃ³n. */
+  private static final int DECEMBER_DEADLINE_DAY = 20;
+
+  /**
+   * Calcula el Aguinaldo NavideÃ±o para un empleado individual.
+   *
+   * @param personId Identificador del empleado (para trazabilidad)
+   * @param tenantId Identificador del Tenant
+   * @param fiscalYear AÃ±o fiscal de cÃ¡lculo
+   * @param monthsWorked Meses trabajados en el aÃ±o fiscal
+   * @param isObrero true si el trabajador es obrero, false si es empleado
+   * @param septemberSalary Total Ganado de Septiembre
+   * @param octoberSalary Total Ganado de Octubre
+   * @param novemberSalary Total Ganado de Noviembre
+   * @return Monto del Aguinaldo (ZERO si no es elegible)
+   */
+  @Transactional(readOnly = true)
+  public BigDecimal execute(
+      java.util.UUID personId,
+      String tenantId,
+      int fiscalYear,
+      int monthsWorked,
+      boolean isObrero,
+      BigDecimal septemberSalary,
+      BigDecimal octoberSalary,
+      BigDecimal novemberSalary) {
+
+    log.info(
+        "event=AGUINALDO_CALCULATION_START personId={} tenantId={} fiscalYear={} monthsWorked={} isObrero={}",
+        personId,
+        tenantId,
+        fiscalYear,
+        monthsWorked,
+        isObrero);
+
+    // --- Paso 2: Validar elegibilidad ---
+    int minMonths = isObrero ? MIN_MONTHS_OBRERO : MIN_MONTHS_EMPLEADO;
+    if (monthsWorked < minMonths) {
+      log.info(
+          "event=AGUINALDO_NOT_ELIGIBLE personId={} monthsWorked={} minRequired={}",
+          personId,
+          monthsWorked,
+          minMonths);
+      return BigDecimal.ZERO;
+    }
+
+    // --- Paso 3: Base de cÃ¡lculo (P15): Promedio Sep/Oct/Nov ---
+    BigDecimal totalTrimestre =
+        safe(septemberSalary).add(safe(octoberSalary)).add(safe(novemberSalary));
+
+    long activeSalaryMonths =
+        List.of(septemberSalary, octoberSalary, novemberSalary).stream()
+            .filter(s -> s != null && s.compareTo(BigDecimal.ZERO) > 0)
+            .count();
+
+    BigDecimal averageSalary;
+    if (activeSalaryMonths == 0) {
+      log.warn("event=AGUINALDO_NO_SALARY_DATA personId={}", personId);
+      return BigDecimal.ZERO;
+    }
+    averageSalary =
+        totalTrimestre.divide(new BigDecimal(activeSalaryMonths), 2, RoundingMode.HALF_UP);
+
+    log.info(
+        "event=AGUINALDO_AVERAGE_CALCULATED personId={} average={} activeSalaryMonths={}",
+        personId,
+        averageSalary,
+        activeSalaryMonths);
+
+    // --- Paso 4: CÃ¡lculo proporcional o completo ---
+    BigDecimal aguinaldo;
+    if (monthsWorked >= 12) {
+      aguinaldo = averageSalary.setScale(2, RoundingMode.HALF_UP);
+    } else {
+      aguinaldo =
+          averageSalary
+              .multiply(new BigDecimal(monthsWorked))
+              .divide(TWELVE, 2, RoundingMode.HALF_UP);
+    }
+
+    log.info(
+        "event=AGUINALDO_BASE_CALCULATED personId={} baseAmount={} monthsWorked={}",
+        personId,
+        aguinaldo,
+        monthsWorked);
+
+    // --- Paso 5: Invariante P16 â€” Multa si pago > 20 Diciembre ---
+    LocalDate today = LocalDate.now();
+    boolean penaltyApplied = false;
+    if (today.getMonth() == Month.DECEMBER && today.getDayOfMonth() > DECEMBER_DEADLINE_DAY) {
+      aguinaldo = aguinaldo.multiply(PENALTY_MULTIPLIER).setScale(2, RoundingMode.HALF_UP);
+      penaltyApplied = true;
+      log.warn(
+          "event=AGUINALDO_PENALTY_APPLIED personId={} penalizedAmount={} today={}",
+          personId,
+          aguinaldo,
+          today);
+    }
+
+    log.info(
+        "event=AGUINALDO_CALCULATED personId={} finalAmount={} penaltyApplied={}",
+        personId,
+        aguinaldo,
+        penaltyApplied);
+
+    return aguinaldo;
+  }
+
+  private static BigDecimal safe(BigDecimal value) {
+    return value != null ? value : BigDecimal.ZERO;
+  }
+}
+
+
+// ============================================================================
+
+// PATH: application\usecase\EvaluatePrimaAnnualUseCase.java
+package com.solveria.core.financial.application.usecase;
+
+import com.solveria.core.financial.domain.event.PrimaCalculatedEvent;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Use Case: DistribuciÃ³n de Utilidades / Primas segÃºn tipo de Tenant.
+ *
+ * <p>Flujo:
+ * 1. Recibe tenantId, tipo de tenant, utilidad neta y datos de planilla.
+ * 2. Invariante P2: Si Tenant es ONG/FundaciÃ³n o EducaciÃ³n, retorna 0 (exenciÃ³n total).
+ * 3. Si es Retail/Corporativo: calcula lÃ­mite legal del pozo (25% de utilidad neta).
+ * 4. Compara el pozo con el costo de 1 sueldo por cada empleado elegible.
+ * 5. Si el 25% no cubre la planilla completa, distribuye el pozo equitativamente (prorrateo).
+ * 6. Dispara evento PrimaCalculatedEvent.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class EvaluatePrimaAnnualUseCase extends DomainRoot {
+
+  /** Porcentaje legal mÃ¡ximo del pozo de distribuciÃ³n de utilidades (25%). */
+  private static final BigDecimal POOL_PERCENTAGE = new BigDecimal("0.25");
+
+  /**
+   * EvalÃºa y calcula la prima anual / distribuciÃ³n de utilidades.
+   *
+   * @param tenantId Identificador del Tenant
+   * @param tenantType Tipo de organizaciÃ³n del Tenant
+   * @param fiscalYear AÃ±o fiscal
+   * @param utilidadNeta Utilidad neta del ejercicio fiscal
+   * @param eligibleEmployeeCount Cantidad de empleados elegibles
+   * @param totalPayrollCost Costo total de 1 sueldo promedio Ã— cada empleado elegible
+   * @return Monto individual de prima por empleado (ZERO si exento o sin utilidad)
+   */
+  @Transactional
+  public BigDecimal execute(
+      String tenantId,
+      TenantType tenantType,
+      int fiscalYear,
+      BigDecimal utilidadNeta,
+      int eligibleEmployeeCount,
+      BigDecimal totalPayrollCost) {
+
+    log.info(
+        "event=PRIMA_ANNUAL_START tenantId={} tenantType={} fiscalYear={} utilidadNeta={}",
+        tenantId,
+        tenantType,
+        fiscalYear,
+        utilidadNeta);
+
+    // --- Invariante P2: ExenciÃ³n total para ONG/FundaciÃ³n y EducaciÃ³n ---
+    if (tenantType == TenantType.ONG_FUNDACION || tenantType == TenantType.EDUCACION) {
+      log.info(
+          "event=PRIMA_EXEMPT tenantId={} tenantType={} reason=P2_EXENCION_TOTAL",
+          tenantId,
+          tenantType);
+
+      registerEvent(
+          new PrimaCalculatedEvent(
+              tenantId,
+              fiscalYear,
+              utilidadNeta,
+              BigDecimal.ZERO,
+              BigDecimal.ZERO,
+              0,
+              false));
+
+      return BigDecimal.ZERO;
+    }
+
+    // --- Validar utilidad positiva ---
+    if (utilidadNeta == null || utilidadNeta.compareTo(BigDecimal.ZERO) <= 0) {
+      log.info("event=PRIMA_NO_PROFIT tenantId={} utilidadNeta={}", tenantId, utilidadNeta);
+      return BigDecimal.ZERO;
+    }
+
+    if (eligibleEmployeeCount <= 0) {
+      log.info("event=PRIMA_NO_ELIGIBLE_EMPLOYEES tenantId={}", tenantId);
+      return BigDecimal.ZERO;
+    }
+
+    // --- Paso 3: Calcular pozo legal (25% de utilidad neta) ---
+    BigDecimal poolAmount =
+        utilidadNeta.multiply(POOL_PERCENTAGE).setScale(2, RoundingMode.HALF_UP);
+
+    log.info(
+        "event=PRIMA_POOL_CALCULATED tenantId={} pool={} percentage={}",
+        tenantId,
+        poolAmount,
+        POOL_PERCENTAGE);
+
+    // --- Paso 4-5: Comparar pozo con planilla y distribuir ---
+    BigDecimal perEmployeeAmount;
+    boolean prorateApplied;
+
+    if (poolAmount.compareTo(totalPayrollCost) >= 0) {
+      // El pozo cubre al menos 1 sueldo por empleado
+      perEmployeeAmount =
+          totalPayrollCost
+              .divide(new BigDecimal(eligibleEmployeeCount), 2, RoundingMode.HALF_UP);
+      prorateApplied = false;
+
+      log.info(
+          "event=PRIMA_FULL_COVERAGE tenantId={} perEmployee={}",
+          tenantId,
+          perEmployeeAmount);
+    } else {
+      // El 25% no cubre la planilla â†’ prorrateo equitativo
+      perEmployeeAmount =
+          poolAmount
+              .divide(new BigDecimal(eligibleEmployeeCount), 2, RoundingMode.HALF_UP);
+      prorateApplied = true;
+
+      log.warn(
+          "event=PRIMA_PRORATE_APPLIED tenantId={} pool={} payrollCost={} perEmployee={}",
+          tenantId,
+          poolAmount,
+          totalPayrollCost,
+          perEmployeeAmount);
+    }
+
+    // --- Paso 6: Disparar evento ---
+    registerEvent(
+        new PrimaCalculatedEvent(
+            tenantId,
+            fiscalYear,
+            utilidadNeta,
+            poolAmount,
+            perEmployeeAmount,
+            eligibleEmployeeCount,
+            prorateApplied));
+
+    log.info(
+        "event=PRIMA_CALCULATED tenantId={} perEmployee={} eligible={} prorate={}",
+        tenantId,
+        perEmployeeAmount,
+        eligibleEmployeeCount,
+        prorateApplied);
+
+    return perEmployeeAmount;
+  }
+
+  /** Tipos de Tenant para control de invariante P2. */
+  public enum TenantType {
+    /** Empresa Retail â€” sujeta a distribuciÃ³n de utilidades. */
+    RETAIL,
+    /** Empresa Corporativa â€” sujeta a distribuciÃ³n de utilidades. */
+    CORPORATIVO,
+    /** ONG o FundaciÃ³n â€” exenta de distribuciÃ³n (P2). */
+    ONG_FUNDACION,
+    /** InstituciÃ³n Educativa â€” exenta de distribuciÃ³n (P2). */
+    EDUCACION
+  }
+}
+
+
+// ============================================================================
+
+// PATH: infrastructure\adapter\BcbWebScrapingUfvAdapter.java
+package com.solveria.core.financial.infrastructure.adapter;
+
+import com.solveria.core.financial.application.port.UfvQuotationPort;
+import com.solveria.core.financial.domain.model.vo.UfvProviderUnavailableException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.springframework.stereotype.Component;
+
+/**
+ * Adapter: Implementa UfvQuotationPort mediante Web Scraping (Jsoup) al sitio del
+ * Banco Central de Bolivia.
+ *
+ * <p>Estrategia:
+ * <ul>
+ *   <li>Jsoup.connect() con timeout de 5 segundos.</li>
+ *   <li>CachÃ© en memoria (ConcurrentHashMap) para evitar peticiones duplicadas
+ *       durante ejecuciones masivas de la misma fecha.</li>
+ *   <li>Si falla (timeout, cambio de DOM, error de red), lanza
+ *       UfvProviderUnavailableException.</li>
+ * </ul>
+ */
+@Slf4j
+@Component
+public class BcbWebScrapingUfvAdapter implements UfvQuotationPort {
+
+  private static final String BCB_UFV_URL =
+      "https://www.bcb.gob.bo/librerias/indicadores/ufv/ufv.php";
+
+  private static final int TIMEOUT_MS = 5_000;
+
+  private static final DateTimeFormatter BCB_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+  /** CachÃ© en memoria para evitar peticiones HTTP duplicadas por fecha. */
+  private final Map<LocalDate, BigDecimal> cache = new ConcurrentHashMap<>();
+
+  @Override
+  public BigDecimal getUfvValue(LocalDate date) throws UfvProviderUnavailableException {
+    log.info("event=UFV_QUOTATION_REQUEST date={}", date);
+
+    BigDecimal cached = cache.get(date);
+    if (cached != null) {
+      log.info("event=UFV_CACHE_HIT date={} value={}", date, cached);
+      return cached;
+    }
+
+    try {
+      String formattedDate = date.format(BCB_DATE_FORMAT);
+
+      Document doc =
+          Jsoup.connect(BCB_UFV_URL)
+              .data("fecha", formattedDate)
+              .timeout(TIMEOUT_MS)
+              .post();
+
+      Element resultElement = doc.selectFirst("div.resultado, span.ufv-valor, #resultado, td.valor");
+
+      String rawValue;
+      if (resultElement != null) {
+        rawValue = resultElement.text().trim();
+      } else {
+        rawValue = extractFallback(doc);
+      }
+
+      if (rawValue == null || rawValue.isBlank()) {
+        throw new UfvProviderUnavailableException(
+            "No se encontrÃ³ el valor UFV en el DOM del BCB para fecha: " + formattedDate);
+      }
+
+      String sanitized = rawValue.replaceAll("[^0-9.,]", "").replace(",", ".");
+      BigDecimal ufvValue = new BigDecimal(sanitized);
+
+      cache.put(date, ufvValue);
+      log.info("event=UFV_QUOTATION_SUCCESS date={} value={}", date, ufvValue);
+      return ufvValue;
+
+    } catch (UfvProviderUnavailableException ex) {
+      throw ex;
+    } catch (NumberFormatException ex) {
+      log.error("event=UFV_PARSE_ERROR date={} error={}", date, ex.getMessage());
+      throw new UfvProviderUnavailableException(
+          "Valor UFV no numÃ©rico en la respuesta del BCB para fecha: " + date, ex);
+    } catch (Exception ex) {
+      log.error("event=UFV_PROVIDER_UNAVAILABLE date={} error={}", date, ex.getMessage());
+      throw new UfvProviderUnavailableException(
+          "El servicio web del BCB no respondiÃ³ (timeout 5s) para fecha: " + date, ex);
+    }
+  }
+
+  /**
+   * Estrategia fallback: busca cualquier elemento del body que contenga un valor
+   * numÃ©rico con formato UFV (ej. "2.xxxxx").
+   */
+  private String extractFallback(Document doc) {
+    for (Element el : doc.body().getAllElements()) {
+      String text = el.ownText().trim();
+      if (text.matches("\\d+[.,]\\d{2,}")) {
+        return text;
+      }
+    }
+    return null;
+  }
+}
+
+
+
+
+// ============================================================================
+

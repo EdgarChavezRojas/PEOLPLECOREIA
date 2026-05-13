@@ -9,7 +9,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "prl_payroll_run")
 public class PayrollRunJpa extends BaseEntity {
-
+    @Column(name = "payroll_run_id", updatable = false, columnDefinition = "UUID")
+    private UUID payrollRunId;
     @Column(name = "period_ref")
     private UUID periodRef;
 
@@ -27,7 +28,8 @@ public class PayrollRunJpa extends BaseEntity {
 
     @OneToMany(mappedBy = "payrollRun", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PayrollLineJpa> lines = new ArrayList<>();
-
+    public UUID getPayrollRunId() { return payrollRunId; }
+    public void setPayrollRunId(UUID payrollRunId) { this.payrollRunId = payrollRunId; }
     public UUID getPeriodRef() { return periodRef; }
     public void setPeriodRef(UUID periodRef) { this.periodRef = periodRef; }
 

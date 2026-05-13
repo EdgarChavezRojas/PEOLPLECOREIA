@@ -6,6 +6,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TalentInventory {
+public class TalentInventory extends DomainRoot {
 
   private UUID inventoryId;
   private UUID relationshipId;
@@ -24,7 +26,7 @@ public class TalentInventory {
   private List<SkillSet> skillSets;
   private List<TrainingHistory> trainingHistory;
 
-  @Builder.Default private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   public static TalentInventory create(UUID relationshipId, UUID tenantId) {
     if (relationshipId == null) {
@@ -63,23 +65,9 @@ public class TalentInventory {
     }
     trainingHistory.add(training);
     if (verifiedTitle) {
-      addDomainEvent(DossierEvent.now(DossierEventType.DOCENT_ACADEMIC_TITLE_VERIFIED));
+      registerEvent(DossierEvent.now(DossierEventType.DOCENT_ACADEMIC_TITLE_VERIFIED));
     }
   }
 
-  public void addDomainEvent(DomainEvent event) {
-    if (domainEvents == null) {
-      domainEvents = new ArrayList<>();
-    }
-    domainEvents.add(event);
-  }
 
-  public List<DomainEvent> pullDomainEvents() {
-    if (domainEvents == null || domainEvents.isEmpty()) {
-      return List.of();
-    }
-    List<DomainEvent> events = List.copyOf(domainEvents);
-    domainEvents.clear();
-    return events;
-  }
 }

@@ -2,6 +2,8 @@ package com.solveria.core.financial.domain.model;
 
 import com.solveria.core.financial.domain.model.vo.ContributionRate;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -15,7 +17,7 @@ import java.util.UUID;
  * <p>Invariante: - Deducción Laboral Exacta: retención fijada estrictamente en 12.71% sobre el
  * Total Ganado.
  */
-public class SocialSecurityAccount {
+public class SocialSecurityAccount extends DomainRoot {
 
   private final UUID ssaId;
   private final UUID personId;
@@ -25,7 +27,7 @@ public class SocialSecurityAccount {
   private final String tenantId;
   private final String createdBy;
 
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   private SocialSecurityAccount(
       UUID ssaId,
@@ -100,11 +102,7 @@ public class SocialSecurityAccount {
     this.lastContribution = date;
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = new ArrayList<>(this.domainEvents);
-    this.domainEvents.clear();
-    return Collections.unmodifiableList(events);
-  }
+
 
   // --- Getters ---
 

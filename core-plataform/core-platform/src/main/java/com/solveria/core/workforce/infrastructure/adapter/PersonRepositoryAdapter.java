@@ -1,7 +1,7 @@
 package com.solveria.core.workforce.infrastructure.adapter;
 
 import com.solveria.core.shared.events.DomainEvent;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import com.solveria.core.workforce.application.port.PersonRepositoryPort;
 import com.solveria.core.workforce.domain.model.Person;
 import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
@@ -30,9 +30,7 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
     PersonJpa savedPersonJpa = personRepository.save(personJpa);
     Person savedPerson = personMapper.toDomain(savedPersonJpa);
 
-    for (DomainEvent event : person.pullDomainEvents()) {
-      eventOutboxPort.publish(event);
-    }
+    eventOutboxPort.publish(person.pullDomainEvents());
 
     return savedPerson;
   }

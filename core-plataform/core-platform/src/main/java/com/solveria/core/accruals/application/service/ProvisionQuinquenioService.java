@@ -6,9 +6,11 @@ import com.solveria.core.accruals.application.usecase.ProvisionQuinquenioUseCase
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
+import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
 import java.util.UUID;
-
+@Service
 public class ProvisionQuinquenioService implements ProvisionQuinquenioUseCase {
 
   private final BenefitsRepositoryPort benefitsRepository;

@@ -60,6 +60,9 @@ public class ContractJpa extends BaseEntity {
   @Column(name = "employment_cond", length = 2)
   private EmploymentCondition employmentCond;
 
+  @Column(name = "tacita_reconduccion_alert_sent", nullable = false)
+  private boolean tacitaReconduccionAlertSent;
+
   @OneToMany(
       mappedBy = "contract",
       cascade = CascadeType.ALL,

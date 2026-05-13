@@ -1,5 +1,7 @@
 package com.solveria.core.workforce.domain.exception;
 
+import java.util.UUID;
+
 /**
  * Excepción: Control de Plazas - No hay slots disponibles
  *
@@ -8,10 +10,7 @@ package com.solveria.core.workforce.domain.exception;
  */
 public class HeadcountExceededException extends SolverException {
 
-  private static final long serialVersionUID = 1L;
-  private static final String HEADCOUNT_EXCEEDED = "HEADCOUNT_EXCEEDED";
-
-  public HeadcountExceededException(String message) {
-    super(HEADCOUNT_EXCEEDED, message);
+  public HeadcountExceededException(UUID jobId, long maxPositions) {
+    super(String.format("No se pueden crear más plazas. El cargo con ID %s ha alcanzado su límite máximo de %d plazas (Headcount).", jobId, maxPositions));
   }
 }

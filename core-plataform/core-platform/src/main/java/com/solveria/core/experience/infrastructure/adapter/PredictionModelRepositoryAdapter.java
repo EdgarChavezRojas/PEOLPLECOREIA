@@ -1,6 +1,5 @@
 package com.solveria.core.experience.infrastructure.adapter;
 
-import com.solveria.core.experience.application.port.out.EventOutboxPort;
 import com.solveria.core.experience.application.port.out.PredictionModelPO;
 import com.solveria.core.experience.domain.model.PredictionModel;
 import com.solveria.core.experience.infrastructure.jpa.PredictionModelJpa;
@@ -11,6 +10,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,15 +33,7 @@ public class PredictionModelRepositoryAdapter implements PredictionModelPO {
     List<DomainEvent> events = model.pullDomainEvents();
     PredictionModelJpa jpa = mapper.toJpa(model);
     PredictionModelJpa savedJpa = repository.save(jpa);
-    PredictionModel saved = mapper.toDomain(savedJpa);
-
-    for (DomainEvent event : events) {
-      eventOutboxPort.publish(
-          "PredictionModel",
-          saved.getModelId(),
-          mapper.resolveEventType(event),
-          mapper.toEventPayload(saved, event));
-    }
+    eventOutboxPort.publish(events);
   }
 
   @Override

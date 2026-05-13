@@ -1,20 +1,18 @@
 package com.solveria.core.financial.domain.model;
 
 import com.solveria.core.financial.domain.event.RcIvaForm110ImportedEvent;
-import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Entity: TaxForm110. Formulario 110 del SIAT para importación de facturas del RC-IVA.
  * verified_credit = total_declared * 13%.
  */
-public class TaxForm110 {
+public class TaxForm110 extends DomainRoot {
 
   private static final BigDecimal IVA_RATE = new BigDecimal("0.13");
 
@@ -27,7 +25,7 @@ public class TaxForm110 {
   private final String tenantId;
   private final String createdBy;
 
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   private TaxForm110(
       UUID formId,
@@ -70,7 +68,7 @@ public class TaxForm110 {
     TaxForm110 form =
         new TaxForm110(
             UUID.randomUUID(), personId, totalDeclared, credit, docId, period, tenantId, createdBy);
-    form.domainEvents.add(
+    form.registerEvent(
         new RcIvaForm110ImportedEvent(
             form.formId, personId, period.toString(), totalDeclared, credit));
     return form;
@@ -99,11 +97,7 @@ public class TaxForm110 {
     this.verifiedCredit = newTotalDeclared.multiply(IVA_RATE).setScale(2, RoundingMode.HALF_UP);
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = new ArrayList<>(this.domainEvents);
-    this.domainEvents.clear();
-    return Collections.unmodifiableList(events);
-  }
+
 
   // --- Getters ---
 

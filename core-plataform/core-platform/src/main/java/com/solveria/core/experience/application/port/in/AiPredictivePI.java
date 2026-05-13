@@ -1,5 +1,6 @@
 package com.solveria.core.experience.application.port.in;
 
+import com.solveria.core.experience.application.command.RegisterPredictionModelCommand;
 import com.solveria.core.experience.domain.model.vo.RiskAlert;
 import java.math.BigDecimal;
 import java.util.List;
@@ -10,6 +11,9 @@ import java.util.UUID;
  * Genera alertas de riesgo para pasivos laborales y compliance.
  */
 public interface AiPredictivePI {
+
+  /** Registrar un nuevo modelo predictivo IA. */
+  UUID registerPredictionModel(RegisterPredictionModelCommand cmd);
 
   /** Generar alerta de tácita reconducción (T-90 días). */
   RiskAlert generateTacitaReconduccionAlert(

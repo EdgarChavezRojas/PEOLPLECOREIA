@@ -1,7 +1,6 @@
 package com.solveria.core.accruals.infrastructure.adapter;
 
 import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
-import com.solveria.core.accruals.application.port.EventOutboxPort;
 import com.solveria.core.accruals.domain.event.AccrualEvent;
 import com.solveria.core.accruals.domain.model.BenefitAccrual;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
@@ -20,6 +19,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,15 +59,7 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
         quinquenioProvisionRepository.save(benefitsMapper.toJpa(provision));
     QuinquenioProvision saved = benefitsMapper.toDomain(savedJpa);
 
-    for (DomainEvent event : events) {
-      if (event instanceof AccrualEvent accrualEvent) {
-        eventOutboxPort.publish(
-            "QuinquenioProvision",
-            saved.getProvisionId(),
-            accrualEvent.type().name(),
-            benefitsMapper.toEventPayload(saved, accrualEvent));
-      }
-    }
+    eventOutboxPort.publish(events);
 
     return saved;
   }
@@ -86,11 +79,21 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   }
 
   @Override
-  public Optional<BenefitAccrual> findBenefitAccrual(BenefitType benefitType, int fiscalYear) {
+  @Transactional
+  public List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals) {
+    List<BenefitAccrualJpa> saved =
+        benefitAccrualRepository.saveAll(
+            accruals.stream().map(benefitsMapper::toJpa).toList());
+    return saved.stream().map(benefitsMapper::toDomain).toList();
+  }
+
+  @Override
+  public Optional<BenefitAccrual> findBenefitAccrual(
+      UUID relationshipId, BenefitType benefitType, int fiscalYear) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
     return benefitAccrualRepository
-        .findByBenefitTypeAndFiscalYearAndTenantId(
-            benefitType, fiscalYear, UUID.fromString(tenantId))
+        .findByRelationshipIdAndBenefitTypeAndFiscalYearAndTenantId(
+            relationshipId, benefitType, fiscalYear, UUID.fromString(tenantId))
         .map(benefitsMapper::toDomain);
   }
 }

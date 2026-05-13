@@ -34,3 +34,4 @@ public record OffboardingBlockedByAssetsEvent(
     return new OffboardingBlockedByAssetsEvent(personId, unreturnedAssetIds, Instant.now());
   }
 }
+//revisar porque evento se genera dentro de usecase

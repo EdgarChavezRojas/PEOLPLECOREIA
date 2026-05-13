@@ -1,0 +1,663 @@
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdatePersonUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.MaritalStatus;
+import java.util.List;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdatePersonUseCase {
+
+  private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
+
+  private final PersonRepositoryPort personRepositoryPort;
+
+  public void execute(
+      UUID personId,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      List<ContactPoint> contacts) {
+    Person person =
+        personRepositoryPort
+            .findByPersonId(personId)
+            .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
+
+    person.updateMasterData(
+        person.getFirstName(),
+        person.getLastName(),
+        person.getBirthDate(),
+        person.getGender(),
+        maritalStatus,
+        professionTitle,
+        person.getGlobalId());
+
+    if (contacts != null && !contacts.isEmpty() && contacts.get(0) != null) {
+      person.updateContactPoint(contacts.get(0));
+    }
+
+    personRepositoryPort.save(person);
+
+    log.info("event=CORE_WORKFORCE_PERSON_UPDATE_SUCCESS targetId={}", personId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/ResolveDeduplicationUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Person;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class ResolveDeduplicationUseCase {
+
+  private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
+
+  private final PersonRepositoryPort personRepositoryPort;
+
+  public void execute(UUID principalId, UUID duplicateId) {
+    Person principal =
+        personRepositoryPort
+            .findByPersonId(principalId)
+            .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
+
+    Person duplicate =
+        personRepositoryPort
+            .findByPersonId(duplicateId)
+            .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
+
+    principal.recordDeduplicationMatchFound(duplicate.getGlobalId());
+    personRepositoryPort.save(principal);
+
+    log.info("event=CORE_WORKFORCE_PERSON_DEDUPLICATION_RESOLVE_SUCCESS targetId={}", principalId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdateAcademicRankUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.AcademicRank;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdateAcademicRankUseCase {
+
+  private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";
+  private static final String ACADEMIC_PROFILE_NOT_FOUND = "ACADEMIC_PROFILE_NOT_FOUND";
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  public void execute(UUID relationshipId, UUID tenantId, String newRank) {
+    Relationship relationship =
+        relationshipRepositoryPort
+            .findByRelationshipIdAndTenantId(relationshipId, tenantId)
+            .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
+
+    if (relationship.getAcademicProfile() == null) {
+      throw new SolverException(ACADEMIC_PROFILE_NOT_FOUND);
+    }
+
+    AcademicRank rank = AcademicRank.valueOf(newRank.toUpperCase());
+    relationship.getAcademicProfile().upgradeRank(rank);
+    relationship.notifyAcademicProfileRankUpdated(rank.name());
+
+    relationshipRepositoryPort.save(relationship);
+
+    log.info(
+        "event=CORE_WORKFORCE_ACADEMIC_RANK_UPDATE_SUCCESS targetId={}", relationshipId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdateEmploymentConditionsUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.EmploymentCondition;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdateEmploymentConditionsUseCase {
+
+  private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  public void execute(UUID relationshipId, EmploymentCondition condition) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    Relationship relationship =
+        relationshipRepositoryPort
+            .findByRelationshipIdAndTenantId(relationshipId, tenantId)
+            .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
+
+    relationship.updateEmploymentCondition(condition);
+    relationshipRepositoryPort.save(relationship);
+
+    log.info(
+        "event=CORE_WORKFORCE_EMPLOYMENT_CONDITION_UPDATE_SUCCESS targetId={}", relationshipId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/TerminateRelationshipUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.StatusLog;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class TerminateRelationshipUseCase {
+
+  private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  public void execute(UUID relationshipId, String reason) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    Relationship relationship =
+        relationshipRepositoryPort
+            .findByRelationshipIdAndTenantId(relationshipId, tenantId)
+            .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
+
+    RelationshipStatus previousStatus = relationship.getCurrentStatus();
+    relationship.terminate();
+    relationship.addStatusLog(
+        StatusLog.create(
+            relationshipId, previousStatus, RelationshipStatus.TERMINATED, reason, null));
+
+    relationshipRepositoryPort.save(relationship);
+
+    log.info("event=CORE_WORKFORCE_RELATIONSHIP_TERMINATE_SUCCESS targetId={}", relationshipId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/ReactivateRelationshipUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.StatusLog;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class ReactivateRelationshipUseCase {
+
+  private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  public void execute(UUID relationshipId) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    Relationship relationship =
+        relationshipRepositoryPort
+            .findByRelationshipIdAndTenantId(relationshipId, tenantId)
+            .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
+
+    RelationshipStatus previousStatus = relationship.getCurrentStatus();
+    relationship.reactivate();
+    relationship.addStatusLog(
+        StatusLog.create(
+            relationshipId, previousStatus, RelationshipStatus.ACTIVE, null, null));
+
+    relationshipRepositoryPort.save(relationship);
+
+    log.info("event=CORE_WORKFORCE_RELATIONSHIP_REACTIVATE_SUCCESS targetId={}", relationshipId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/AssignPersonToPositionUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PositionRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Position;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class AssignPersonToPositionUseCase {
+
+  private static final String POSITION_NOT_FOUND = "POSITION_NOT_FOUND";
+
+  private final PositionRepositoryPort positionRepositoryPort;
+
+  public void execute(UUID positionId, UUID tenantId, UUID personId) {
+    Position position =
+        positionRepositoryPort
+            .findByPositionIdAndTenantId(positionId, tenantId)
+            .orElseThrow(() -> new SolverException(POSITION_NOT_FOUND));
+
+    position.occupy();
+    positionRepositoryPort.save(position);
+
+    log.info(
+        "event=CORE_WORKFORCE_POSITION_ASSIGN_SUCCESS targetId={} personId={}",
+        positionId,
+        personId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/VacatePositionUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PositionRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Position;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class VacatePositionUseCase {
+
+  private static final String POSITION_NOT_FOUND = "POSITION_NOT_FOUND";
+
+  private final PositionRepositoryPort positionRepositoryPort;
+
+  public void execute(UUID positionId, UUID tenantId) {
+    Position position =
+        positionRepositoryPort
+            .findByPositionIdAndTenantId(positionId, tenantId)
+            .orElseThrow(() -> new SolverException(POSITION_NOT_FOUND));
+
+    position.vacate();
+    positionRepositoryPort.save(position);
+
+    log.info("event=CORE_WORKFORCE_POSITION_VACATE_SUCCESS targetId={}", positionId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdatePositionBudgetUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.PositionRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Position;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdatePositionBudgetUseCase {
+
+  private static final String POSITION_NOT_FOUND = "POSITION_NOT_FOUND";
+
+  private final PositionRepositoryPort positionRepositoryPort;
+
+  public void execute(UUID positionId, boolean isBudgeted) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    Position position =
+        positionRepositoryPort
+            .findByPositionIdAndTenantId(positionId, tenantId)
+            .orElseThrow(() -> new SolverException(POSITION_NOT_FOUND));
+
+    position.updateBudgeted(isBudgeted);
+    positionRepositoryPort.save(position);
+
+    log.info("event=CORE_WORKFORCE_POSITION_BUDGET_UPDATE_SUCCESS targetId={}", positionId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/MoveOrgUnitUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class MoveOrgUnitUseCase {
+
+  private static final String ORG_UNIT_NOT_FOUND = "ORG_UNIT_NOT_FOUND";
+
+  private final OrgUnitRepositoryPort orgUnitRepositoryPort;
+
+  public void execute(UUID unitId, UUID newParentId) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+    OrgUnit orgUnit =
+        orgUnitRepositoryPort
+            .findByUnitIdAndTenantId(unitId, tenantId)
+            .orElseThrow(() -> new SolverException(ORG_UNIT_NOT_FOUND));
+
+    if (newParentId != null) {
+      orgUnitRepositoryPort
+          .findByUnitIdAndTenantId(newParentId, tenantId)
+          .orElseThrow(() -> new SolverException(ORG_UNIT_NOT_FOUND));
+    }
+
+    orgUnit.changeAssignment(newParentId);
+    orgUnitRepositoryPort.save(orgUnit);
+
+    log.info("event=CORE_WORKFORCE_ORGUNIT_MOVE_SUCCESS targetId={}", unitId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/RelocateOrgUnitUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.vo.Extension;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class RelocateOrgUnitUseCase {
+
+  private static final String ORG_UNIT_NOT_FOUND = "ORG_UNIT_NOT_FOUND";
+  private static final String ORG_UNIT_GEO_EXTENSION_REQUIRED = "ORG_UNIT_GEO_EXTENSION_REQUIRED";
+
+  private final OrgUnitRepositoryPort orgUnitRepositoryPort;
+
+  public void execute(UUID unitId, Extension geoExtension) {
+    if (geoExtension == null) {
+      throw new SolverException(ORG_UNIT_GEO_EXTENSION_REQUIRED);
+    }
+
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    OrgUnit orgUnit =
+        orgUnitRepositoryPort
+            .findByUnitIdAndTenantId(unitId, tenantId)
+            .orElseThrow(() -> new SolverException(ORG_UNIT_NOT_FOUND));
+
+    orgUnit.updateGeoCoords(geoExtension.name());
+    orgUnitRepositoryPort.save(orgUnit);
+
+    log.info("event=CORE_WORKFORCE_ORGUNIT_RELOCATE_SUCCESS targetId={}", unitId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/Relationship.java ====
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.event.AcademicProfileRankUpdatedEvent;
+import com.solveria.core.workforce.domain.event.RelationshipCreatedEvent;
+import com.solveria.core.workforce.domain.event.RelationshipEndedEvent;
+import com.solveria.core.workforce.domain.event.RelationshipReactivatedEvent;
+import com.solveria.core.workforce.domain.model.vo.EmploymentCondition;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Relationship extends DomainRoot {
+
+  private UUID relationshipId;
+  private UUID personId;
+  private UUID tenantId;
+  private RelationshipType relationType;
+  private RelationshipStatus currentStatus;
+  private LocalDate hireDate;
+  private LocalDate createdAt;
+  private LocalDate updatedAt;
+
+  private WorkerProfile workerProfile;
+  private AcademicProfile academicProfile;
+  private EmploymentCondition employmentCondition;
+
+  @Builder.Default private List<StatusLog> statusLogs = new ArrayList<>();
+
+
+
+  public static Relationship create(
+      UUID personId, UUID tenantId, RelationshipType relationType, LocalDate hireDate) {
+    if (personId == null || tenantId == null || relationType == null) {
+      throw new IllegalArgumentException("personId, tenantId y relationType son requeridos");
+    }
+
+    Relationship relationship =
+        Relationship.builder()
+            .relationshipId(UUID.randomUUID())
+            .personId(personId)
+            .tenantId(tenantId)
+            .relationType(relationType)
+            .currentStatus(RelationshipStatus.DRAFT)
+            .hireDate(hireDate)
+            .createdAt(LocalDate.now())
+            .updatedAt(LocalDate.now())
+            .statusLogs(new ArrayList<>())
+            .build();
+    relationship.registerEvent(
+        new RelationshipCreatedEvent(
+            relationship.relationshipId, relationship.personId, relationship.tenantId, Instant.now()));
+    return relationship;
+  }
+
+  public void assignWorkerProfile(WorkerProfile profile) {
+    this.workerProfile = profile;
+    this.academicProfile = null;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void assignAcademicProfile(AcademicProfile profile) {
+    this.academicProfile = profile;
+    this.workerProfile = null;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void addStatusLog(StatusLog statusLog) {
+    if (statusLog == null) {
+      throw new IllegalArgumentException("statusLog no puede ser nulo");
+    }
+    if (statusLogs == null) {
+      statusLogs = new ArrayList<>();
+    }
+    statusLogs.add(statusLog);
+  }
+
+  public void activate() {
+    if (!RelationshipStatus.DRAFT.equals(currentStatus)) {
+      throw new IllegalStateException("Solo se puede activar una relacion en estado DRAFT");
+    }
+    this.currentStatus = RelationshipStatus.ACTIVE;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void suspend() {
+    this.currentStatus = RelationshipStatus.SUSPENDED;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void reactivate() {
+    if (!RelationshipStatus.SUSPENDED.equals(currentStatus)) {
+      throw new IllegalStateException("Solo se puede reactivar una relacion SUSPENDIDA");
+    }
+    this.currentStatus = RelationshipStatus.ACTIVE;
+    this.updatedAt = LocalDate.now();
+    registerEvent(new RelationshipReactivatedEvent(relationshipId, Instant.now()));
+  }
+
+  public void terminate() {
+    this.currentStatus = RelationshipStatus.TERMINATED;
+    this.updatedAt = LocalDate.now();
+    registerEvent(new RelationshipEndedEvent(relationshipId, Instant.now()));
+  }
+
+  public void updateEmploymentCondition(EmploymentCondition condition) {
+    if (condition == null) {
+      throw new SolverException("EMPLOYMENT_CONDITION_REQUIRED");
+    }
+    this.employmentCondition = condition;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void notifyAcademicProfileRankUpdated(String newRank) {
+    registerEvent(new AcademicProfileRankUpdatedEvent(relationshipId, newRank, Instant.now()));
+  }
+
+
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/Position.java ====
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.workforce.domain.event.PositionAssignedEvent;
+import com.solveria.core.workforce.domain.event.PositionVacatedEvent;
+import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
+import com.solveria.core.workforce.domain.model.vo.PositionStatus;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Position extends DomainRoot {
+
+  private UUID positionId;
+  private UUID unitId;
+  private Job job;
+  private PositionStatus status;
+  private Boolean isBudgeted;
+  private HeadcountPlan headcountPlan;
+
+
+
+  public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
+    if (unitId == null || jobId == null || maxSlots == null) {
+      throw new IllegalArgumentException("unitId, jobId y maxSlots son requeridos");
+    }
+    if (maxSlots <= 0) {
+      throw new IllegalArgumentException("maxSlots debe ser mayor a 0");
+    }
+
+    return Position.builder()
+        .positionId(UUID.randomUUID())
+        .unitId(unitId)
+        .job(Job.builder().jobId(jobId).build())
+        .status(PositionStatus.VACANT)
+        .isBudgeted(isBudgeted != null ? isBudgeted : false)
+        .headcountPlan(HeadcountPlan.create(maxSlots))
+        .build();
+  }
+
+  public UUID getJobId() {
+    return job != null ? job.getJobId() : null;
+  }
+
+  public void occupy() {
+    if (!PositionStatus.VACANT.equals(status)) {
+      throw new IllegalStateException("Solo se puede ocupar una posicion vacante");
+    }
+    headcountPlan.occupy();
+    this.status = PositionStatus.OCCUPIED;
+    registerEvent(new PositionAssignedEvent(positionId, unitId, Instant.now()));
+  }
+
+  public void vacate() {
+    headcountPlan.vacate();
+    if (headcountPlan.getCurrentSlots() == 0) {
+      this.status = PositionStatus.VACANT;
+      registerEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
+    }
+  }
+
+  public void reserve() {
+    if (!PositionStatus.VACANT.equals(status)) {
+      throw new IllegalStateException("Solo se puede reservar una posicion vacante");
+    }
+    this.status = PositionStatus.RESERVED;
+  }
+
+  public boolean hasVacancy() {
+    return headcountPlan.hasVacancy();
+  }
+
+  public void updateBudgeted(boolean budgeted) {
+    this.isBudgeted = budgeted;
+  }
+
+
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/EmploymentCondition.java ====
+package com.solveria.core.workforce.domain.model.vo;
+
+import lombok.Getter;
+
+@Getter
+public enum EmploymentCondition {
+  FULL_TIME("Full time"),
+  PART_TIME("Part time"),
+  TEMPORARY("Temporary"),
+  CONTRACTOR("Contractor");
+
+  private final String label;
+
+  EmploymentCondition(String label) {
+    this.label = label;
+  }
+}
+

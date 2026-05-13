@@ -5,6 +5,8 @@ import com.solveria.core.financial.domain.event.FundingSourceProjectExhaustedEve
 import com.solveria.core.financial.domain.event.FundingSourceValidatedEvent;
 import com.solveria.core.financial.domain.model.vo.LaborCostSplit;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +20,7 @@ import java.util.UUID;
  * <p>Invariantes: - Consistencia del 100%: la suma de LaborCostSplit.percentage DEBE ser
  * exactamente 100%. - available_budget nunca puede ser negativo.
  */
-public class FundingSource {
+public class FundingSource extends DomainRoot {
 
   private final UUID sourceId;
   private final String projectCode;
@@ -29,7 +31,7 @@ public class FundingSource {
   private final String createdBy;
   private List<LaborCostSplit> costSplits;
 
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   private FundingSource(
       UUID sourceId,
@@ -98,7 +100,7 @@ public class FundingSource {
   public boolean checkBudgetSufficiency(BigDecimal requiredAmount) {
     boolean sufficient = this.availableBudget.compareTo(requiredAmount) >= 0;
     if (sufficient) {
-      domainEvents.add(new FundingSourceValidatedEvent(this.sourceId, requiredAmount));
+      registerEvent(new FundingSourceValidatedEvent(this.sourceId, requiredAmount));
     }
     return sufficient;
   }
@@ -127,7 +129,7 @@ public class FundingSource {
     }
 
     if (this.availableBudget.compareTo(BigDecimal.ZERO) == 0) {
-      domainEvents.add(new FundingSourceProjectExhaustedEvent(this.sourceId, this.projectCode));
+      registerEvent(new FundingSourceProjectExhaustedEvent(this.sourceId, this.projectCode));
     }
   }
 
@@ -138,7 +140,7 @@ public class FundingSource {
   public void adjustCostSplit(List<LaborCostSplit> newSplits) {
     validateSplitSumIs100(newSplits);
     this.costSplits = new ArrayList<>(newSplits);
-    domainEvents.add(new CostCenterSplitAdjustedEvent(this.sourceId, newSplits));
+    registerEvent(new CostCenterSplitAdjustedEvent(this.sourceId, newSplits));
   }
 
   private void validateSplitSumIs100(List<LaborCostSplit> splits) {
@@ -155,11 +157,7 @@ public class FundingSource {
     }
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = new ArrayList<>(this.domainEvents);
-    this.domainEvents.clear();
-    return Collections.unmodifiableList(events);
-  }
+
 
   // --- Getters (sin anotaciones) ---
 

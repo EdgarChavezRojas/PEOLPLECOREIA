@@ -13,7 +13,7 @@ public interface BankEntityMapper {
     @Mapping(target = "fileFormat", source = "fileFormatSpec")
     BankEntityJpa toJpa(BankEntity domain);
 
-    @Mapping(target = "bankCode", expression = "java(new com.solveria.core.payroll.domain.model.vo.BankCode(jpa.getBankCode()))")
+    @Mapping(target = "bankCode", expression = "java(new com.solveria.payroll.domain.model.vo.BankCode(jpa.getBankCode()))")
     @Mapping(target = "fileFormatSpec", source = "fileFormat")
     BankEntity toDomain(BankEntityJpa jpa);
 }

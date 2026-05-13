@@ -54,4 +54,7 @@ public class DocumentRecordJpa {
 
   @Column(name = "tenant_id", nullable = false)
   private UUID tenantId;
+
+  @Column(name = "expiration_warning_sent", nullable = false)
+  private Boolean expirationWarningSent;
 }

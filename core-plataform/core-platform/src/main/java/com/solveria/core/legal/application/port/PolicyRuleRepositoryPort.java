@@ -8,5 +8,7 @@ public interface PolicyRuleRepositoryPort {
 
   Optional<PolicyRule> findById(UUID policyId);
 
+  Optional<PolicyRule> findByPolicyName(String policyName);
+
   void save(PolicyRule policyRule);
 }

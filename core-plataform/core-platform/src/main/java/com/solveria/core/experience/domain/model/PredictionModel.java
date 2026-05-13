@@ -5,6 +5,8 @@ import com.solveria.core.experience.domain.event.TacitaReconduccionRiskEvent;
 import com.solveria.core.experience.domain.model.vo.ModelType;
 import com.solveria.core.experience.domain.model.vo.RiskAlert;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -14,14 +16,14 @@ import java.util.*;
  * AR: PredictionModel (Aggregate 11). Orquesta análisis predictivo para generar alertas de riesgo.
  * Invariante AI_Neutrality: no sugiere acciones que violen umbrales legales.
  */
-public class PredictionModel {
+public class PredictionModel extends DomainRoot {
   private UUID modelId;
   private ModelType modelType;
   private String version;
   private Instant lastExecution;
   private String tenantId;
   private List<RiskAlert> alerts;
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   private PredictionModel() {
     this.alerts = new ArrayList<>();
@@ -59,7 +61,7 @@ public class PredictionModel {
                 + " días sin decisión de renovación. Riesgo de tácita reconducción.",
             financialImpact);
     this.alerts.add(alert);
-    this.domainEvents.add(
+    this.registerEvent(
         new TacitaReconduccionRiskEvent(
             this.modelId,
             contractId,
@@ -82,7 +84,7 @@ public class PredictionModel {
             + " meses. Posible despido justificado según normativa boliviana.";
     RiskAlert alert = RiskAlert.create(RiskAlert.Severity.CRITICAL, msg, BigDecimal.ZERO);
     this.alerts.add(alert);
-    this.domainEvents.add(
+    this.registerEvent(
         new DisciplinaryThresholdReachedEvent(
             this.modelId,
             personId,
@@ -168,11 +170,7 @@ public class PredictionModel {
     return m;
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = new ArrayList<>(domainEvents);
-    domainEvents.clear();
-    return Collections.unmodifiableList(events);
-  }
+
 
   public UUID getModelId() {
     return modelId;

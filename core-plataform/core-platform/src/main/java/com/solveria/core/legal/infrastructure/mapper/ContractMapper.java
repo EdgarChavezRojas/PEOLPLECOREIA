@@ -54,7 +54,8 @@ public interface ContractMapper {
         jpa.getProjectId(),
         jpa.getTenantId(),
         jpa.getCreatedBy(),
-        addendums);
+        addendums,
+        jpa.isTacitaReconduccionAlertSent());
   }
 
   default ContractAddendum toAddendumDomain(ContractAddendumJpa jpa) {

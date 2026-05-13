@@ -29,7 +29,7 @@ public interface ClockingDeviceSpringRepository extends JpaRepository<ClockingDe
             FROM ClockingDeviceJpa d
             WHERE d.orgUnitId = :orgUnitId
               AND d.deviceType = :deviceType
-              AND d.deviceRole = com.solveria.core.timeandbearings.domain.model.enums.DeviceRole.PRIMARY
+              AND d.deviceRole = com.solveria.TimeAndBearings.domain.model.enums.DeviceRole.PRIMARY
               AND d.status = :activeStatus
               AND d.tenantId = :tenantId
             """)

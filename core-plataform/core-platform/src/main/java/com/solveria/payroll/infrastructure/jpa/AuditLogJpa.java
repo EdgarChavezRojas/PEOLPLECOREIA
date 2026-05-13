@@ -12,7 +12,8 @@ import java.util.UUID;
 @Table(name = "prl_audit_log")
 public class AuditLogJpa extends BaseEntity {
 
-
+    @Column(name = "audit_log_id", updatable = false, columnDefinition = "UUID")
+    private UUID auditLogId;
     @Column(name = "run_ref", nullable = false)
     private UUID runRef;
 
@@ -29,7 +30,8 @@ public class AuditLogJpa extends BaseEntity {
     private String tenantId;
 
 
-
+    public UUID getAuditLogId() { return auditLogId; }
+    public void setAuditLogId(UUID auditLogId) { this.auditLogId = auditLogId; }
     public UUID getRunRef() { return runRef; }
     public void setRunRef(UUID runRef) { this.runRef = runRef; }
     public UUID getUserRef() { return userRef; }

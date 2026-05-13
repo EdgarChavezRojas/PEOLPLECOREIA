@@ -1,7 +1,6 @@
 package com.solveria.core.accruals.infrastructure.adapter;
 
 import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
-import com.solveria.core.accruals.application.port.EventOutboxPort;
 import com.solveria.core.accruals.domain.event.AccrualEvent;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.infrastructure.jpa.AccrualBalanceJpa;
@@ -12,6 +11,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +33,7 @@ public class AccrualBalanceRepositoryAdapter implements AccrualBalanceRepository
     AccrualBalanceJpa savedJpa = accrualBalanceRepository.save(jpa);
     AccrualBalance saved = accrualBalanceMapper.toDomain(savedJpa);
 
-    for (DomainEvent event : events) {
-      if (event instanceof AccrualEvent accrualEvent) {
-        eventOutboxPort.publish(
-            "AccrualBalance",
-            saved.getBalanceId(),
-            accrualEvent.type().name(),
-            accrualBalanceMapper.toEventPayload(saved, accrualEvent));
-      }
-    }
+    eventOutboxPort.publish(events);
 
     return saved;
   }

@@ -51,6 +51,7 @@ public interface BenefitsMapper {
     }
     return BenefitAccrual.builder()
         .benefitId(jpa.getBenefitId())
+        .relationshipId(jpa.getRelationshipId())
         .benefitType(jpa.getBenefitType())
         .fiscalYear(jpa.getFiscalYear())
         .accruedAmount(jpa.getAccruedAmount())

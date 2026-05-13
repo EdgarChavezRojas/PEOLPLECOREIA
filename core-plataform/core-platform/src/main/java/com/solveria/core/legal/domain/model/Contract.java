@@ -22,7 +22,6 @@ import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.domain.model.vo.EmploymentCondition;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.events.DomainEvent;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,10 +29,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.Getter;
 
 @Getter
-public class Contract {
+public class Contract extends DomainRoot {
 
   private static final int MAX_RENEWALS = 2;
 
@@ -46,7 +47,7 @@ public class Contract {
   private final String tenantId;
   private final String createdBy;
   private final List<ContractAddendum> addendums;
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+  private boolean tacitaReconduccionAlertSent;
 
   private Contract(
       UUID contractId,
@@ -57,7 +58,8 @@ public class Contract {
       String projectId,
       String tenantId,
       String createdBy,
-      List<ContractAddendum> addendums) {
+      List<ContractAddendum> addendums,
+      boolean tacitaReconduccionAlertSent) {
     this.contractId = Objects.requireNonNull(contractId, "contractId");
     this.relationshipId = Objects.requireNonNull(relationshipId, "relationshipId");
     this.contractType = Objects.requireNonNull(contractType, "contractType");
@@ -67,6 +69,7 @@ public class Contract {
     this.tenantId = Objects.requireNonNull(tenantId, "tenantId");
     this.createdBy = Objects.requireNonNull(createdBy, "createdBy");
     this.addendums = new ArrayList<>(Objects.requireNonNullElseGet(addendums, List::of));
+    this.tacitaReconduccionAlertSent = tacitaReconduccionAlertSent;
     validateTenant();
   }
 
@@ -88,8 +91,9 @@ public class Contract {
             projectId,
             tenantId,
             createdBy,
-            List.of());
-    contract.domainEvents.add(new ContractDraftedEvent(contractId, relationshipId, Instant.now()));
+            List.of(),
+            false);
+    contract.registerEvent(new ContractDraftedEvent(contractId, relationshipId, Instant.now()));
     return contract;
   }
 
@@ -102,7 +106,8 @@ public class Contract {
       String projectId,
       String tenantId,
       String createdBy,
-      List<ContractAddendum> addendums) {
+      List<ContractAddendum> addendums,
+      boolean tacitaReconduccionAlertSent) {
     return new Contract(
         contractId,
         relationshipId,
@@ -112,7 +117,8 @@ public class Contract {
         projectId,
         tenantId,
         createdBy,
-        addendums);
+        addendums,
+        tacitaReconduccionAlertSent);
   }
 
   public void approve(String createdBy, String approvedBy) {
@@ -122,7 +128,7 @@ public class Contract {
       throw new InvalidContractStatusException(status, ContractStatus.DRAFT);
     }
     status = ContractStatus.APPROVED;
-    domainEvents.add(new ContractApprovedEvent(contractId, Instant.now()));
+    registerEvent(new ContractApprovedEvent(contractId, Instant.now()));
   }
 
   public ContractAddendum proposeAddendum(
@@ -149,7 +155,7 @@ public class Contract {
             snapshot,
             createdBy);
     addendums.add(addendum);
-    domainEvents.add(new AddendumApprovalRequiredEvent(contractId, addendumId, Instant.now()));
+    registerEvent(new AddendumApprovalRequiredEvent(contractId, addendumId, Instant.now()));
     return addendum;
   }
 
@@ -158,7 +164,7 @@ public class Contract {
     validateSegregationOfDuties(createdBy, approvedBy);
     ContractAddendum addendum = findAddendum(addendumId);
     addendum.approve(approvedBy);
-    domainEvents.add(
+    registerEvent(
         new AddendumSalaryAdjustmentApprovedEvent(contractId, addendumId, Instant.now()));
   }
 
@@ -166,27 +172,28 @@ public class Contract {
     validateTenant();
     validateSegregationOfDuties(createdBy, approvedBy);
     status = ContractStatus.TERMINATED;
-    domainEvents.add(new ContractTerminatedEvent(contractId, Instant.now()));
+    registerEvent(new ContractTerminatedEvent(contractId, Instant.now()));
   }
 
   public void markTacitaReconduccionRisk() {
     validateTenant();
-    domainEvents.add(new ContractTacitaReconduccionRiskEvent(contractId, Instant.now()));
+    registerEvent(new ContractTacitaReconduccionRiskEvent(contractId, Instant.now()));
+  }
+
+  public void markTacitaReconduccionAlertSent() {
+    validateTenant();
+    this.tacitaReconduccionAlertSent = true;
   }
 
   public void validateRenewalLimit(int renewalCount) {
     validateTenant();
     if (renewalCount >= MAX_RENEWALS) {
-      domainEvents.add(new MaxRenewalsReachedEvent(contractId, renewalCount, Instant.now()));
+      registerEvent(new MaxRenewalsReachedEvent(contractId, renewalCount, Instant.now()));
       throw new MaxRenewalsReachedException(renewalCount, MAX_RENEWALS);
     }
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = List.copyOf(domainEvents);
-    domainEvents.clear();
-    return events;
-  }
+
 
   private ContractAddendum findAddendum(UUID addendumId) {
     return addendums.stream()
@@ -213,7 +220,7 @@ public class Contract {
       return;
     }
     if (salaryTerms.basicSalary().compareTo(floor) < 0) {
-      domainEvents.add(
+      registerEvent(
           new ContractLegalPisoViolatedEvent(contractId, salaryTerms.basicSalary(), Instant.now()));
       throw new ContractLegalPisoViolatedException(salaryTerms.basicSalary(), floor);
     }

@@ -7,12 +7,11 @@ import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
 import com.solveria.core.legal.infrastructure.mapper.ContractMapper;
 import com.solveria.core.legal.infrastructure.repository.ContractRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.events.DomainEvent;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,17 +30,9 @@ public class ContractRepositoryAdapter implements ContractRepositoryPort {
   @Transactional
   public void save(Contract contract) {
     ContractJpa contractJpa = contractMapper.toJpa(contract);
-    ContractJpa savedJpa = contractRepository.save(contractJpa);
-    Contract savedContract = contractMapper.toDomain(savedJpa);
-    List<DomainEvent> events = contract.pullDomainEvents();
+    contractRepository.save(contractJpa);
 
-    for (DomainEvent event : events) {
-      eventOutboxPort.publish(
-          "Contract",
-          savedContract.getContractId(),
-          contractMapper.resolveEventType(event),
-          contractMapper.toEventPayload(savedContract, event));
-    }
+    eventOutboxPort.publish(contract.pullDomainEvents());
   }
 
   @Override
@@ -57,6 +48,16 @@ public class ContractRepositoryAdapter implements ContractRepositoryPort {
     String currentTenantId = SecurityTenantContext.getCurrentTenantId();
     return contractRepository
         .findExpiringContracts(ContractType.PLAZO_FIJO, from, to, currentTenantId)
+        .stream()
+        .map(contractMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<Contract> findContractsExpiringExactlyOn(
+      ContractType type, LocalDate exactDate, String tenantId) {
+    return contractRepository
+        .findContractsExpiringExactlyOn(type, exactDate, tenantId)
         .stream()
         .map(contractMapper::toDomain)
         .toList();

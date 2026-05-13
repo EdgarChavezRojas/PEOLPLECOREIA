@@ -33,6 +33,7 @@ public interface DocumentRecordMapper {
         .validationStatus(toDomain(jpa.getValidationStatus()))
         .metadata(toDomain(jpa.getMetadata()))
         .tenantId(jpa.getTenantId())
+        .expirationWarningSent(Boolean.TRUE.equals(jpa.getExpirationWarningSent()))
         .build();
   }
 

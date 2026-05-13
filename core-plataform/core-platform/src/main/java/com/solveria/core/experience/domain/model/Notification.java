@@ -1,12 +1,14 @@
 package com.solveria.core.experience.domain.model;
 
+import com.solveria.core.experience.domain.event.MemorandumAcknowledgedEvent;
 import com.solveria.core.experience.domain.event.NotificationSentEvent;
 import com.solveria.core.experience.domain.model.vo.NotificationChannel;
-import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.time.Instant;
 import java.util.*;
 
-public class Notification {
+public class Notification extends DomainRoot {
   private UUID notificationId;
   private UUID recipientId;
   private NotificationChannel channel;
@@ -15,7 +17,14 @@ public class Notification {
   private String tenantId;
   private Instant sentAt;
   private Instant readAt;
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+
+  /** Indica si esta notificación es un memorando que requiere acuse de recibo formal. */
+  private boolean requiresAcknowledgement;
+  /** Timestamp del acuse de recibo (firma). */
+  private Instant acknowledgedAt;
+  /** ID de la persona que firmó el acuse. */
+  private UUID acknowledgedBy;
+
 
   private Notification() {}
 
@@ -34,15 +43,79 @@ public class Notification {
     n.tenantId = tenantId;
     n.sentAt = Instant.now();
     n.readAt = null;
-    n.domainEvents.add(
+    n.requiresAcknowledgement = false;
+    n.acknowledgedAt = null;
+    n.acknowledgedBy = null;
+    n.registerEvent(
         new NotificationSentEvent(
             n.notificationId, recipientId, channel.name(), subject, tenantId));
+    return n;
+  }
+
+  /**
+   * Crea una notificación de tipo memorando que requiere acuse de recibo formal (W12).
+   *
+   * @param recipientId ID del destinatario
+   * @param subject     Asunto del memorando
+   * @param body        Contenido del memorando
+   * @param tenantId    Tenant
+   */
+  public static Notification sendMemorandum(
+      UUID recipientId, String subject, String body, String tenantId) {
+    if (recipientId == null) throw new IllegalArgumentException("recipientId no puede ser nulo");
+    if (subject == null || subject.isBlank()) throw new IllegalArgumentException("Asunto vacío");
+
+    Notification n = new Notification();
+    n.notificationId = UUID.randomUUID();
+    n.recipientId = recipientId;
+    n.channel = NotificationChannel.EMAIL;
+    n.subject = subject;
+    n.body = body;
+    n.tenantId = tenantId;
+    n.sentAt = Instant.now();
+    n.readAt = null;
+    n.requiresAcknowledgement = true;
+    n.acknowledgedAt = null;
+    n.acknowledgedBy = null;
+    n.registerEvent(
+        new NotificationSentEvent(
+            n.notificationId, recipientId, NotificationChannel.EMAIL.name(), subject, tenantId));
     return n;
   }
 
   public void markAsRead() {
     if (this.readAt != null) return;
     this.readAt = Instant.now();
+  }
+
+  /**
+   * W12: Acuse de recibo formal del memorando. Solo memorandos que requieren
+   * acknowledgement pueden ser firmados, y solo por el destinatario.
+   *
+   * @param personId ID de la persona que firma el acuse
+   */
+  public void acknowledge(UUID personId) {
+    if (!this.requiresAcknowledgement) {
+      throw new IllegalStateException(
+          "Esta notificación no requiere acuse de recibo");
+    }
+    if (this.acknowledgedAt != null) {
+      throw new IllegalStateException(
+          "Este memorando ya fue acusado de recibo el " + this.acknowledgedAt);
+    }
+    if (!this.recipientId.equals(personId)) {
+      throw new IllegalStateException(
+          "Solo el destinatario puede firmar el acuse de recibo");
+    }
+    this.acknowledgedAt = Instant.now();
+    this.acknowledgedBy = personId;
+    // Marcar como leído implícitamente al firmar
+    if (this.readAt == null) {
+      this.readAt = this.acknowledgedAt;
+    }
+    this.registerEvent(
+        new MemorandumAcknowledgedEvent(
+            this.notificationId, personId, this.acknowledgedAt, this.tenantId));
   }
 
   public static Notification rehydrate(
@@ -53,7 +126,10 @@ public class Notification {
       String body,
       String tenantId,
       Instant sentAt,
-      Instant readAt) {
+      Instant readAt,
+      boolean requiresAcknowledgement,
+      Instant acknowledgedAt,
+      UUID acknowledgedBy) {
     Notification n = new Notification();
     n.notificationId = notificationId;
     n.recipientId = recipientId;
@@ -63,14 +139,13 @@ public class Notification {
     n.tenantId = tenantId;
     n.sentAt = sentAt;
     n.readAt = readAt;
+    n.requiresAcknowledgement = requiresAcknowledgement;
+    n.acknowledgedAt = acknowledgedAt;
+    n.acknowledgedBy = acknowledgedBy;
     return n;
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = new ArrayList<>(domainEvents);
-    domainEvents.clear();
-    return Collections.unmodifiableList(events);
-  }
+
 
   public UUID getNotificationId() {
     return notificationId;
@@ -106,5 +181,21 @@ public class Notification {
 
   public boolean isRead() {
     return readAt != null;
+  }
+
+  public boolean isRequiresAcknowledgement() {
+    return requiresAcknowledgement;
+  }
+
+  public Instant getAcknowledgedAt() {
+    return acknowledgedAt;
+  }
+
+  public UUID getAcknowledgedBy() {
+    return acknowledgedBy;
+  }
+
+  public boolean isAcknowledged() {
+    return acknowledgedAt != null;
   }
 }

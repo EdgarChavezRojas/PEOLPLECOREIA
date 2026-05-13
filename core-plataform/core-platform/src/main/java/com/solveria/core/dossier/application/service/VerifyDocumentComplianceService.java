@@ -12,7 +12,8 @@ import com.solveria.core.dossier.domain.model.vo.DocumentMetadata;
 import com.solveria.core.dossier.domain.policy.DocumentCompliancePolicy;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
+
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -120,11 +121,11 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
     UUID aggregateId =
         command.relationshipId() != null ? command.relationshipId() : UUID.randomUUID();
     String payload = buildMissingDocPayload(command);
-    eventOutboxPort.publish(
-        "DocumentRecord",
-        aggregateId,
-        DossierEventType.MANDATORY_COMPLIANCE_DOC_MISSING.name(),
-        payload);
+//    eventOutboxPort.publish(
+//        "DocumentRecord",
+//        aggregateId,
+//        DossierEventType.MANDATORY_COMPLIANCE_DOC_MISSING.name(),
+//        payload);
   }
 
   private String buildMissingDocPayload(VerifyDocumentComplianceCommand command) {

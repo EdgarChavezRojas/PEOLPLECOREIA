@@ -1,6 +1,7 @@
 package com.solveria.core.workforce.domain.model;
 
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import com.solveria.core.workforce.domain.event.OrgUnitAssignedChangedEvent;
 import com.solveria.core.workforce.domain.event.OrgUnitExtensionUpdatedEvent;
 import com.solveria.core.workforce.domain.event.OrgUnitGeographicMovedEvent;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrgUnit {
+public class OrgUnit extends DomainRoot {
 
   private UUID unitId;
   private UUID tenantId;
@@ -31,7 +32,7 @@ public class OrgUnit {
 
   @Builder.Default private List<OrgHierarchy> hierarchies = new ArrayList<>();
 
-  @Builder.Default private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   public enum OrgUnitType {
     ADMINISTRATIVE("Administrativa"),
@@ -90,17 +91,17 @@ public class OrgUnit {
 
   public void changeAssignment(UUID newParentId) {
     this.parentId = newParentId;
-    addDomainEvent(new OrgUnitAssignedChangedEvent(unitId, newParentId, Instant.now()));
+    registerEvent(new OrgUnitAssignedChangedEvent(unitId, newParentId, Instant.now()));
   }
 
   public void updateCostCenter(CostCenter newCostCenter) {
     this.costCenter = newCostCenter;
-    addDomainEvent(new OrgUnitExtensionUpdatedEvent(unitId, newCostCenter, Instant.now()));
+    registerEvent(new OrgUnitExtensionUpdatedEvent(unitId, newCostCenter, Instant.now()));
   }
 
   public void updateGeoCoords(String newGeoCoords) {
     this.geoCoords = newGeoCoords;
-    addDomainEvent(new OrgUnitGeographicMovedEvent(unitId, newGeoCoords, Instant.now()));
+    registerEvent(new OrgUnitGeographicMovedEvent(unitId, newGeoCoords, Instant.now()));
   }
 
   public void addHierarchy(OrgHierarchy hierarchy) {
@@ -110,19 +111,5 @@ public class OrgUnit {
     hierarchies.add(hierarchy);
   }
 
-  public void addDomainEvent(DomainEvent event) {
-    if (domainEvents == null) {
-      domainEvents = new ArrayList<>();
-    }
-    domainEvents.add(event);
-  }
 
-  public List<DomainEvent> pullDomainEvents() {
-    if (domainEvents == null || domainEvents.isEmpty()) {
-      return List.of();
-    }
-    List<DomainEvent> events = List.copyOf(domainEvents);
-    domainEvents.clear();
-    return events;
-  }
 }

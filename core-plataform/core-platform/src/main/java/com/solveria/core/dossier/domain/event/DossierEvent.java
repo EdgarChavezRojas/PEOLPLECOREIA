@@ -18,3 +18,4 @@ public record DossierEvent(DossierEventType type, Instant occurredAt) implements
     return new DossierEvent(type, Instant.now());
   }
 }
+//revisar el diferente flujo que maneja DossierEvent

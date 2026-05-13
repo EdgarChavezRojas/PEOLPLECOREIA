@@ -11,6 +11,6 @@ public interface PayrollPeriodMapper {
     @Mapping(target = "cutoffDate", source = "cutoffDate.date")
     PayrollPeriodJpa toJpa(PayrollPeriod domain);
 
-    @Mapping(target = "cutoffDate", expression = "java(new com.solveria.core.payroll.domain.model.vo.CutoffDate(jpa.getCutoffDate()))")
+    @Mapping(target = "cutoffDate", expression = "java(new com.solveria.payroll.domain.model.vo.CutoffDate(jpa.getCutoffDate()))")
     PayrollPeriod toDomain(PayrollPeriodJpa jpa);
 }

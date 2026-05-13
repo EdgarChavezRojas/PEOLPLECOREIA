@@ -21,5 +21,7 @@ public interface BenefitsRepositoryPort {
 
   BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual);
 
-  Optional<BenefitAccrual> findBenefitAccrual(BenefitType benefitType, int fiscalYear);
+  List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals);
+
+  Optional<BenefitAccrual> findBenefitAccrual(UUID relationshipId, BenefitType benefitType, int fiscalYear);
 }

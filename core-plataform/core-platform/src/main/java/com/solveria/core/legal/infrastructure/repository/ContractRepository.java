@@ -24,4 +24,14 @@ public interface ContractRepository extends JpaRepository<ContractJpa, Long> {
       @Param("from") LocalDate from,
       @Param("to") LocalDate to,
       @Param("tenantId") String tenantId);
+
+  @Query(
+      "select distinct c from ContractJpa c join c.addendums a "
+          + "where c.contractType = :contractType "
+          + "and a.effectiveTo = :exactDate "
+          + "and c.tenantId = :tenantId")
+  List<ContractJpa> findContractsExpiringExactlyOn(
+      @Param("contractType") ContractType contractType,
+      @Param("exactDate") LocalDate exactDate,
+      @Param("tenantId") String tenantId);
 }

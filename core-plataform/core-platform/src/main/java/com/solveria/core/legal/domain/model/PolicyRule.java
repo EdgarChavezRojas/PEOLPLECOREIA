@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.Getter;
 
 @Getter

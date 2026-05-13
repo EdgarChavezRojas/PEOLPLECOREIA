@@ -6,7 +6,9 @@ import com.solveria.core.accruals.application.usecase.AccrueVacationUseCase;
 import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundException;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import org.springframework.stereotype.Service;
 
+@Service
 public class AccrueVacationService implements AccrueVacationUseCase {
 
   private final AccrualBalanceRepositoryPort accrualBalanceRepository;

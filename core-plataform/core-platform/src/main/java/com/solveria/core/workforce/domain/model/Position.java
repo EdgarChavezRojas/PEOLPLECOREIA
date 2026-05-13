@@ -1,6 +1,7 @@
 package com.solveria.core.workforce.domain.model;
 
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import com.solveria.core.workforce.domain.event.PositionAssignedEvent;
 import com.solveria.core.workforce.domain.event.PositionVacatedEvent;
 import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Position {
+public class Position extends DomainRoot {
 
   private UUID positionId;
   private UUID unitId;
@@ -26,8 +27,9 @@ public class Position {
   private PositionStatus status;
   private Boolean isBudgeted;
   private HeadcountPlan headcountPlan;
+  private UUID personId;
 
-  @Builder.Default private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
     if (unitId == null || jobId == null || maxSlots == null) {
@@ -44,6 +46,7 @@ public class Position {
         .status(PositionStatus.VACANT)
         .isBudgeted(isBudgeted != null ? isBudgeted : false)
         .headcountPlan(HeadcountPlan.create(maxSlots))
+        .personId(null)
         .build();
   }
 
@@ -51,20 +54,25 @@ public class Position {
     return job != null ? job.getJobId() : null;
   }
 
-  public void occupy() {
+  public void occupy(UUID personId) {
     if (!PositionStatus.VACANT.equals(status)) {
       throw new IllegalStateException("Solo se puede ocupar una posicion vacante");
     }
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido para ocupar una posicion");
+    }
     headcountPlan.occupy();
     this.status = PositionStatus.OCCUPIED;
-    addDomainEvent(new PositionAssignedEvent(positionId, unitId, Instant.now()));
+    this.personId = personId;
+    registerEvent(new PositionAssignedEvent(positionId, unitId, Instant.now()));
   }
 
   public void vacate() {
     headcountPlan.vacate();
     if (headcountPlan.getCurrentSlots() == 0) {
       this.status = PositionStatus.VACANT;
-      addDomainEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
+      this.personId = null;
+      registerEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
     }
   }
 
@@ -79,19 +87,9 @@ public class Position {
     return headcountPlan.hasVacancy();
   }
 
-  public void addDomainEvent(DomainEvent event) {
-    if (domainEvents == null) {
-      domainEvents = new ArrayList<>();
-    }
-    domainEvents.add(event);
+  public void updateBudgeted(boolean budgeted) {
+    this.isBudgeted = budgeted;
   }
 
-  public List<DomainEvent> pullDomainEvents() {
-    if (domainEvents == null || domainEvents.isEmpty()) {
-      return List.of();
-    }
-    List<DomainEvent> events = List.copyOf(domainEvents);
-    domainEvents.clear();
-    return events;
-  }
+
 }

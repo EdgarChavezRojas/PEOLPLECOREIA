@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface PolicyRuleRepository extends JpaRepository<PolicyRuleJpa, Long> {
 
   Optional<PolicyRuleJpa> findByPolicyIdAndTenantId(UUID policyId, String tenantId);
+
+  Optional<PolicyRuleJpa> findByPolicyNameAndTenantId(String policyName, String tenantId);
 }

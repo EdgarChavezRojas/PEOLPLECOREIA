@@ -7,7 +7,8 @@ import com.solveria.core.dossier.application.usecase.CheckOffboardingAssetsUseCa
 import com.solveria.core.dossier.domain.event.DossierEventType;
 import com.solveria.core.dossier.domain.event.OffboardingBlockedByAssetsEvent;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,10 +53,10 @@ public class CheckOffboardingAssetsService implements CheckOffboardingAssetsUseC
     } catch (Exception e) {
       payload = "{}";
     }
-    eventOutboxPort.publish(
-        "AssignedAsset",
-        command.workerId(),
-        DossierEventType.OFFBOARDING_BLOCKED_BY_ASSETS.name(),
-        payload);
+//    eventOutboxPort.publish(
+//        "AssignedAsset",
+//        command.workerId(),
+//        DossierEventType.OFFBOARDING_BLOCKED_BY_ASSETS.name(),
+//        payload);
   }
 }

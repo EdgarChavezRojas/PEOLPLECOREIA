@@ -34,6 +34,9 @@ public class BenefitAccrualJpa {
   @Column(name = "benefit_id")
   private UUID benefitId;
 
+  @Column(name = "relationship_id", nullable = false)
+  private UUID relationshipId;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "benefit_type", nullable = false)
   private BenefitType benefitType;

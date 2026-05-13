@@ -5,4 +5,5 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record AddendumApprovalRequiredEvent(UUID contractId, UUID addendumId, Instant occurredAt)
-    implements DomainEvent {}
+    implements DomainEvent {
+}

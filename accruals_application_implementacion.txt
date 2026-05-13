@@ -1,0 +1,571 @@
+// ApproveLeaveCommand.java
+package com.solveria.core.accruals.application.command;
+
+import java.util.UUID;
+
+public record ApproveLeaveCommand(UUID balanceId, UUID transactionId, String location) {}
+
+// RejectLeaveCommand.java
+package com.solveria.core.accruals.application.command;
+
+import java.util.UUID;
+
+public record RejectLeaveCommand(UUID balanceId, UUID transactionId, String location) {}
+
+// OpenAccrualBalanceCommand.java
+package com.solveria.core.accruals.application.command;
+
+import com.solveria.core.accruals.domain.model.vo.AccrualBalanceType;
+import com.solveria.core.accruals.domain.model.vo.AccrualUnit;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record OpenAccrualBalanceCommand(
+    UUID relationshipId,
+    AccrualBalanceType balanceType,
+    AccrualUnit unit,
+    BigDecimal currentBalance,
+    LocalDate lastAccrualDate,
+    String location) {}
+
+// ProvisionBenefitBatchCommand.java
+package com.solveria.core.accruals.application.command;
+
+import com.solveria.core.accruals.domain.model.vo.BenefitType;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+public record ProvisionBenefitBatchCommand(List<BenefitProvisionItem> items, String location) {
+
+  public record BenefitProvisionItem(
+      UUID employeeId, BenefitType benefitType, int fiscalYear, BigDecimal amount) {}
+}
+
+// RegisterSeniorityMilestoneCommand.java
+package com.solveria.core.accruals.application.command;
+
+import com.solveria.core.accruals.domain.model.vo.SeniorityBaseType;
+import java.util.UUID;
+
+public record RegisterSeniorityMilestoneCommand(
+    UUID balanceId, int monthsCompleted, SeniorityBaseType baseSmnType, String location) {}
+
+// RequestQuinquenioPaymentCommand.java
+package com.solveria.core.accruals.application.command;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record RequestQuinquenioPaymentCommand(
+    UUID relationshipId, LocalDate requestDate, String location) {}
+
+// EvaluateQuinquenioPenaltyCommand.java
+package com.solveria.core.accruals.application.command;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record EvaluateQuinquenioPenaltyCommand(
+    UUID relationshipId,
+    LocalDate requestDate,
+    LocalDate paymentDate,
+    LocalDate today,
+    String location) {}
+
+// MarkQuinquenioPaidCommand.java
+package com.solveria.core.accruals.application.command;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record MarkQuinquenioPaidCommand(
+    UUID relationshipId, LocalDate paymentDate, String location) {}
+
+// ApproveLeaveUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.ApproveLeaveCommand;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+
+public interface ApproveLeaveUseCase {
+
+  AccrualBalance handle(ApproveLeaveCommand command);
+}
+
+// RejectLeaveUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.RejectLeaveCommand;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+
+public interface RejectLeaveUseCase {
+
+  AccrualBalance handle(RejectLeaveCommand command);
+}
+
+// OpenAccrualBalanceUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.OpenAccrualBalanceCommand;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+
+public interface OpenAccrualBalanceUseCase {
+
+  AccrualBalance handle(OpenAccrualBalanceCommand command);
+}
+
+// ProvisionBenefitBatchUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.ProvisionBenefitBatchCommand;
+import com.solveria.core.accruals.domain.model.BenefitAccrual;
+import java.util.List;
+
+public interface ProvisionBenefitBatchUseCase {
+
+  List<BenefitAccrual> handle(ProvisionBenefitBatchCommand command);
+}
+
+// RegisterSeniorityMilestoneUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.RegisterSeniorityMilestoneCommand;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+
+public interface RegisterSeniorityMilestoneUseCase {
+
+  AccrualBalance handle(RegisterSeniorityMilestoneCommand command);
+}
+
+// RequestQuinquenioPaymentUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.RequestQuinquenioPaymentCommand;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+
+public interface RequestQuinquenioPaymentUseCase {
+
+  QuinquenioProvision handle(RequestQuinquenioPaymentCommand command);
+}
+
+// EvaluateQuinquenioPenaltyUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.EvaluateQuinquenioPenaltyCommand;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+
+public interface EvaluateQuinquenioPenaltyUseCase {
+
+  QuinquenioProvision handle(EvaluateQuinquenioPenaltyCommand command);
+}
+
+// MarkQuinquenioPaidUseCase.java
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.MarkQuinquenioPaidCommand;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+
+public interface MarkQuinquenioPaidUseCase {
+
+  QuinquenioProvision handle(MarkQuinquenioPaidCommand command);
+}
+
+// ApproveLeaveService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.ApproveLeaveCommand;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
+import com.solveria.core.accruals.application.usecase.ApproveLeaveUseCase;
+import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundException;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+
+public class ApproveLeaveService implements ApproveLeaveUseCase {
+
+  private final AccrualBalanceRepositoryPort accrualBalanceRepository;
+
+  public ApproveLeaveService(AccrualBalanceRepositoryPort accrualBalanceRepository) {
+    this.accrualBalanceRepository = accrualBalanceRepository;
+  }
+
+  @Override
+  public AccrualBalance handle(ApproveLeaveCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    AccrualBalance balance =
+        accrualBalanceRepository
+            .findById(command.balanceId())
+            .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
+    balance.approveLeave(command.transactionId());
+    return accrualBalanceRepository.save(balance);
+  }
+}
+
+// RejectLeaveService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.RejectLeaveCommand;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
+import com.solveria.core.accruals.application.usecase.RejectLeaveUseCase;
+import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundException;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+
+public class RejectLeaveService implements RejectLeaveUseCase {
+
+  private final AccrualBalanceRepositoryPort accrualBalanceRepository;
+
+  public RejectLeaveService(AccrualBalanceRepositoryPort accrualBalanceRepository) {
+    this.accrualBalanceRepository = accrualBalanceRepository;
+  }
+
+  @Override
+  public AccrualBalance handle(RejectLeaveCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    AccrualBalance balance =
+        accrualBalanceRepository
+            .findById(command.balanceId())
+            .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
+    balance.rejectLeave(command.transactionId());
+    return accrualBalanceRepository.save(balance);
+  }
+}
+
+// OpenAccrualBalanceService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.OpenAccrualBalanceCommand;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
+import com.solveria.core.accruals.application.usecase.OpenAccrualBalanceUseCase;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import com.solveria.core.security.context.SecurityTenantContext;
+import java.util.UUID;
+
+public class OpenAccrualBalanceService implements OpenAccrualBalanceUseCase {
+
+  private final AccrualBalanceRepositoryPort accrualBalanceRepository;
+
+  public OpenAccrualBalanceService(AccrualBalanceRepositoryPort accrualBalanceRepository) {
+    this.accrualBalanceRepository = accrualBalanceRepository;
+  }
+
+  @Override
+  public AccrualBalance handle(OpenAccrualBalanceCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    AccrualBalance balance =
+        AccrualBalance.open(
+            command.relationshipId(),
+            command.balanceType(),
+            command.unit(),
+            command.currentBalance(),
+            command.lastAccrualDate(),
+            tenantId);
+    return accrualBalanceRepository.save(balance);
+  }
+}
+
+// ProvisionBenefitBatchService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.ProvisionBenefitBatchCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.ProvisionBenefitBatchUseCase;
+import com.solveria.core.accruals.domain.model.BenefitAccrual;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import com.solveria.core.security.context.SecurityTenantContext;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+public class ProvisionBenefitBatchService implements ProvisionBenefitBatchUseCase {
+
+  private final BenefitsRepositoryPort benefitsRepository;
+
+  public ProvisionBenefitBatchService(BenefitsRepositoryPort benefitsRepository) {
+    this.benefitsRepository = benefitsRepository;
+  }
+
+  @Override
+  public List<BenefitAccrual> handle(ProvisionBenefitBatchCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    List<BenefitAccrual> accruals = new ArrayList<>();
+
+    for (ProvisionBenefitBatchCommand.BenefitProvisionItem item : command.items()) {
+      BenefitAccrual accrual =
+          benefitsRepository
+              .findBenefitAccrual(item.benefitType(), item.fiscalYear())
+              .orElseGet(
+                  () ->
+                      BenefitAccrual.open(
+                          item.benefitType(), item.fiscalYear(), BigDecimal.ZERO, tenantId));
+      accrual.addAccrual(item.amount());
+      accruals.add(accrual);
+    }
+
+    return benefitsRepository.saveBenefitAccrualBatch(accruals);
+  }
+}
+
+// RegisterSeniorityMilestoneService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.RegisterSeniorityMilestoneCommand;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
+import com.solveria.core.accruals.application.usecase.RegisterSeniorityMilestoneUseCase;
+import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundException;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import com.solveria.core.accruals.domain.model.vo.SeniorityMilestone;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import java.util.UUID;
+
+public class RegisterSeniorityMilestoneService implements RegisterSeniorityMilestoneUseCase {
+
+  private final AccrualBalanceRepositoryPort accrualBalanceRepository;
+
+  public RegisterSeniorityMilestoneService(AccrualBalanceRepositoryPort accrualBalanceRepository) {
+    this.accrualBalanceRepository = accrualBalanceRepository;
+  }
+
+  @Override
+  public AccrualBalance handle(RegisterSeniorityMilestoneCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    AccrualBalance balance =
+        accrualBalanceRepository
+            .findById(command.balanceId())
+            .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
+    SeniorityMilestone milestone =
+        new SeniorityMilestone(UUID.randomUUID(), command.monthsCompleted(), command.baseSmnType());
+    balance.addSeniorityMilestone(milestone);
+    return accrualBalanceRepository.save(balance);
+  }
+}
+
+// RequestQuinquenioPaymentService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.RequestQuinquenioPaymentCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.RequestQuinquenioPaymentUseCase;
+import com.solveria.core.accruals.domain.exception.QuinquenioProvisionNotFoundException;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+
+public class RequestQuinquenioPaymentService implements RequestQuinquenioPaymentUseCase {
+
+  private final BenefitsRepositoryPort benefitsRepository;
+
+  public RequestQuinquenioPaymentService(BenefitsRepositoryPort benefitsRepository) {
+    this.benefitsRepository = benefitsRepository;
+  }
+
+  @Override
+  public QuinquenioProvision handle(RequestQuinquenioPaymentCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    QuinquenioProvision provision =
+        benefitsRepository
+            .findQuinquenioByRelationshipId(command.relationshipId())
+            .orElseThrow(
+                () -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
+    provision.requestPayment(command.requestDate());
+    return benefitsRepository.saveQuinquenio(provision);
+  }
+}
+
+// EvaluateQuinquenioPenaltyService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.EvaluateQuinquenioPenaltyCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.EvaluateQuinquenioPenaltyUseCase;
+import com.solveria.core.accruals.domain.exception.QuinquenioProvisionNotFoundException;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import java.time.LocalDate;
+
+public class EvaluateQuinquenioPenaltyService implements EvaluateQuinquenioPenaltyUseCase {
+
+  private final BenefitsRepositoryPort benefitsRepository;
+
+  public EvaluateQuinquenioPenaltyService(BenefitsRepositoryPort benefitsRepository) {
+    this.benefitsRepository = benefitsRepository;
+  }
+
+  @Override
+  public QuinquenioProvision handle(EvaluateQuinquenioPenaltyCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    QuinquenioProvision provision =
+        benefitsRepository
+            .findQuinquenioByRelationshipId(command.relationshipId())
+            .orElseThrow(
+                () -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
+    LocalDate today = command.today() != null ? command.today() : LocalDate.now();
+    provision.evaluatePenalty(command.requestDate(), today, command.paymentDate());
+    return benefitsRepository.saveQuinquenio(provision);
+  }
+}
+
+// MarkQuinquenioPaidService.java
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.MarkQuinquenioPaidCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.MarkQuinquenioPaidUseCase;
+import com.solveria.core.accruals.domain.exception.QuinquenioProvisionNotFoundException;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+
+public class MarkQuinquenioPaidService implements MarkQuinquenioPaidUseCase {
+
+  private final BenefitsRepositoryPort benefitsRepository;
+
+  public MarkQuinquenioPaidService(BenefitsRepositoryPort benefitsRepository) {
+    this.benefitsRepository = benefitsRepository;
+  }
+
+  @Override
+  public QuinquenioProvision handle(MarkQuinquenioPaidCommand command) {
+    LocalizationPolicy.requireSantaCruz(command.location());
+    QuinquenioProvision provision =
+        benefitsRepository
+            .findQuinquenioByRelationshipId(command.relationshipId())
+            .orElseThrow(
+                () -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
+    provision.markPaid(command.paymentDate());
+    return benefitsRepository.saveQuinquenio(provision);
+  }
+}
+
+// BenefitsRepositoryPort.java
+package com.solveria.core.accruals.application.port;
+
+import com.solveria.core.accruals.domain.model.BenefitAccrual;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.model.vo.BenefitType;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface BenefitsRepositoryPort {
+
+  HolidayCalendar saveHoliday(HolidayCalendar holiday);
+
+  List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate);
+
+  QuinquenioProvision saveQuinquenio(QuinquenioProvision provision);
+
+  Optional<QuinquenioProvision> findQuinquenioByRelationshipId(UUID relationshipId);
+
+  BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual);
+
+  List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals);
+
+  Optional<BenefitAccrual> findBenefitAccrual(BenefitType benefitType, int fiscalYear);
+}
+
+// BenefitsRepositoryAdapter.java
+package com.solveria.core.accruals.infrastructure.adapter;
+
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.domain.event.AccrualEvent;
+import com.solveria.core.accruals.domain.model.BenefitAccrual;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.model.vo.BenefitType;
+import com.solveria.core.accruals.infrastructure.jpa.BenefitAccrualJpa;
+import com.solveria.core.accruals.infrastructure.jpa.HolidayCalendarJpa;
+import com.solveria.core.accruals.infrastructure.jpa.QuinquenioProvisionJpa;
+import com.solveria.core.accruals.infrastructure.mapper.BenefitsMapper;
+import com.solveria.core.accruals.infrastructure.repository.BenefitAccrualRepository;
+import com.solveria.core.accruals.infrastructure.repository.HolidayCalendarRepository;
+import com.solveria.core.accruals.infrastructure.repository.QuinquenioProvisionRepository;
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component
+@RequiredArgsConstructor
+public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
+
+  private final HolidayCalendarRepository holidayCalendarRepository;
+  private final QuinquenioProvisionRepository quinquenioProvisionRepository;
+  private final BenefitAccrualRepository benefitAccrualRepository;
+  private final BenefitsMapper benefitsMapper;
+  private final EventOutboxPort eventOutboxPort;
+
+  @Override
+  public HolidayCalendar saveHoliday(HolidayCalendar holiday) {
+    HolidayCalendarJpa saved = holidayCalendarRepository.save(benefitsMapper.toJpa(holiday));
+    return benefitsMapper.toDomain(saved);
+  }
+
+  @Override
+  public List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate) {
+    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    return holidayCalendarRepository
+        .findByHolidayDateBetweenAndTenantId(startDate, endDate, UUID.fromString(tenantId))
+        .stream()
+        .map(benefitsMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  @Transactional
+  public QuinquenioProvision saveQuinquenio(QuinquenioProvision provision) {
+    List<DomainEvent> events = provision.pullDomainEvents();
+    QuinquenioProvisionJpa savedJpa =
+        quinquenioProvisionRepository.save(benefitsMapper.toJpa(provision));
+    QuinquenioProvision saved = benefitsMapper.toDomain(savedJpa);
+
+    eventOutboxPort.publish(events);
+
+    return saved;
+  }
+
+  @Override
+  public Optional<QuinquenioProvision> findQuinquenioByRelationshipId(UUID relationshipId) {
+    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    return quinquenioProvisionRepository
+        .findByRelationshipIdAndTenantId(relationshipId, UUID.fromString(tenantId))
+        .map(benefitsMapper::toDomain);
+  }
+
+  @Override
+  public BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual) {
+    BenefitAccrualJpa saved = benefitAccrualRepository.save(benefitsMapper.toJpa(accrual));
+    return benefitsMapper.toDomain(saved);
+  }
+
+  @Override
+  @Transactional
+  public List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals) {
+    List<BenefitAccrualJpa> saved =
+        benefitAccrualRepository.saveAll(
+            accruals.stream().map(benefitsMapper::toJpa).toList());
+    return saved.stream().map(benefitsMapper::toDomain).toList();
+  }
+
+  @Override
+  public Optional<BenefitAccrual> findBenefitAccrual(BenefitType benefitType, int fiscalYear) {
+    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    return benefitAccrualRepository
+        .findByBenefitTypeAndFiscalYearAndTenantId(
+            benefitType, fiscalYear, UUID.fromString(tenantId))
+        .map(benefitsMapper::toDomain);
+  }
+}
+

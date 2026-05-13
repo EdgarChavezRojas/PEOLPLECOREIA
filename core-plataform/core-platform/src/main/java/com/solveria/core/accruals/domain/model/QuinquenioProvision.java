@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,7 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class QuinquenioProvision {
+public class QuinquenioProvision extends DomainRoot {
 
   private UUID provisionId;
   private UUID relationshipId;
@@ -28,7 +30,7 @@ public class QuinquenioProvision {
   private boolean penaltyActive;
   private UUID tenantId;
 
-  @Builder.Default private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   public static QuinquenioProvision open(
       UUID relationshipId, BigDecimal totalAccumulated, UUID tenantId) {
@@ -58,8 +60,8 @@ public class QuinquenioProvision {
   }
 
   public void markEligible() {
-    addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_ELIGIBILITY_REACHED));
-    addDomainEvent(QuinquenioEligibilityReachedEvent.now(
+    registerEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_ELIGIBILITY_REACHED));
+    registerEvent(QuinquenioEligibilityReachedEvent.now(
         relationshipId, LocalDate.now()));
   }
 
@@ -67,7 +69,7 @@ public class QuinquenioProvision {
     if (requestDate == null) {
       throw new IllegalArgumentException("requestDate is required");
     }
-    addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_REQUESTED));
+    registerEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_REQUESTED));
   }
 
   public void finalizeCalculation(BigDecimal averageLast90Days) {
@@ -75,15 +77,15 @@ public class QuinquenioProvision {
       throw new IllegalArgumentException("averageLast90Days must be positive");
     }
     totalAccumulated = averageLast90Days;
-    addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_CALCULATION_FINALIZED));
+    registerEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_CALCULATION_FINALIZED));
   }
 
   public void evaluatePenalty(LocalDate requestDate, LocalDate today, LocalDate paymentDate) {
     if (QuinquenioPolicy.isPaymentOverdue(requestDate, today, paymentDate)) {
       penaltyActive = true;
-      addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_OVERDUE));
+      registerEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_OVERDUE));
       BigDecimal penalty = totalAccumulated.multiply(QuinquenioPolicy.PENALTY_RATE);
-      addDomainEvent(QuinquenioPaymentOverdueEvent.now(
+      registerEvent(QuinquenioPaymentOverdueEvent.now(
           relationshipId, provisionId, penalty));
     }
   }
@@ -93,25 +95,8 @@ public class QuinquenioProvision {
       throw new IllegalArgumentException("paymentDate is required");
     }
     penaltyActive = false;
-    addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_PROCESSED));
+    registerEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_PROCESSED));
   }
 
-  public void addDomainEvent(DomainEvent event) {
-    if (event == null) {
-      return;
-    }
-    if (domainEvents == null) {
-      domainEvents = new ArrayList<>();
-    }
-    domainEvents.add(event);
-  }
 
-  public List<DomainEvent> pullDomainEvents() {
-    if (domainEvents == null || domainEvents.isEmpty()) {
-      return List.of();
-    }
-    List<DomainEvent> events = List.copyOf(domainEvents);
-    domainEvents.clear();
-    return events;
-  }
 }

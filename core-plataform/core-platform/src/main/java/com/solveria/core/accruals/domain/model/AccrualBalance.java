@@ -20,6 +20,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,7 +31,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccrualBalance {
+public class AccrualBalance extends DomainRoot {
 
   private UUID balanceId;
   private UUID relationshipId;
@@ -44,7 +46,7 @@ public class AccrualBalance {
   private List<LeaveTransaction> leaveTransactions;
   private List<SeniorityMilestone> seniorityMilestones;
 
-  @Builder.Default private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   public static AccrualBalance open(
       UUID relationshipId,
@@ -88,6 +90,7 @@ public class AccrualBalance {
   }
 
   public LeaveTransaction requestLeave(
+
       LocalDate startDate, LocalDate endDate, BigDecimal chargeableDays) {
     requireVacationDays();
     if (startDate == null || endDate == null) {
@@ -97,7 +100,7 @@ public class AccrualBalance {
       throw new IllegalArgumentException("chargeableDays must be positive");
     }
     if (currentBalance.compareTo(chargeableDays) < 0) {
-      addDomainEvent(AccrualEvent.now(AccrualEventType.VACATION_BALANCE_THRESHOLD_LOW));
+      registerEvent(AccrualEvent.now(AccrualEventType.VACATION_BALANCE_THRESHOLD_LOW));
       throw new InsufficientAccrualBalanceException(balanceId, chargeableDays, currentBalance);
     }
     LeaveTransaction transaction =
@@ -106,7 +109,7 @@ public class AccrualBalance {
       leaveTransactions = new ArrayList<>();
     }
     leaveTransactions.add(transaction);
-    addDomainEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_SUBMITTED));
+    registerEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_SUBMITTED));
     return transaction;
   }
 
@@ -117,8 +120,8 @@ public class AccrualBalance {
     }
     transaction.approve();
     deduct(transaction.getDaysRequested());
-    addDomainEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_MANAGER_APPROVED));
-    addDomainEvent(AccrualEvent.now(AccrualEventType.ACCRUAL_BALANCE_DEDUCTED));
+    registerEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_MANAGER_APPROVED));
+    registerEvent(AccrualEvent.now(AccrualEventType.ACCRUAL_BALANCE_DEDUCTED));
   }
 
   public void rejectLeave(UUID transactionId) {
@@ -127,7 +130,7 @@ public class AccrualBalance {
       throw new InvalidLeaveStateException("leave transaction is not pending");
     }
     transaction.reject();
-    addDomainEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_MANAGER_REJECTED));
+    registerEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_MANAGER_REJECTED));
   }
 
   public void accrueVacation(int yearsOfService, LocalDate accrualDate) {
@@ -138,7 +141,7 @@ public class AccrualBalance {
     }
     currentBalance = currentBalance.add(BigDecimal.valueOf(days));
     lastAccrualDate = accrualDate != null ? accrualDate : LocalDate.now();
-    addDomainEvent(AccrualBalanceUpdatedEvent.now(
+    registerEvent(AccrualBalanceUpdatedEvent.now(
         relationshipId, balanceType.name(), currentBalance));
   }
 
@@ -153,7 +156,7 @@ public class AccrualBalance {
     int years = milestone.monthsCompleted() / 12;
     int smMultiplier = BolivianSeniorityScale.smMultiplierFor(years);
     if (smMultiplier > 0) {
-      addDomainEvent(SeniorityMilestoneReachedEvent.now(
+      registerEvent(SeniorityMilestoneReachedEvent.now(
           relationshipId, years, smMultiplier));
     }
   }
@@ -204,22 +207,5 @@ public class AccrualBalance {
         .orElseThrow(() -> new InvalidLeaveStateException("leave transaction not found"));
   }
 
-  public void addDomainEvent(DomainEvent event) {
-    if (event == null) {
-      return;
-    }
-    if (domainEvents == null) {
-      domainEvents = new ArrayList<>();
-    }
-    domainEvents.add(event);
-  }
 
-  public List<DomainEvent> pullDomainEvents() {
-    if (domainEvents == null || domainEvents.isEmpty()) {
-      return List.of();
-    }
-    List<DomainEvent> events = List.copyOf(domainEvents);
-    domainEvents.clear();
-    return events;
-  }
 }

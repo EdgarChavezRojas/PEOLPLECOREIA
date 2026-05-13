@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BenefitAccrualRepository extends JpaRepository<BenefitAccrualJpa, UUID> {
 
-  Optional<BenefitAccrualJpa> findByBenefitTypeAndFiscalYearAndTenantId(
-      BenefitType benefitType, int fiscalYear, UUID tenantId);
+  Optional<BenefitAccrualJpa> findByRelationshipIdAndBenefitTypeAndFiscalYear(
+      UUID relationshipId, BenefitType benefitType, int fiscalYear);
+
+  Optional<BenefitAccrualJpa> findByRelationshipIdAndBenefitTypeAndFiscalYearAndTenantId(
+      UUID relationshipId, BenefitType benefitType, int fiscalYear, UUID tenantId);
 }

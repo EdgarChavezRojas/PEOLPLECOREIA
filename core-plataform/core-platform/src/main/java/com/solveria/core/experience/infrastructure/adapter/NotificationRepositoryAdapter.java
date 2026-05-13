@@ -1,6 +1,5 @@
 package com.solveria.core.experience.infrastructure.adapter;
 
-import com.solveria.core.experience.application.port.out.EventOutboxPort;
 import com.solveria.core.experience.application.port.out.NotificationPO;
 import com.solveria.core.experience.domain.model.Notification;
 import com.solveria.core.experience.infrastructure.jpa.NotificationJpa;
@@ -11,6 +10,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,18 +30,10 @@ public class NotificationRepositoryAdapter implements NotificationPO {
   @Override
   @Transactional
   public void save(Notification notification) {
-    List<DomainEvent> events = notification.pullDomainEvents();
-    NotificationJpa jpa = mapper.toJpa(notification);
-    NotificationJpa savedJpa = repository.save(jpa);
-    Notification saved = mapper.toDomain(savedJpa);
 
-    for (DomainEvent event : events) {
-      eventOutboxPort.publish(
-          "Notification",
-          saved.getNotificationId(),
-          mapper.resolveEventType(event),
-          mapper.toEventPayload(saved, event));
-    }
+    NotificationJpa jpa = mapper.toJpa(notification);
+      repository.save(jpa);
+      eventOutboxPort.publish(notification.pullDomainEvents());
   }
 
   @Override

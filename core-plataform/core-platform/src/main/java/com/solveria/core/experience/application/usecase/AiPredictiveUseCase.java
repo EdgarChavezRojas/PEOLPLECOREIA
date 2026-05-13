@@ -1,5 +1,6 @@
 package com.solveria.core.experience.application.usecase;
 
+import com.solveria.core.experience.application.command.RegisterPredictionModelCommand;
 import com.solveria.core.experience.application.port.in.AiPredictivePI;
 import com.solveria.core.experience.application.port.out.PredictionModelPO;
 import com.solveria.core.experience.domain.model.PredictionModel;
@@ -24,6 +25,25 @@ public class AiPredictiveUseCase implements AiPredictivePI {
 
   private static final BigDecimal SMN = new BigDecimal("3300.00");
   private final PredictionModelPO predictionModelPO;
+
+  @Override
+  @Transactional
+  public UUID registerPredictionModel(RegisterPredictionModelCommand cmd) {
+    log.info(
+        "event=PREDICTION_MODEL_REGISTER modelType={} version={} tenantId={}",
+        cmd.modelType(),
+        cmd.version(),
+        cmd.tenantId());
+
+    PredictionModel model = PredictionModel.create(cmd.modelType(), cmd.version(), cmd.tenantId());
+    predictionModelPO.save(model);
+
+    log.info(
+        "event=PREDICTION_MODEL_REGISTERED modelId={} modelType={}",
+        model.getModelId(),
+        model.getModelType());
+    return model.getModelId();
+  }
 
   @Override
   @Transactional

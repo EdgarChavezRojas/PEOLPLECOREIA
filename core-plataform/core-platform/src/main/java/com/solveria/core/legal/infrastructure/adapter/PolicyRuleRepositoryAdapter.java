@@ -26,6 +26,7 @@ public class PolicyRuleRepositoryAdapter implements PolicyRuleRepositoryPort {
   public void save(PolicyRule policyRule) {
     PolicyRuleJpa jpa = policyRuleMapper.toJpa(policyRule);
     policyRuleRepository.save(jpa);
+
   }
 
   @Override
@@ -33,6 +34,14 @@ public class PolicyRuleRepositoryAdapter implements PolicyRuleRepositoryPort {
     String currentTenantId = SecurityTenantContext.getCurrentTenantId();
     return policyRuleRepository
         .findByPolicyIdAndTenantId(policyId, currentTenantId)
+        .map(policyRuleMapper::toDomain);
+  }
+
+  @Override
+  public Optional<PolicyRule> findByPolicyName(String policyName) {
+    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    return policyRuleRepository
+        .findByPolicyNameAndTenantId(policyName, currentTenantId)
         .map(policyRuleMapper::toDomain);
   }
 }

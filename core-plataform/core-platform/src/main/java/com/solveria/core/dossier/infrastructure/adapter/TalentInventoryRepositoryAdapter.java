@@ -1,17 +1,16 @@
 package com.solveria.core.dossier.infrastructure.adapter;
 
 import com.solveria.core.dossier.application.port.TalentInventoryRepositoryPort;
-import com.solveria.core.dossier.domain.event.DossierEvent;
 import com.solveria.core.dossier.domain.model.TalentInventory;
 import com.solveria.core.dossier.infrastructure.jpa.TalentInventoryJpa;
 import com.solveria.core.dossier.infrastructure.mapper.TalentInventoryMapper;
 import com.solveria.core.dossier.infrastructure.repository.TalentInventoryRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.events.DomainEvent;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
-import java.util.List;
+
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,20 +28,12 @@ public class TalentInventoryRepositoryAdapter implements TalentInventoryReposito
   @Override
   @Transactional
   public TalentInventory save(TalentInventory inventory) {
-    List<DomainEvent> events = inventory.pullDomainEvents();
+
     TalentInventoryJpa jpa = talentInventoryMapper.toJpa(inventory);
     TalentInventoryJpa savedJpa = talentInventoryRepository.save(jpa);
     TalentInventory saved = talentInventoryMapper.toDomain(savedJpa);
 
-    for (DomainEvent event : events) {
-      if (event instanceof DossierEvent dossierEvent) {
-        eventOutboxPort.publish(
-            "TalentInventory",
-            saved.getInventoryId(),
-            dossierEvent.type().name(),
-            talentInventoryMapper.toEventPayload(saved, dossierEvent));
-      }
-    }
+    eventOutboxPort.publish(inventory.pullDomainEvents());
 
     return saved;
   }

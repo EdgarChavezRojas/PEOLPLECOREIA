@@ -11,6 +11,9 @@ import java.util.UUID;
 @Table(name = "prl_payroll_closure")
 public class PayrollClosureJpa extends BaseEntity {
 
+    @Column(name = "payroll_closure_id", updatable = false, columnDefinition = "UUID")
+    private UUID payrollClosureId
+            ;
     @Column(name = "run_ref", nullable = false)
     private UUID runRef;
 
@@ -20,6 +23,8 @@ public class PayrollClosureJpa extends BaseEntity {
     @Column(name = "integrity_hash")
     private String integrityHash;
 
+    public UUID getPayrollClosureId() { return payrollClosureId; }
+    public void setPayrollClosureId(UUID payrollClosureId) { this.payrollClosureId = payrollClosureId; }
     public UUID getRunRef() { return runRef; }
     public void setRunRef(UUID runRef) { this.runRef = runRef; }
     public String getStatus() { return status; }

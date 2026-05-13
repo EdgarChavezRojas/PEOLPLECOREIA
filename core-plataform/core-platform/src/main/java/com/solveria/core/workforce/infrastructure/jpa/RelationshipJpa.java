@@ -66,15 +66,15 @@ public class RelationshipJpa {
   @OneToOne(
       mappedBy = "relationship",
       cascade = CascadeType.ALL,
-      orphanRemoval = true,
-      fetch = FetchType.LAZY)
+      orphanRemoval = true
+  )
   private WorkerProfileJpa workerProfile;
 
   @OneToOne(
       mappedBy = "relationship",
       cascade = CascadeType.ALL,
-      orphanRemoval = true,
-      fetch = FetchType.LAZY)
+      orphanRemoval = true
+  )
   private AcademicProfileJpa academicProfile;
 
   @OneToMany(

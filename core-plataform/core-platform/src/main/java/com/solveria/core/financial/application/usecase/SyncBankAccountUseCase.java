@@ -2,9 +2,10 @@ package com.solveria.core.financial.application.usecase;
 
 import com.solveria.core.financial.application.command.SyncBankAccountCommand;
 import com.solveria.core.financial.application.port.DispersionPort;
-import com.solveria.core.financial.application.port.EventOutboxPort;
 import com.solveria.core.financial.domain.event.BankAccountSyncedEvent;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,17 +34,17 @@ public class SyncBankAccountUseCase implements DispersionPort {
     BankAccountSyncedEvent event =
         new BankAccountSyncedEvent(cmd.personId(), cmd.bankAccountNumber(), cmd.bankCode());
 
-    eventOutboxPort.publish(
-        "BankAccount",
-        cmd.personId(),
-        "BANK_ACCOUNT_SYNCED",
-        "{\"personId\":\""
-            + cmd.personId()
-            + "\",\"bankAccountNumber\":\""
-            + cmd.bankAccountNumber()
-            + "\",\"bankCode\":\""
-            + cmd.bankCode()
-            + "\"}");
+//    eventOutboxPort.publish(
+//        "BankAccount",
+//        cmd.personId(),
+//        "BANK_ACCOUNT_SYNCED",
+//        "{\"personId\":\""
+//            + cmd.personId()
+//            + "\",\"bankAccountNumber\":\""
+//            + cmd.bankAccountNumber()
+//            + "\",\"bankCode\":\""
+//            + cmd.bankCode()
+//            + "\"}");
 
     log.info("event=BANK_ACCOUNT_SYNCED personId={}", personId);
   }

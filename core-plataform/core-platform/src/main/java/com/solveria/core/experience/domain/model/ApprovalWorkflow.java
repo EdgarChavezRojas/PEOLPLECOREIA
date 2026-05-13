@@ -76,6 +76,23 @@ public class ApprovalWorkflow {
         new ApprovalHistoryEntry(rejectedBy.toString(), "REJECTED", reason, Instant.now()));
   }
 
+  /**
+   * Cancela la solicitud (ESS). Solo solicitudes en PENDING_REVIEW pueden cancelarse.
+   * Registra el actor que cancela en el historial para auditoría.
+   *
+   * @param cancelledBy ID del empleado que cancela (debe ser el solicitante original)
+   */
+  public void cancel(String cancelledBy) {
+    if (this.status != ApprovalStatus.PENDING_REVIEW) {
+      throw new IllegalStateException(
+          "Solo solicitudes en PENDING_REVIEW pueden cancelarse. Estado actual: " + this.status);
+    }
+    this.status = ApprovalStatus.CANCELLED;
+    this.history.add(
+        new ApprovalHistoryEntry(
+            cancelledBy, "CANCELLED", "Cancelado por el solicitante vía ESS", Instant.now()));
+  }
+
   // ─── Rehydration ───────────────────────────────────────────────
 
   public static ApprovalWorkflow rehydrate(

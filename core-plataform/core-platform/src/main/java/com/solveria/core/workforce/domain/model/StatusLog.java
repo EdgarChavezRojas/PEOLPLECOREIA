@@ -34,7 +34,7 @@ public class StatusLog {
       RelationshipStatus newStatus,
       String changeReason,
       UUID changedBy) {
-    if (relationshipId == null || previousStatus == null || newStatus == null) {
+    if (relationshipId == null || newStatus == null) {
       throw new IllegalArgumentException(
           "relationshipId, previousStatus y newStatus son requeridos");
     }

@@ -1,7 +1,6 @@
 package com.solveria.core.dossier.infrastructure.adapter;
 
 import com.solveria.core.dossier.application.port.AssignedAssetRepositoryPort;
-import com.solveria.core.dossier.domain.event.DossierEvent;
 import com.solveria.core.dossier.domain.model.AssignedAsset;
 import com.solveria.core.dossier.domain.model.vo.AssetStatus;
 import com.solveria.core.dossier.infrastructure.jpa.AssignedAssetJpa;
@@ -9,10 +8,12 @@ import com.solveria.core.dossier.infrastructure.mapper.AssignedAssetMapper;
 import com.solveria.core.dossier.infrastructure.repository.AssignedAssetRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.events.DomainEvent;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -30,20 +31,11 @@ public class AssignedAssetRepositoryAdapter implements AssignedAssetRepositoryPo
   @Override
   @Transactional
   public AssignedAsset save(AssignedAsset asset) {
-    List<DomainEvent> events = asset.pullDomainEvents();
     AssignedAssetJpa jpa = assignedAssetMapper.toJpa(asset);
     AssignedAssetJpa savedJpa = assignedAssetRepository.save(jpa);
     AssignedAsset saved = assignedAssetMapper.toDomain(savedJpa);
 
-    for (DomainEvent event : events) {
-      if (event instanceof DossierEvent dossierEvent) {
-        eventOutboxPort.publish(
-            "AssignedAsset",
-            saved.getAssignmentId(),
-            dossierEvent.type().name(),
-            assignedAssetMapper.toEventPayload(saved, dossierEvent));
-      }
-    }
+    eventOutboxPort.publish(asset.pullDomainEvents());
 
     return saved;
   }
@@ -62,4 +54,9 @@ public class AssignedAssetRepositoryAdapter implements AssignedAssetRepositoryPo
     return assignedAssetRepository.existsByWorkerIdAndTenantIdAndStatusIn(
         workerId, UUID.fromString(tenantId), List.of(AssetStatus.CUSTODY));
   }
+
+  @Override
+  public List<UUID> findPendingAssetIds(UUID workerId) {
+    return List.of();
+  }//pendiente a revisar para que sirve esta funcionalidad
 }

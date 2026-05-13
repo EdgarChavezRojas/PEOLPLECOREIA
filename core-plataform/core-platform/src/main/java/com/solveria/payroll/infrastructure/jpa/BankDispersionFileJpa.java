@@ -12,6 +12,10 @@ import java.util.UUID;
 @Table(name = "prl_dispersion_file")
 public class BankDispersionFileJpa extends BaseEntity {
 
+    @Column(name = "dispersion_file_id", updatable = false, columnDefinition = "UUID")
+    private UUID dispersionFileId;
+
+    // Add getters and setters
     @Column(name = "run_ref")
     private UUID runRef;
 
@@ -30,6 +34,12 @@ public class BankDispersionFileJpa extends BaseEntity {
     @Column(name = "file_hash")
     private String fileHash;
 
+    public UUID getDispersionFileId() {
+        return dispersionFileId;
+    }
+    public void setDispersionFileId(UUID dispersionFileId) {
+        this.dispersionFileId = dispersionFileId;
+    }
     public UUID getRunRef() {
         return runRef;
     }

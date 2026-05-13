@@ -9,12 +9,15 @@ import com.solveria.core.legal.application.port.PolicyRuleRepositoryPort;
 import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.ContractAddendum;
 import com.solveria.core.legal.domain.model.PolicyRule;
+import com.solveria.core.legal.domain.exception.ContractNotFoundException;
+import com.solveria.core.legal.domain.exception.LegalThresholdNotFoundException;
+import com.solveria.core.legal.domain.exception.PolicyRuleNotFoundException;
+import com.solveria.core.legal.domain.exception.TenantMismatchException;
 import com.solveria.core.legal.domain.model.vo.ComplianceSnapshot;
 import com.solveria.core.legal.domain.model.vo.LegalThreshold;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.security.context.SecurityUserContext;
-import com.solveria.core.shared.exceptions.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.UUID;
@@ -39,14 +42,13 @@ public class ProposeContractAddendumUseCase {
   public ContractAddendumResponse execute(ProposeContractAddendumRequest request) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
     if (!tenantId.equals(request.tenantId())) {
-      throw new IllegalStateException("Tenant inconsistente entre request y contexto de seguridad");
+      throw new TenantMismatchException(request.tenantId(), tenantId);
     }
 
     Contract contract =
         contractRepositoryPort
             .findById(request.contractId())
-            .orElseThrow(
-                () -> new EntityNotFoundException("Contract", request.contractId().toString()));
+            .orElseThrow(() -> new ContractNotFoundException(request.contractId()));
 
     UUID addendumId = request.addendumId() != null ? request.addendumId() : UUID.randomUUID();
     SalaryTerms salaryTerms = toSalaryTerms(request.salaryTerms());
@@ -67,7 +69,7 @@ public class ProposeContractAddendumUseCase {
     contractRepositoryPort.save(contract);
 
     log.info(
-        "event=LEGAL_CONTRACT_ADDENDUM_PROPOSED contractId={} addendumId={}",
+        "event=LEGAL_CONTRACT_ADDENDUM_PROPOSE_SUCCESS contractId={} addendumId={}",
         contract.getContractId(),
         addendum.getAddendumId());
 
@@ -89,13 +91,13 @@ public class ProposeContractAddendumUseCase {
     PolicyRule policyRule =
         policyRuleRepositoryPort
             .findById(UUID.fromString(smnPolicyId))
-            .orElseThrow(() -> new EntityNotFoundException("PolicyRule", smnPolicyId));
+            .orElseThrow(() -> new PolicyRuleNotFoundException(UUID.fromString(smnPolicyId)));
     LegalThreshold threshold =
         policyRule.getThresholds().stream()
             .max(
                 Comparator.comparing(
                     LegalThreshold::effectiveDate, Comparator.nullsLast(Comparator.naturalOrder())))
-            .orElseThrow(() -> new EntityNotFoundException("LegalThreshold", smnPolicyId));
+            .orElseThrow(() -> new LegalThresholdNotFoundException(policyRule.getPolicyId()));
     return threshold.thresholdValue();
   }
 

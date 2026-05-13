@@ -2,6 +2,8 @@ package com.solveria.payroll.application.web;
 
 import com.solveria.payroll.application.port.inbound.AttendanceHandoffUseCase;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +25,7 @@ public class PayrollHandoffController {
     public ResponseEntity<Void> syncAttendance(
             @RequestParam UUID periodId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        attendanceHandoffUseCase.process(periodId, tenantId);
+//        attendanceHandoffUseCase.process(periodId, tenantId);
         return ResponseEntity.ok().build();
     }
 }

@@ -6,8 +6,10 @@ import com.solveria.core.accruals.application.usecase.RegisterHolidayUseCase;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
-import java.util.UUID;
+import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+@Service
 public class RegisterHolidayService implements RegisterHolidayUseCase {
 
   private final BenefitsRepositoryPort benefitsRepository;

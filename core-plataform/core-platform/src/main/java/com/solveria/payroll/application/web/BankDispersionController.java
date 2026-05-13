@@ -24,7 +24,7 @@ public class BankDispersionController {
     public ResponseEntity<Void> generateDispersionFile(
             @PathVariable UUID runId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
-        generateDispersionFileUseCase.execute(runId, tenantId);
+//        generateDispersionFileUseCase.execute(runId, tenantId);
         return ResponseEntity.ok().build();
     }
 }

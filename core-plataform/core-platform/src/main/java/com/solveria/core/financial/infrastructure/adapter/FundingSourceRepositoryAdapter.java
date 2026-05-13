@@ -1,6 +1,5 @@
 package com.solveria.core.financial.infrastructure.adapter;
 
-import com.solveria.core.financial.application.port.EventOutboxPort;
 import com.solveria.core.financial.application.port.FundingSourceRepositoryPort;
 import com.solveria.core.financial.domain.model.FundingSource;
 import com.solveria.core.financial.infrastructure.jpa.FundingSourceJpa;
@@ -11,6 +10,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,17 +34,9 @@ public class FundingSourceRepositoryAdapter implements FundingSourceRepositoryPo
   @Transactional
   public void save(FundingSource fundingSource) {
     List<DomainEvent> events = fundingSource.pullDomainEvents();
-    FundingSourceJpa jpa = fundingSourceMapper.toJpa(fundingSource);
-    FundingSourceJpa savedJpa = fundingSourceRepository.save(jpa);
-    FundingSource saved = fundingSourceMapper.toDomain(savedJpa);
+     fundingSourceMapper.toJpa(fundingSource);
 
-    for (DomainEvent event : events) {
-      eventOutboxPort.publish(
-          "FundingSource",
-          saved.getSourceId(),
-          fundingSourceMapper.resolveEventType(event),
-          fundingSourceMapper.toEventPayload(saved, event));
-    }
+    eventOutboxPort.publish(fundingSource.pullDomainEvents());
   }
 
   @Override

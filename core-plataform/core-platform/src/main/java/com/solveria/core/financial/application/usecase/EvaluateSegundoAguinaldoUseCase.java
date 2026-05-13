@@ -1,10 +1,12 @@
 package com.solveria.core.financial.application.usecase;
 
-import com.solveria.core.financial.application.port.EventOutboxPort;
 import com.solveria.core.financial.domain.event.SegundoAguinaldoEligibilityMetEvent;
 import com.solveria.core.financial.domain.service.SegundoAguinaldoPolicy;
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class EvaluateSegundoAguinaldoUseCase {
+public class EvaluateSegundoAguinaldoUseCase extends DomainRoot {
 
   private final EventOutboxPort eventOutboxPort;
 
@@ -48,15 +50,10 @@ public class EvaluateSegundoAguinaldoUseCase {
     BigDecimal provisionalAmount = SegundoAguinaldoPolicy.calculate(averageSalary, gdpGrowthToggleActive);
 
     if (provisionalAmount.compareTo(BigDecimal.ZERO) > 0) {
-      SegundoAguinaldoEligibilityMetEvent event =
-          new SegundoAguinaldoEligibilityMetEvent(personId, provisionalAmount);
 
-      eventOutboxPort.publish(
-          "SegundoAguinaldo",
-          personId,
-          "SEGUNDO_AGUINALDO_ELIGIBILITY_MET",
-          "{\"personId\":\"" + personId
-              + "\",\"provisionalAmount\":" + provisionalAmount + "}");
+         registerEvent(new SegundoAguinaldoEligibilityMetEvent(personId, provisionalAmount));
+        //revisar si es valido para la arquitectura y el acoplamiento si se puede extender un caso de uso a un dominio
+
 
       log.info(
           "event=SEGUNDO_AGUINALDO_ELIGIBILITY_MET personId={} provisionalAmount={}",

@@ -1,5 +1,6 @@
 package com.solveria.payroll.application.usecase;
 
+import com.solveria.core.shared.exceptions.SolverExceptionImpl;
 import com.solveria.payroll.application.dto.request.ApprovePayrollRequest;
 import com.solveria.payroll.application.port.inbound.ApprovePayrollUseCase;
 import com.solveria.payroll.application.port.outbound.PayrollApprovalRepositoryPort;
@@ -23,7 +24,7 @@ public class ProcessApprovePayrollUseCase implements ApprovePayrollUseCase {
     @Transactional
     public void execute(UUID runId, ApprovePayrollRequest request, String tenantId) {
         PayrollApproval approval = payrollApprovalRepositoryPort.findByRunRef(runId)
-                .orElseThrow(() -> new SolverException("APPROVAL_NOT_FOUND", "Payroll approval not found for runId: " + runId));
+                .orElseThrow(() -> new SolverExceptionImpl("APPROVAL_NOT_FOUND"));
         
         approval.approve(UUID.randomUUID()); 
         

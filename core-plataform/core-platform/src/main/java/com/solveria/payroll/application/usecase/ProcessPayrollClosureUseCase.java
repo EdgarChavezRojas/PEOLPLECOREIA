@@ -1,5 +1,6 @@
 package com.solveria.payroll.application.usecase;
 
+import com.solveria.core.shared.exceptions.SolverExceptionImpl;
 import com.solveria.payroll.application.port.inbound.ClosePayrollUseCase;
 import com.solveria.payroll.application.port.outbound.EventOutboxPort;
 import com.solveria.payroll.application.port.outbound.PayrollClosureRepositoryPort;
@@ -43,7 +44,7 @@ public class ProcessPayrollClosureUseCase implements ClosePayrollUseCase {
         } catch (Exception e) {
             closure.markAsError();
             closureRepository.save(closure);
-            throw new SolverException("PAYROLL_CLOSURE_FAILED", "Failed to close payroll", e);
+            throw new SolverExceptionImpl("PAYROLL_CLOSURE_FAILED");
         }
     }
 }

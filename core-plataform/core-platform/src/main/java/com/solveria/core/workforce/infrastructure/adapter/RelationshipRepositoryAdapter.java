@@ -2,7 +2,7 @@ package com.solveria.core.workforce.infrastructure.adapter;
 
 import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
 import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
@@ -33,9 +33,7 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
     RelationshipJpa savedRelationshipJpa = relationshipRepository.save(relationshipJpa);
     Relationship savedRelationship = relationshipMapper.toDomain(savedRelationshipJpa);
 
-    for (DomainEvent event : relationship.pullDomainEvents()) {
-      eventOutboxPort.publish(event);
-    }
+   eventOutboxPort.publish(relationship.pullDomainEvents());
 
     return savedRelationship;
   }

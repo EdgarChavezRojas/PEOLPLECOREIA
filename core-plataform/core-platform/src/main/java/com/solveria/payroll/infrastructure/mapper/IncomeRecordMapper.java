@@ -13,7 +13,7 @@ public interface IncomeRecordMapper {
     @Mapping(target = "isAutomatic", source = "automatic")
     IncomeRecordJpa toJpa(IncomeRecord domain);
 
-    @Mapping(target = "amount", expression = "java(new com.solveria.core.payroll.domain.model.vo.IncomeAmount(jpa.getAmount()))")
+    @Mapping(target = "amount", expression = "java(new com.solveria.payroll.domain.model.vo.IncomeAmount(jpa.getAmount()))")
     @Mapping(target = "isAutomatic", source = "isAutomatic")
     IncomeRecord toDomain(IncomeRecordJpa jpa);
 }

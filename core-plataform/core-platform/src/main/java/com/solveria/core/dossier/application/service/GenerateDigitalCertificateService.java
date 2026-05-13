@@ -8,8 +8,11 @@ import com.solveria.core.dossier.domain.model.DocumentRecord;
 import com.solveria.core.dossier.domain.model.vo.DocumentMetadata;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
+import org.springframework.stereotype.Service;
+
 import java.util.UUID;
 
+@Service
 public class GenerateDigitalCertificateService implements GenerateDigitalCertificateUseCase {
 
   private final DocumentRecordRepositoryPort documentRecordRepository;

@@ -18,7 +18,7 @@ public interface PersonMapper {
 
   PersonJpa toJpa(Person person);
 
-  @Mapping(target = "domainEvents", ignore = true)
+
   Person toDomain(PersonJpa jpa);
 
   @Mapping(

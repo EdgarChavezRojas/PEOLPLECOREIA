@@ -1,12 +1,17 @@
 package com.solveria.core.experience.domain.model;
 
 import com.solveria.core.experience.domain.event.CertificateGeneratedEvent;
+import com.solveria.core.experience.domain.event.DataChangeCancelledEvent;
 import com.solveria.core.experience.domain.event.DataChangeRejectedEvent;
 import com.solveria.core.experience.domain.event.DataChangeRequestedEvent;
+import com.solveria.core.experience.domain.event.LeaveRequestedViaEssEvent;
 import com.solveria.core.experience.domain.model.vo.ActionType;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +29,7 @@ import java.util.UUID;
  *
  * <p>Dominio puro: SIN anotaciones de infraestructura.
  */
-public class SelfServiceAction {
+public class SelfServiceAction extends DomainRoot {
 
   private UUID actionId;
   private UUID personId;
@@ -40,7 +45,7 @@ public class SelfServiceAction {
   /** Payload de certificado generado (solo para CERTIFICATE_REQUEST). */
   private CertificatePayload certificatePayload;
 
-  private final List<DomainEvent> domainEvents = new ArrayList<>();
+
 
   /** Constructor privado: factory methods obligatorias. */
   private SelfServiceAction() {}
@@ -75,7 +80,7 @@ public class SelfServiceAction {
     // Invariante SoD: siempre inicia con aprobación pendiente
     action.approvalWorkflow = ApprovalWorkflow.initiate(action.actionId, createdBy);
 
-    action.domainEvents.add(
+    action.registerEvent(
         new DataChangeRequestedEvent(
             action.actionId, personId, ActionType.DATA_UPDATE.name(), payload, tenantId));
 
@@ -111,7 +116,7 @@ public class SelfServiceAction {
     // W14: Certificados no requieren aprobación MSS (autoservicio directo)
     action.approvalWorkflow = null;
 
-    action.domainEvents.add(
+    action.registerEvent(
         new CertificateGeneratedEvent(
             action.actionId,
             personId,
@@ -119,6 +124,57 @@ public class SelfServiceAction {
             certificatePayload.sha256Hash(),
             certificatePayload.qrValidationUrl(),
             tenantId));
+
+    return action;
+  }
+
+  /**
+   * Solicitud de ausencia/permiso vía ESS. Crea la acción como LEAVE_REQUEST
+   * con flujo de aprobación PENDING_REVIEW y emite LeaveRequestedViaEssEvent.
+   *
+   * @param personId    ID del empleado solicitante
+   * @param leaveType   Tipo de ausencia (VACACION, PERMISO, etc.)
+   * @param startDate   Fecha inicio de la ausencia
+   * @param endDate     Fecha fin de la ausencia
+   * @param tenantId    Tenant del empleado
+   * @param createdBy   ID del usuario que crea la solicitud
+   */
+  public static SelfServiceAction requestLeave(
+      UUID personId,
+      String leaveType,
+      LocalDate startDate,
+      LocalDate endDate,
+      String tenantId,
+      String createdBy) {
+    validateCommonArgs(personId, tenantId, createdBy);
+    if (leaveType == null || leaveType.isBlank()) {
+      throw new IllegalArgumentException("El tipo de ausencia no puede estar vacío");
+    }
+    if (startDate == null || endDate == null) {
+      throw new IllegalArgumentException("Las fechas de inicio y fin son obligatorias");
+    }
+    if (endDate.isBefore(startDate)) {
+      throw new IllegalArgumentException("La fecha fin no puede ser anterior a la fecha inicio");
+    }
+
+    SelfServiceAction action = new SelfServiceAction();
+    action.actionId = UUID.randomUUID();
+    action.personId = personId;
+    action.actionType = ActionType.LEAVE_REQUEST;
+    action.payload =
+        "{\"leaveType\":\"" + leaveType
+            + "\",\"startDate\":\"" + startDate
+            + "\",\"endDate\":\"" + endDate + "\"}";
+    action.tenantId = tenantId;
+    action.createdBy = createdBy;
+    action.createdAt = Instant.now();
+
+    // Leave requests requieren aprobación MSS (invariante SoD)
+    action.approvalWorkflow = ApprovalWorkflow.initiate(action.actionId, createdBy);
+
+    action.registerEvent(
+        new LeaveRequestedViaEssEvent(
+            action.actionId, personId, leaveType, startDate, endDate, tenantId));
 
     return action;
   }
@@ -165,9 +221,32 @@ public class SelfServiceAction {
     }
     this.approvalWorkflow.reject(rejectedBy, rejectionReason);
 
-    this.domainEvents.add(
+    this.registerEvent(
         new DataChangeRejectedEvent(
             this.actionId, this.personId, rejectionReason, rejectedBy, this.tenantId));
+  }
+
+  /**
+   * Cancela una solicitud ESS pendiente de revisión. Solo el autor original
+   * puede cancelar su propia solicitud.
+   *
+   * <p>Invariante: Solo acciones en estado PENDING_REVIEW pueden cancelarse.
+   * Invariante: Solo el solicitante original (personId) puede cancelar.
+   *
+   * @param requestingPersonId ID del empleado que solicita la cancelación
+   */
+  public void cancel(UUID requestingPersonId) {
+    if (this.approvalWorkflow == null) {
+      throw new IllegalStateException("Esta acción no tiene flujo de aprobación cancelable");
+    }
+    if (!this.personId.equals(requestingPersonId)) {
+      throw new IllegalStateException(
+          "Solo el solicitante original puede cancelar su propia solicitud");
+    }
+    this.approvalWorkflow.cancel(requestingPersonId.toString());
+
+    this.registerEvent(
+        new DataChangeCancelledEvent(this.actionId, this.personId, this.tenantId));
   }
 
   // ─── Rehydration (from persistence) ────────────────────────────
@@ -201,15 +280,7 @@ public class SelfServiceAction {
 
   // ─── Event Handling ────────────────────────────────────────────
 
-  /**
-   * Extrae y limpia los eventos de dominio acumulados. Patron pull-based: la infraestructura llama
-   * esto después de persistir.
-   */
-  public List<DomainEvent> pullDomainEvents() {
-    List<DomainEvent> events = new ArrayList<>(domainEvents);
-    domainEvents.clear();
-    return Collections.unmodifiableList(events);
-  }
+
 
   // ─── Getters (pure domain, no Lombok) ──────────────────────────
 

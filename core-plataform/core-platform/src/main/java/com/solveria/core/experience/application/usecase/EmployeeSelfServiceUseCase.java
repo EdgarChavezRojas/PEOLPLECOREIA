@@ -2,8 +2,11 @@ package com.solveria.core.experience.application.usecase;
 
 import com.solveria.core.experience.application.command.RequestCertificateCommand;
 import com.solveria.core.experience.application.command.RequestDataUpdateCommand;
+import com.solveria.core.experience.application.command.RequestLeaveCommand;
 import com.solveria.core.experience.application.port.in.EmployeeSelfServicePI;
+import com.solveria.core.experience.application.port.out.NotificationPO;
 import com.solveria.core.experience.application.port.out.SelfServiceActionPO;
+import com.solveria.core.experience.domain.model.Notification;
 import com.solveria.core.experience.domain.model.SelfServiceAction;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
 import com.solveria.core.experience.domain.service.CertificateGenerationService;
@@ -14,8 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Use Case: Employee Self-Service (ESS). Implementa W11 (Actualización de Datos) y W14
- * (Certificados Digitales).
+ * Use Case: Employee Self-Service (ESS). Implementa W11 (Actualización de Datos), W12 (Acuse de
+ * Memorandos), W14 (Certificados Digitales), y solicitudes de ausencia.
  */
 @Slf4j
 @Service
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
 
   private final SelfServiceActionPO selfServiceActionPO;
+  private final NotificationPO notificationPO;
 
   @Override
   @Transactional
@@ -70,6 +74,88 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
         "event=CERTIFICATE_GENERATED actionId={} sha256={}",
         action.getActionId(),
         certPayload.sha256Hash());
+    return action.getActionId();
+  }
+
+  @Override
+  @Transactional
+  public void cancelDataUpdate(UUID actionId, UUID personId, String tenantId) {
+    log.info(
+        "event=DATA_UPDATE_CANCEL_REQUESTED actionId={} personId={} tenantId={}",
+        actionId,
+        personId,
+        tenantId);
+
+    SelfServiceAction action =
+        selfServiceActionPO
+            .findById(actionId)
+            .orElseThrow(
+                () -> new IllegalArgumentException("SelfServiceAction no encontrado: " + actionId));
+
+    // Valida autoría y estado PENDING_REVIEW en el dominio
+    action.cancel(personId);
+
+    selfServiceActionPO.save(action);
+
+    log.info(
+        "event=DATA_UPDATE_CANCELLED actionId={} personId={}", actionId, personId);
+  }
+
+  @Override
+  @Transactional
+  public void acknowledgeNotification(UUID notificationId, UUID personId) {
+    log.info(
+        "event=MEMORANDUM_ACKNOWLEDGE_REQUESTED notificationId={} personId={}",
+        notificationId,
+        personId);
+
+    Notification notification =
+        notificationPO
+            .findById(notificationId)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Notification no encontrada: " + notificationId));
+
+    // Valida que requiere acknowledgement, no está ya firmada, y es el destinatario
+    notification.acknowledge(personId);
+
+    notificationPO.save(notification);
+
+    log.info(
+        "event=MEMORANDUM_ACKNOWLEDGED notificationId={} personId={} acknowledgedAt={}",
+        notificationId,
+        personId,
+        notification.getAcknowledgedAt());
+  }
+
+  @Override
+  @Transactional
+  public UUID requestLeave(RequestLeaveCommand cmd) {
+    log.info(
+        "event=LEAVE_REQUESTED personId={} leaveType={} start={} end={} tenantId={}",
+        cmd.personId(),
+        cmd.leaveType(),
+        cmd.startDate(),
+        cmd.endDate(),
+        cmd.tenantId());
+
+    SelfServiceAction action =
+        SelfServiceAction.requestLeave(
+            cmd.personId(),
+            cmd.leaveType(),
+            cmd.startDate(),
+            cmd.endDate(),
+            cmd.tenantId(),
+            cmd.personId().toString());
+
+    selfServiceActionPO.save(action);
+
+    log.info(
+        "event=LEAVE_REQUEST_CREATED actionId={} personId={} leaveType={}",
+        action.getActionId(),
+        cmd.personId(),
+        cmd.leaveType());
     return action.getActionId();
   }
 }

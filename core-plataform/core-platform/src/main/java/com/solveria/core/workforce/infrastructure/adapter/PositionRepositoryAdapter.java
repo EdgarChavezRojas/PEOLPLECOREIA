@@ -2,7 +2,7 @@ package com.solveria.core.workforce.infrastructure.adapter;
 
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.events.DomainEvent;
-import com.solveria.core.workforce.application.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.port.EventOutboxPort;
 import com.solveria.core.workforce.application.port.PositionRepositoryPort;
 import com.solveria.core.workforce.domain.model.Position;
 import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
@@ -31,9 +31,7 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
     PositionJpa savedPositionJpa = positionRepository.save(positionJpa);
     Position savedPosition = positionMapper.toDomain(savedPositionJpa);
 
-    for (DomainEvent event : position.pullDomainEvents()) {
-      eventOutboxPort.publish(event);
-    }
+    eventOutboxPort.publish(position.pullDomainEvents());
 
     return savedPosition;
   }
