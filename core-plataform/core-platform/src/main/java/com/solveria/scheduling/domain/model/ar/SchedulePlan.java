@@ -3,57 +3,28 @@ package com.solveria.scheduling.domain.model.ar;
 import com.solveria.scheduling.domain.exception.DomainRuleViolationException;
 import com.solveria.scheduling.domain.model.entity.AssignedShift;
 import com.solveria.scheduling.domain.model.enums.PlanStatus;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Root Entity para la gestión de la planificación de horarios (Roster Management).
  * Contiene la malla de turnos (AssignedShift).
  */
-@Entity
-@Table(name = "sch_schedule_plan")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SchedulePlan {
 
-    @Id
-    @Column(name = "plan_id")
-    private UUID planId;
-
-    @Column(name = "unit_id", nullable = false)
-    private UUID unitId;
-
-    @Column(name = "period_start", nullable = false)
-    private LocalDate periodStart;
-
-    @Column(name = "period_end", nullable = false)
-    private LocalDate periodEnd;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    private final UUID planId;
+    private final UUID unitId;
+    private final LocalDate periodStart;
+    private final LocalDate periodEnd;
     private PlanStatus status;
-
-    @Column(name = "total_projected_cost", precision = 15, scale = 2)
     private BigDecimal totalProjectedCost;
-
-    @OneToMany(mappedBy = "schedulePlan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AssignedShift> shifts = new ArrayList<>();
+    private final List<AssignedShift> shifts = new ArrayList<>();
 
     public SchedulePlan(UUID unitId, LocalDate periodStart, LocalDate periodEnd) {
         this.planId = UUID.randomUUID();
@@ -63,6 +34,22 @@ public class SchedulePlan {
         this.status = PlanStatus.DRAFT;
         this.totalProjectedCost = BigDecimal.ZERO;
         validateInvariants();
+    }
+
+    /**
+     * Constructor completo para reconstrucción desde infraestructura.
+     */
+    public SchedulePlan(UUID planId, UUID unitId, LocalDate periodStart, LocalDate periodEnd,
+                        PlanStatus status, BigDecimal totalProjectedCost, List<AssignedShift> shifts) {
+        this.planId = planId;
+        this.unitId = unitId;
+        this.periodStart = periodStart;
+        this.periodEnd = periodEnd;
+        this.status = status;
+        this.totalProjectedCost = totalProjectedCost;
+        if (shifts != null) {
+            this.shifts.addAll(shifts);
+        }
     }
 
     public void publish() {
@@ -99,8 +86,10 @@ public class SchedulePlan {
         shift.setSchedulePlan(null);
     }
 
-    @PrePersist
-    @PreUpdate
+    public List<AssignedShift> getShifts() {
+        return Collections.unmodifiableList(shifts);
+    }
+
     private void validateInvariants() {
         if (periodStart == null || periodEnd == null) {
             throw new DomainRuleViolationException("Las fechas de inicio y fin son obligatorias");
