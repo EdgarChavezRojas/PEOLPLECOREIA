@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -61,5 +61,15 @@ public class ContractRepositoryAdapter implements ContractRepositoryPort {
         .stream()
         .map(contractMapper::toDomain)
         .toList();
+  }
+
+  @Override
+  public Optional<Contract> findByRelationshipId(UUID relationId) {
+    return contractRepository.findByRelationshipId(relationId);
+  }
+
+  @Override
+  public List<Contract> findByProjectId(UUID projectId) {
+    return contractRepository.findByProjectId(projectId);
   }
 }

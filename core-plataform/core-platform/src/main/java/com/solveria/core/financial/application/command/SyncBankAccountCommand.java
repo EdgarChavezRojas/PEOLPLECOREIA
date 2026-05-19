@@ -4,7 +4,7 @@ import java.util.UUID;
 
 /** Command: Sincronizar cuenta bancaria para dispersión. */
 public record SyncBankAccountCommand(
-    UUID personId, String bankAccountNumber, String bankCode, String tenantId, String userId) {
+    UUID personId, String bankAccountNumber, String bankCode, UUID tenantId, String userId) {
   public SyncBankAccountCommand {
     if (personId == null) {
       throw new IllegalArgumentException("personId es obligatorio");

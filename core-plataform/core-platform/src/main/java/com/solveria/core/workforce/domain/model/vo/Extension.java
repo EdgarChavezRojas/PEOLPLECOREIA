@@ -1,8 +1,5 @@
 package com.solveria.core.workforce.domain.model.vo;
 
-import lombok.Getter;
-
-@Getter
 public enum Extension {
   SCZ("Santa Cruz"),
   LP("La Paz"),
@@ -19,5 +16,7 @@ public enum Extension {
     this.name = name;
   }
 
-
+  public String getName() {
+    return name;
+  }
 }

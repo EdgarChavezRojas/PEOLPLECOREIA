@@ -21,7 +21,7 @@ public class PayrollPeriod {
     private final CutoffDate cutoffDate;
     private PeriodStatus status;
     private final UUID holidayCalendarRef;
-    private final String tenantId;
+    private final UUID tenantId;
 
     /**
      * Constructor de reconstrucción (desde persistencia).
@@ -33,7 +33,7 @@ public class PayrollPeriod {
             CutoffDate cutoffDate,
             PeriodStatus status,
             UUID holidayCalendarRef,
-            String tenantId) {
+            UUID tenantId) {
         this.periodId = Objects.requireNonNull(periodId, "periodId es requerido");
         validateMonth(month);
         this.month = month;
@@ -52,7 +52,7 @@ public class PayrollPeriod {
             int year,
             LocalDate cutoffDate,
             UUID holidayCalendarRef,
-            String tenantId) {
+            UUID tenantId) {
         return new PayrollPeriod(
                 UUID.randomUUID(),
                 month,
@@ -88,5 +88,5 @@ public class PayrollPeriod {
     public CutoffDate getCutoffDate() { return cutoffDate; }
     public PeriodStatus getStatus() { return status; }
     public UUID getHolidayCalendarRef() { return holidayCalendarRef; }
-    public String getTenantId() { return tenantId; }
+    public UUID getTenantId() { return tenantId; }
 }

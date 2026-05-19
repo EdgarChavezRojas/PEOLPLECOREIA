@@ -7,11 +7,14 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Builder;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "shared_event_outbox")
+@Builder
 public class SharedOutboxMessageJpaEntity {
 
     @Id

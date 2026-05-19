@@ -54,7 +54,7 @@ public class ContractJpa extends BaseEntity {
   private ContractStatus status;
 
   @Column(name = "project_id", length = 50)
-  private String projectId;
+  private UUID projectId;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "employment_cond", length = 2)

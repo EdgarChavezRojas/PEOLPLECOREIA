@@ -23,10 +23,7 @@ public class TerminateContractUseCase {
 
   @Transactional
   public void execute(TerminateContractRequest request) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!tenantId.equals(request.tenantId())) {
-      throw new TenantMismatchException(request.tenantId(), tenantId);
-    }
+
 
     Contract contract =
         contractRepositoryPort

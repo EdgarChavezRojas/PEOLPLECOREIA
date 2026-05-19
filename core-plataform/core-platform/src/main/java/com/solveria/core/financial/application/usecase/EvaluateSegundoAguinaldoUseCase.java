@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,7 +47,7 @@ public class EvaluateSegundoAguinaldoUseCase extends DomainRoot {
       return BigDecimal.ZERO;
     }
 
-    BigDecimal provisionalAmount = SegundoAguinaldoPolicy.calculate(averageSalary, gdpGrowthToggleActive);
+    BigDecimal provisionalAmount = SegundoAguinaldoPolicy.calculate(averageSalary, true);
 
     if (provisionalAmount.compareTo(BigDecimal.ZERO) > 0) {
 

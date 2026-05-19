@@ -3,6 +3,7 @@ package com.solveria.core.iam.domain.model;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Pure domain model for Role - no persistence framework dependencies.
@@ -15,7 +16,7 @@ public class Role {
   private String name;
   private String description;
   private Set<Long> permissionIds = new HashSet<>();
-  private String tenantId;
+  private UUID tenantId;
   private Long version;
   private LocalDateTime createdAt;
   private String createdBy;
@@ -37,7 +38,7 @@ public class Role {
       String name,
       String description,
       Set<Long> permissionIds,
-      String tenantId,
+      UUID tenantId,
       Long version,
       LocalDateTime createdAt,
       String createdBy,
@@ -86,11 +87,11 @@ public class Role {
     }
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 
-  public void setTenantId(String tenantId) {
+  public void setTenantId(UUID tenantId) {
     this.tenantId = tenantId;
   }
 

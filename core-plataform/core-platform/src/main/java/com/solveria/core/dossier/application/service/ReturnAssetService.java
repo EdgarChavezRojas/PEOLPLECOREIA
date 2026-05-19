@@ -6,7 +6,9 @@ import com.solveria.core.dossier.application.usecase.ReturnAssetUseCase;
 import com.solveria.core.dossier.domain.exception.AssignedAssetNotFoundException;
 import com.solveria.core.dossier.domain.model.AssignedAsset;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ReturnAssetService implements ReturnAssetUseCase {
 
   private final AssignedAssetRepositoryPort assignedAssetRepository;

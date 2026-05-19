@@ -1,6 +1,7 @@
 package com.solveria.core.iam.domain.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Pure domain model for Action - no persistence framework dependencies.
@@ -13,7 +14,7 @@ public class Action {
   private final Long id;
   private String code;
   private String name;
-  private String tenantId;
+  private UUID tenantId;
   private Long version;
   private LocalDateTime createdAt;
   private String createdBy;
@@ -34,7 +35,7 @@ public class Action {
       Long id,
       String code,
       String name,
-      String tenantId,
+      UUID tenantId,
       Long version,
       LocalDateTime createdAt,
       String createdBy,
@@ -71,11 +72,11 @@ public class Action {
     this.name = name;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 
-  public void setTenantId(String tenantId) {
+  public void setTenantId(UUID tenantId) {
     this.tenantId = tenantId;
   }
 

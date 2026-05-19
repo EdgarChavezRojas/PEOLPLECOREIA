@@ -2,109 +2,127 @@ package com.solveria.core.financial.infrastructure.adapter;
 
 import com.solveria.core.financial.application.port.UfvQuotationPort;
 import com.solveria.core.financial.domain.model.vo.UfvProviderUnavailableException;
+
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URI;
+
+import java.time.DateTimeException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Component;
 
 /**
- * Adapter: Implementa UfvQuotationPort mediante Web Scraping (Jsoup) al sitio del
- * Banco Central de Bolivia.
- *
- * <p>Estrategia:
- * <ul>
- *   <li>Jsoup.connect() con timeout de 5 segundos.</li>
- *   <li>Caché en memoria (ConcurrentHashMap) para evitar peticiones duplicadas
- *       durante ejecuciones masivas de la misma fecha.</li>
- *   <li>Si falla (timeout, cambio de DOM, error de red), lanza
- *       UfvProviderUnavailableException.</li>
- * </ul>
+ * Adapter: Descarga el PDF anual del BCB y extrae la matriz de UFVs.
+ * Incluye lógica de auto-actualización si faltan datos de fechas recientes.
  */
 @Slf4j
 @Component
 public class BcbWebScrapingUfvAdapter implements UfvQuotationPort {
 
-  private static final String BCB_UFV_URL =
-      "https://www.bcb.gob.bo/librerias/indicadores/ufv/ufv.php";
+  private static final String BCB_PDF_URL_TEMPLATE = "https://www.bcb.gob.bo/librerias/indicadores/ufv/anualpdf.php?gestion=%d";
+  private static final Pattern UFV_PATTERN = Pattern.compile("(\\d+[.,]\\d{5})");
 
-  private static final int TIMEOUT_MS = 5_000;
-
-  private static final DateTimeFormatter BCB_DATE_FORMAT =
-      DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-  /** Caché en memoria para evitar peticiones HTTP duplicadas por fecha. */
+  // Caché de UFVs. Clave: Fecha exacta, Valor: UFV
   private final Map<LocalDate, BigDecimal> cache = new ConcurrentHashMap<>();
+
+  // Registro de CUÁNDO fue la última vez que descargamos el PDF de un año específico.
+  // Clave: Año, Valor: Fecha de la última descarga
+  private final Map<Integer, LocalDate> lastDownloadDatePerYear = new ConcurrentHashMap<>();
 
   @Override
   public BigDecimal getUfvValue(LocalDate date) throws UfvProviderUnavailableException {
-    log.info("event=UFV_QUOTATION_REQUEST date={}", date);
+    int year = date.getYear();
 
-    BigDecimal cached = cache.get(date);
-    if (cached != null) {
-      log.info("event=UFV_CACHE_HIT date={} value={}", date, cached);
-      return cached;
+    // 1. Buscamos primero en la memoria rápida
+    BigDecimal ufvValue = cache.get(date);
+
+    // 2. Si NO existe el dato, evaluamos si debemos volver a descargar el PDF
+    if (ufvValue == null) {
+      LocalDate lastDownload = lastDownloadDatePerYear.get(year);
+
+      // Regla de negocio: Si nunca lo hemos descargado, o si lo descargamos en un día
+      // anterior a HOY, volvemos a descargarlo para buscar la versión más reciente.
+      // (Esto evita que descarguemos el PDF 1000 veces el mismo día si alguien pide una fecha del futuro).
+      if (lastDownload == null || lastDownload.isBefore(LocalDate.now())) {
+        log.info("event=UFV_CACHE_MISS date={} action=FORCING_PDF_REFRESH", date);
+        loadYearFromPdf(year);
+
+        // Volvemos a intentar sacar el dato después de la actualización
+        ufvValue = cache.get(date);
+      }
     }
 
-    try {
-      String formattedDate = date.format(BCB_DATE_FORMAT);
-
-      Document doc =
-          Jsoup.connect(BCB_UFV_URL)
-              .data("fecha", formattedDate)
-              .timeout(TIMEOUT_MS)
-              .post();
-
-      Element resultElement = doc.selectFirst("div.resultado, span.ufv-valor, #resultado, td.valor");
-
-      String rawValue;
-      if (resultElement != null) {
-        rawValue = resultElement.text().trim();
-      } else {
-        rawValue = extractFallback(doc);
-      }
-
-      if (rawValue == null || rawValue.isBlank()) {
-        throw new UfvProviderUnavailableException(
-            "No se encontró el valor UFV en el DOM del BCB para fecha: " + formattedDate);
-      }
-
-      String sanitized = rawValue.replaceAll("[^0-9.,]", "").replace(",", ".");
-      BigDecimal ufvValue = new BigDecimal(sanitized);
-
-      cache.put(date, ufvValue);
-      log.info("event=UFV_QUOTATION_SUCCESS date={} value={}", date, ufvValue);
-      return ufvValue;
-
-    } catch (UfvProviderUnavailableException ex) {
-      throw ex;
-    } catch (NumberFormatException ex) {
-      log.error("event=UFV_PARSE_ERROR date={} error={}", date, ex.getMessage());
+    // 3. Si después de descargar el PDF fresco de internet sigue sin existir,
+    // significa que el BCB realmente aún no publica esa fecha (ej. pedir la UFV de diciembre en mayo).
+    if (ufvValue == null) {
       throw new UfvProviderUnavailableException(
-          "Valor UFV no numérico en la respuesta del BCB para fecha: " + date, ex);
-    } catch (Exception ex) {
-      log.error("event=UFV_PROVIDER_UNAVAILABLE date={} error={}", date, ex.getMessage());
-      throw new UfvProviderUnavailableException(
-          "El servicio web del BCB no respondió (timeout 5s) para fecha: " + date, ex);
+              "El BCB aún no ha publicado el valor de la UFV para la fecha: " + date);
+    }
+
+    return ufvValue;
+  }
+
+  /**
+   * Descarga el PDF del año solicitado y mapea (o sobrescribe) todos sus valores en la caché.
+   */
+  private synchronized void loadYearFromPdf(int year) throws UfvProviderUnavailableException {
+    // Doble chequeo por si múltiples hilos llegaron aquí al mismo tiempo
+    LocalDate lastDownload = lastDownloadDatePerYear.get(year);
+    if (lastDownload != null && lastDownload.isEqual(LocalDate.now())) {
+      return;
+    }
+
+    String urlString = String.format(BCB_PDF_URL_TEMPLATE, year);
+    log.info("Conectando al BCB para descargar PDF del año {}: {}", year, urlString);
+
+    try (InputStream in = URI.create(urlString).toURL().openStream();
+         PDDocument document = PDDocument.load(in)) {
+
+      PDFTextStripper stripper = new PDFTextStripper();
+      String pdfText = stripper.getText(document);
+
+      parsePdfTextToCache(pdfText, year);
+
+      // Registramos que HOY ya descargamos la versión más reciente de este año
+      lastDownloadDatePerYear.put(year, LocalDate.now());
+      log.info("event=UFV_PDF_LOADED year={} total_records_in_cache={}", year, cache.size());
+
+    } catch (Exception e) {
+      log.error("Error al descargar/procesar PDF del año {}: {}", year, e.getMessage());
+      throw new UfvProviderUnavailableException("Fallo al actualizar el PDF del BCB para " + year, e);
     }
   }
 
   /**
-   * Estrategia fallback: busca cualquier elemento del body que contenga un valor
-   * numérico con formato UFV (ej. "2.xxxxx").
+   * Procesa el texto extraído del PDF línea por línea y lo inyecta en la caché.
    */
-  private String extractFallback(Document doc) {
-    for (Element el : doc.body().getAllElements()) {
-      String text = el.ownText().trim();
-      if (text.matches("\\d+[.,]\\d{2,}")) {
-        return text;
+  private void parsePdfTextToCache(String pdfText, int year) {
+    String[] lines = pdfText.split("\\r?\\n");
+
+    for (String line : lines) {
+      line = line.trim();
+      if (!line.matches("^([1-9]|[12]\\d|3[01])\\b.*")) continue;
+
+      int day = Integer.parseInt(line.split("\\s+")[0]);
+      Matcher matcher = UFV_PATTERN.matcher(line);
+      int month = 1;
+
+      while (matcher.find() && month <= 12) {
+        BigDecimal ufv = new BigDecimal(matcher.group(1).replace(",", "."));
+        try {
+          LocalDate date = LocalDate.of(year, month, day);
+          cache.put(date, ufv); // put() sobrescribe si ya existía, lo cual es perfecto
+        } catch (DateTimeException ignored) {}
+        month++;
       }
     }
-    return null;
   }
 }

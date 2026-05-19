@@ -18,7 +18,7 @@ public interface BudgetAllocationPort {
 
   /** Crea un nuevo FundingSource (proyecto). */
   UUID createFundingSource(
-      String projectCode, BigDecimal totalBudget, String tenantId, String createdBy);
+      String projectCode, BigDecimal totalBudget, UUID tenantId, String createdBy);
 
   /** W2: Ajusta la distribución del costo laboral (LaborCostSplit). Invariante: suma = 100%. */
   void adjustCostSplit(

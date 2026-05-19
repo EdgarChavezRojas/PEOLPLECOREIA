@@ -31,11 +31,17 @@ import java.util.UUID;
  */
 public class PayrollHandoffPackage {
 
-    private final UUID handoffId;
-    private final UUID periodId;
-    private final LocalDateTime generatedAt;
-    private final String checksum;
-    private final List<EmployeeHandoffRecord> employeeRecords;
+    private UUID handoffId;
+    private UUID periodId;
+    private LocalDateTime generatedAt;
+    private String checksum;
+    private List<EmployeeHandoffRecord> employeeRecords;
+
+    public void setHandoffId(UUID handoffId) { this.handoffId = handoffId; }
+    public void setPeriodId(UUID periodId) { this.periodId = periodId; }
+    public void setGeneratedAt(LocalDateTime generatedAt) { this.generatedAt = generatedAt; }
+    public void setChecksum(String checksum) { this.checksum = checksum; }
+    public void setEmployeeRecords(List<EmployeeHandoffRecord> employeeRecords) { this.employeeRecords = employeeRecords; }
 
     /**
      * Constructor de reconstrucción (desde persistencia).

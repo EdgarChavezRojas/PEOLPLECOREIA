@@ -2,43 +2,48 @@ package com.solveria.core.workforce.domain.model;
 
 import com.solveria.core.workforce.domain.model.vo.AcademicRank;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * Entity: AcademicProfile
  *
  * <p>Exclusivo para Tenant Educación. Gestiona rango académico, carga horaria y materias asignadas.
  */
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class AcademicProfile {
 
   private UUID academicId;
   private UUID relationshipId;
   private AcademicRank currentRank;
-  private Integer teachingLoad; // Límite de carga horaria semestral
+  private Integer teachingLoad;
 
-  public static AcademicProfile create(
-      UUID relationshipId, AcademicRank initialRank, Integer teachingLoad) {
+  public AcademicProfile() {}
+
+  public AcademicProfile(UUID academicId, UUID relationshipId, AcademicRank currentRank, Integer teachingLoad) {
+    this.academicId = academicId;
+    this.relationshipId = relationshipId;
+    this.currentRank = currentRank;
+    this.teachingLoad = teachingLoad;
+  }
+
+  public UUID getAcademicId() { return academicId; }
+  public void setAcademicId(UUID academicId) { this.academicId = academicId; }
+
+  public UUID getRelationshipId() { return relationshipId; }
+  public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+
+  public AcademicRank getCurrentRank() { return currentRank; }
+  public void setCurrentRank(AcademicRank currentRank) { this.currentRank = currentRank; }
+
+  public Integer getTeachingLoad() { return teachingLoad; }
+  public void setTeachingLoad(Integer teachingLoad) { this.teachingLoad = teachingLoad; }
+
+  public static AcademicProfile create(UUID relationshipId, AcademicRank initialRank, Integer teachingLoad) {
     if (relationshipId == null || initialRank == null || teachingLoad == null) {
-      throw new IllegalArgumentException(
-          "relationshipId, initialRank y teachingLoad son requeridos");
+      throw new IllegalArgumentException("relationshipId, initialRank y teachingLoad son requeridos");
     }
     if (teachingLoad <= 0) {
       throw new IllegalArgumentException("teachingLoad debe ser mayor a 0");
     }
-
-    return AcademicProfile.builder()
-        .academicId(UUID.randomUUID())
-        .relationshipId(relationshipId)
-        .currentRank(initialRank)
-        .teachingLoad(teachingLoad)
-        .build();
+    return new AcademicProfile(UUID.randomUUID(), relationshipId, initialRank, teachingLoad);
   }
 
   public void upgradeRank(AcademicRank newRank) {

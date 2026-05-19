@@ -3,6 +3,8 @@ package com.solveria.core.shared.base;
 import jakarta.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -23,7 +25,7 @@ public abstract class BaseEntity implements Serializable {
   @Version private Long version;
 
   @Column(name = "tenant_id", nullable = false, updatable = false)
-  private String tenantId;
+  private UUID tenantId;
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -53,11 +55,11 @@ public abstract class BaseEntity implements Serializable {
     return version;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 
-  public void setTenantId(String tenantId) {
+  public void setTenantId(UUID tenantId) {
     this.tenantId = tenantId;
   }
 

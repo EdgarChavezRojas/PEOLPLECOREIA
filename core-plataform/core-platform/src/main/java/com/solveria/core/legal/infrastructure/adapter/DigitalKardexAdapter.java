@@ -29,7 +29,7 @@ public class DigitalKardexAdapter implements DigitalKardexPort {
     }
 
     @Override
-    public String storeEvidence(UUID contractId, String tenantId, byte[] fileContent, Instant generatedAt) {
+    public String storeEvidence(UUID contractId, UUID tenantId, byte[] fileContent, Instant generatedAt) {
 
         LocalDate expiryDate = LocalDate.ofInstant(generatedAt, ZoneId.systemDefault()).plusYears(5);
 
@@ -49,7 +49,7 @@ public class DigitalKardexAdapter implements DigitalKardexPort {
                 null,
                 null,
                 DEFAULT_LOCATION,
-                UUID.fromString(tenantId),
+                tenantId,
                 DEFAULT_TENANT_SEGMENT
         );
 

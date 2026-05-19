@@ -1,6 +1,7 @@
 package com.solveria.core.experience.application.usecase;
 
 import com.solveria.core.experience.application.command.SendNotificationCommand;
+import com.solveria.core.experience.application.port.in.NotificationPI;
 import com.solveria.core.experience.application.port.out.NotificationPO;
 import com.solveria.core.experience.domain.model.Notification;
 import com.solveria.core.experience.domain.model.vo.NotificationChannel;
@@ -14,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SendNotificationUseCase {
+public class SendNotificationUseCase implements NotificationPI {
 
   private final NotificationPO notificationPO;
 
   @Transactional
-  public UUID send(UUID recipientId, String channel, String subject, String body, String tenantId) {
+  public UUID send(UUID recipientId, String channel, String subject, String body, UUID tenantId) {
     log.info(
         "event=NOTIFICATION_SEND recipientId={} channel={} subject={}",
         recipientId,
@@ -27,11 +28,11 @@ public class SendNotificationUseCase {
         subject);
 
     SendNotificationCommand cmd =
-        new SendNotificationCommand(recipientId, channel, subject, body, tenantId);
+        new SendNotificationCommand(recipientId, channel, subject, body);
 
     NotificationChannel ch = NotificationChannel.valueOf(cmd.channel());
     Notification notification =
-        Notification.send(cmd.recipientId(), ch, cmd.subject(), cmd.body(), cmd.tenantId());
+        Notification.send(cmd.recipientId(), ch, cmd.subject(), cmd.body(), tenantId);
 
     notificationPO.save(notification);
 

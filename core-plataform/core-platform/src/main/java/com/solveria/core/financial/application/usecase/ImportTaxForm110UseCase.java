@@ -32,7 +32,7 @@ public class ImportTaxForm110UseCase implements TaxCompliancePort {
             BigDecimal totalDeclared,
             UUID docId,
             YearMonth period,
-            String tenantId,
+            UUID tenantId,
             String createdBy) {
         log.info(
                 "event=IMPORT_TAX_FORM_110 personId={} period={} totalDeclared={}",

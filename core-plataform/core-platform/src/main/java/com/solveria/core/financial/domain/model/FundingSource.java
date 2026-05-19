@@ -27,7 +27,7 @@ public class FundingSource extends DomainRoot {
   private BigDecimal totalBudget;
   private BigDecimal availableBudget;
   private BigDecimal burnRate;
-  private final String tenantId;
+  private final UUID tenantId;
   private final String createdBy;
   private List<LaborCostSplit> costSplits;
 
@@ -39,7 +39,7 @@ public class FundingSource extends DomainRoot {
       BigDecimal totalBudget,
       BigDecimal availableBudget,
       BigDecimal burnRate,
-      String tenantId,
+      UUID tenantId,
       String createdBy,
       List<LaborCostSplit> costSplits) {
     this.sourceId = sourceId;
@@ -54,7 +54,7 @@ public class FundingSource extends DomainRoot {
 
   /** Factory: crea un nuevo FundingSource con presupuesto completo. */
   public static FundingSource create(
-      String projectCode, BigDecimal totalBudget, String tenantId, String createdBy) {
+      String projectCode, BigDecimal totalBudget, UUID tenantId, String createdBy) {
     if (projectCode == null || projectCode.isBlank()) {
       throw new IllegalArgumentException("projectCode es obligatorio para ONGs");
     }
@@ -79,7 +79,7 @@ public class FundingSource extends DomainRoot {
       BigDecimal totalBudget,
       BigDecimal availableBudget,
       BigDecimal burnRate,
-      String tenantId,
+      UUID tenantId,
       String createdBy,
       List<LaborCostSplit> costSplits) {
     return new FundingSource(
@@ -181,7 +181,7 @@ public class FundingSource extends DomainRoot {
     return burnRate;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 

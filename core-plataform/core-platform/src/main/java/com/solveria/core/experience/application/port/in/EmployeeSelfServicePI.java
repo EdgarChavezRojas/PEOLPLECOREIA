@@ -1,5 +1,6 @@
 package com.solveria.core.experience.application.port.in;
 
+import com.solveria.core.experience.application.command.RequestDataUpdateCommand;
 import com.solveria.core.experience.application.command.RequestLeaveCommand;
 import java.util.UUID;
 
@@ -11,13 +12,13 @@ import java.util.UUID;
 public interface EmployeeSelfServicePI {
 
   /** W11: Solicitar actualización de datos personales. */
-  UUID requestDataUpdate(UUID personId, String payload, String tenantId, String createdBy);
+  UUID requestDataUpdate(RequestDataUpdateCommand cmd);
 
   /** W14: Solicitar certificado digital con hash SHA-256 y QR Zero-Trust. */
-  UUID requestCertificate(UUID personId, String certificateType, String tenantId, String createdBy);
+  UUID requestCertificate(UUID personId, String certificateType, UUID tenantId, String createdBy);
 
   /** Cancelar una solicitud ESS pendiente de revisión. Solo el solicitante original puede cancelar. */
-  void cancelDataUpdate(UUID actionId, UUID personId, String tenantId);
+  void cancelDataUpdate(UUID actionId, UUID personId, UUID tenantId);
 
   /** W12: Acuse de recibo formal de memorando/notificación. */
   void acknowledgeNotification(UUID notificationId, UUID personId);

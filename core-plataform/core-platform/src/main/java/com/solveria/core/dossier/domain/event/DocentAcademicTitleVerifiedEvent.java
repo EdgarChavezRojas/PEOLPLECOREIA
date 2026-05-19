@@ -10,26 +10,26 @@ import java.util.UUID;
  * Habilita posibles ascensos de categoría docente en el motor de Escalafón.
  */
 public record DocentAcademicTitleVerifiedEvent(
-    UUID personId,
+    UUID relationshipId,
     String titleLevel,
     boolean provNacional,
     Instant occurredAt
 ) implements DomainEvent {
 
   public DocentAcademicTitleVerifiedEvent {
-    if (personId == null) {
-      throw new IllegalArgumentException("personId es requerido");
+    if (relationshipId == null) {
+      throw new IllegalArgumentException();
     }
     if (titleLevel == null || titleLevel.isBlank()) {
-      throw new IllegalArgumentException("titleLevel es requerido");
+      throw new IllegalArgumentException();
     }
     if (occurredAt == null) {
-      throw new IllegalArgumentException("occurredAt es requerido");
+      throw new IllegalArgumentException();
     }
   }
 
   public static DocentAcademicTitleVerifiedEvent now(
-      UUID personId, String titleLevel, boolean provNacional) {
-    return new DocentAcademicTitleVerifiedEvent(personId, titleLevel, provNacional, Instant.now());
+      UUID relationshipId, String titleLevel, boolean provNacional) {
+    return new DocentAcademicTitleVerifiedEvent(relationshipId, titleLevel, provNacional, Instant.now());
   }
 }

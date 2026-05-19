@@ -4,4 +4,4 @@ import java.util.UUID;
 
 /** Command: Enviar notificación a un destinatario. */
 public record SendNotificationCommand(
-    UUID recipientId, String channel, String subject, String body, String tenantId) {}
+    UUID recipientId, String channel, String subject, String body) {}

@@ -6,15 +6,18 @@ import com.solveria.core.workforce.domain.model.Person;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
+@Service
 public class ResolveDeduplicationUseCase {
 
   private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
 
   private final PersonRepositoryPort personRepositoryPort;
-
+  @Transactional
   public void execute(UUID principalId, UUID duplicateId) {
     Person principal =
         personRepositoryPort

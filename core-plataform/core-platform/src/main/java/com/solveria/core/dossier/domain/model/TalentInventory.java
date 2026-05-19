@@ -1,22 +1,12 @@
 package com.solveria.core.dossier.domain.model;
 
-import com.solveria.core.dossier.domain.event.DossierEvent;
-import com.solveria.core.dossier.domain.event.DossierEventType;
-import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.dossier.domain.event.DocentAcademicTitleVerifiedEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.domain.DomainRoot;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class TalentInventory extends DomainRoot {
 
   private UUID inventoryId;
@@ -26,7 +16,20 @@ public class TalentInventory extends DomainRoot {
   private List<SkillSet> skillSets;
   private List<TrainingHistory> trainingHistory;
 
+  public TalentInventory() {
+  }
 
+  public TalentInventory(UUID inventoryId, UUID relationshipId, UUID tenantId,
+                         List<PerformanceSnapshot> performanceSnapshots,
+                         List<SkillSet> skillSets,
+                         List<TrainingHistory> trainingHistory) {
+    this.inventoryId = inventoryId;
+    this.relationshipId = relationshipId;
+    this.tenantId = tenantId;
+    this.performanceSnapshots = performanceSnapshots;
+    this.skillSets = skillSets;
+    this.trainingHistory = trainingHistory;
+  }
 
   public static TalentInventory create(UUID relationshipId, UUID tenantId) {
     if (relationshipId == null) {
@@ -35,14 +38,14 @@ public class TalentInventory extends DomainRoot {
     if (tenantId == null) {
       throw new IllegalArgumentException("tenantId es requerido");
     }
-    return TalentInventory.builder()
-        .inventoryId(UUID.randomUUID())
-        .relationshipId(relationshipId)
-        .tenantId(tenantId)
-        .performanceSnapshots(new ArrayList<>())
-        .skillSets(new ArrayList<>())
-        .trainingHistory(new ArrayList<>())
-        .build();
+    return new TalentInventory(
+            UUID.randomUUID(),
+            relationshipId,
+            tenantId,
+            new ArrayList<>(),
+            new ArrayList<>(),
+            new ArrayList<>()
+    );
   }
 
   public void addPerformanceSnapshot(PerformanceSnapshot snapshot) {
@@ -65,9 +68,40 @@ public class TalentInventory extends DomainRoot {
     }
     trainingHistory.add(training);
     if (verifiedTitle) {
-      registerEvent(DossierEvent.now(DossierEventType.DOCENT_ACADEMIC_TITLE_VERIFIED));
+      String titleLevel = resolveTitleLevel(training);
+      registerEvent(DocentAcademicTitleVerifiedEvent.now(this.relationshipId, titleLevel, true));
     }
   }
 
+  private static String resolveTitleLevel(TrainingHistory training) {
+    String courseName = training.courseName();
+    if (courseName == null || courseName.isBlank()) {
+      throw new IllegalArgumentException();
+    }
+    return courseName.trim();
+  }
 
+  public UUID getInventoryId() {
+    return inventoryId;
+  }
+
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
+
+  public List<PerformanceSnapshot> getPerformanceSnapshots() {
+    return performanceSnapshots;
+  }
+
+  public List<SkillSet> getSkillSets() {
+    return skillSets;
+  }
+
+  public List<TrainingHistory> getTrainingHistory() {
+    return trainingHistory;
+  }
 }

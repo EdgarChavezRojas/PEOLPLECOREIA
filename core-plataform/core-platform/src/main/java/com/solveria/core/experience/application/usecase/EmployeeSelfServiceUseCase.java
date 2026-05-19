@@ -11,6 +11,8 @@ import com.solveria.core.experience.domain.model.SelfServiceAction;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
 import com.solveria.core.experience.domain.service.CertificateGenerationService;
 import java.util.UUID;
+
+import com.solveria.core.security.context.SecurityTenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,26 +32,25 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
 
   @Override
   @Transactional
-  public UUID requestDataUpdate(UUID personId, String payload, String tenantId, String createdBy) {
-    log.info("event=DATA_UPDATE_REQUESTED personId={} tenantId={}", personId, tenantId);
+  public UUID requestDataUpdate(RequestDataUpdateCommand cmd) {
+    log.info("event=DATA_UPDATE_REQUESTED ");
+    UUID tenantIdUUID = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
 
-    RequestDataUpdateCommand cmd =
-        new RequestDataUpdateCommand(personId, payload, tenantId, createdBy);
 
     SelfServiceAction action =
         SelfServiceAction.requestDataUpdate(
-            cmd.personId(), cmd.payload(), cmd.tenantId(), cmd.createdBy());
+            cmd.personId(), cmd.payload(), tenantIdUUID, cmd.createdBy());
 
     selfServiceActionPO.save(action);
 
-    log.info("event=DATA_UPDATE_CREATED actionId={} personId={}", action.getActionId(), personId);
+    log.info("event=DATA_UPDATE_CREATED actionId={} ", action.getActionId());
     return action.getActionId();
   }
 
   @Override
   @Transactional
   public UUID requestCertificate(
-      UUID personId, String certificateType, String tenantId, String createdBy) {
+      UUID personId, String certificateType, UUID tenantId, String createdBy) {
     log.info(
         "event=CERTIFICATE_REQUESTED personId={} type={} tenantId={}",
         personId,
@@ -57,7 +58,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
         tenantId);
 
     RequestCertificateCommand cmd =
-        new RequestCertificateCommand(personId, certificateType, tenantId, createdBy);
+        new RequestCertificateCommand(personId, certificateType,  createdBy);
 
     // W14: Generar certificado con hash SHA-256 y QR Zero-Trust
     String pdfContent = "CERT_PLACEHOLDER_" + personId + "_" + certificateType;
@@ -66,7 +67,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
 
     SelfServiceAction action =
         SelfServiceAction.requestCertificate(
-            cmd.personId(), certPayload, cmd.tenantId(), cmd.createdBy());
+            cmd.personId(), certPayload, tenantId, cmd.createdBy());
 
     selfServiceActionPO.save(action);
 
@@ -79,7 +80,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
 
   @Override
   @Transactional
-  public void cancelDataUpdate(UUID actionId, UUID personId, String tenantId) {
+  public void cancelDataUpdate(UUID actionId, UUID personId, UUID tenantId) {
     log.info(
         "event=DATA_UPDATE_CANCEL_REQUESTED actionId={} personId={} tenantId={}",
         actionId,
@@ -132,13 +133,14 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
   @Override
   @Transactional
   public UUID requestLeave(RequestLeaveCommand cmd) {
+    UUID tenantIdUUID = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     log.info(
-        "event=LEAVE_REQUESTED personId={} leaveType={} start={} end={} tenantId={}",
+        "event=LEAVE_REQUESTED personId={} leaveType={} start={} end={} ",
         cmd.personId(),
         cmd.leaveType(),
         cmd.startDate(),
-        cmd.endDate(),
-        cmd.tenantId());
+        cmd.endDate()
+        );
 
     SelfServiceAction action =
         SelfServiceAction.requestLeave(
@@ -146,7 +148,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
             cmd.leaveType(),
             cmd.startDate(),
             cmd.endDate(),
-            cmd.tenantId(),
+           tenantIdUUID,
             cmd.personId().toString());
 
     selfServiceActionPO.save(action);

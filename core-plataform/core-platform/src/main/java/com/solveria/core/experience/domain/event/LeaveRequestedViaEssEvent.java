@@ -15,7 +15,7 @@ public record LeaveRequestedViaEssEvent(
     String leaveType,
     LocalDate startDate,
     LocalDate endDate,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
@@ -25,7 +25,7 @@ public record LeaveRequestedViaEssEvent(
       String leaveType,
       LocalDate startDate,
       LocalDate endDate,
-      String tenantId) {
+      UUID tenantId) {
     this(actionId, personId, leaveType, startDate, endDate, tenantId, Instant.now());
   }
 }

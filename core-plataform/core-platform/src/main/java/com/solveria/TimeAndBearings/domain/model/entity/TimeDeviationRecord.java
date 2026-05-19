@@ -23,29 +23,29 @@ import java.util.UUID;
  */
 public class TimeDeviationRecord {
 
-    private final UUID deviationId;
-    private final UUID ledgerId;
-    private final DeviationType deviationType;
-
-    /** Duración en minutos. Puede ser negativo para EARLY_OUT. */
-    private final int deviationMinutes;
-
+    private UUID deviationId;
+    private UUID ledgerId;
+    private DeviationType deviationType;
+    private int deviationMinutes;
     private ResolutionStatus resolutionStatus;
-    private final LocalDateTime detectedAt;
-
+    private LocalDateTime detectedAt;
     private LocalDateTime resolvedAt;
-
-    /** FK a User (MSS/Analista). NULL si PENDING o AUTO_CLOSED. */
     private UUID resolvedBy;
-
-    /** Nota obligatoria para APPROVED/OVERRIDDEN (min 20 chars, P-TM32). */
     private String reasonNote;
-
-    /** FK a User. Para retroactividad >48h (P-TM32). */
     private UUID secondaryApproverId;
+    private List<ExceptionAuditEntry> auditTrail;
 
-    /** Historial inmutable de auditoría. Cada transición añade una entrada. */
-    private final List<ExceptionAuditEntry> auditTrail = new ArrayList<>();
+    public void setDeviationId(UUID deviationId) { this.deviationId = deviationId; }
+    public void setLedgerId(UUID ledgerId) { this.ledgerId = ledgerId; }
+    public void setDeviationType(DeviationType deviationType) { this.deviationType = deviationType; }
+    public void setDeviationMinutes(int deviationMinutes) { this.deviationMinutes = deviationMinutes; }
+    public void setResolutionStatus(ResolutionStatus resolutionStatus) { this.resolutionStatus = resolutionStatus; }
+    public void setDetectedAt(LocalDateTime detectedAt) { this.detectedAt = detectedAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
+    public void setResolvedBy(UUID resolvedBy) { this.resolvedBy = resolvedBy; }
+    public void setReasonNote(String reasonNote) { this.reasonNote = reasonNote; }
+    public void setSecondaryApproverId(UUID secondaryApproverId) { this.secondaryApproverId = secondaryApproverId; }
+    public void setAuditTrail(List<ExceptionAuditEntry> auditTrail) { this.auditTrail = auditTrail; }
 
     /** Package-private: solo el AR puede construir TimeDeviationRecord. */
     public TimeDeviationRecord(

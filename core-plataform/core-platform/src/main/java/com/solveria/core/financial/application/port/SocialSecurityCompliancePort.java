@@ -12,7 +12,7 @@ public interface SocialSecurityCompliancePort {
 
   /** Registra una nueva cuenta de seguridad social (NUA/CUA). */
   UUID registerSocialSecurityAccount(
-      UUID personId, String gestoraCode, String tenantId, String createdBy);
+      UUID personId, String gestoraCode, UUID tenantId, String createdBy);
 
   /** Calcula la deducción de la Gestora para un trabajador. */
   BigDecimal calculateGestoraDeduction(UUID ssaId, BigDecimal totalGanado);
@@ -21,7 +21,7 @@ public interface SocialSecurityCompliancePort {
   void updateLastContribution(UUID ssaId, LocalDate contributionDate);
 
   /** Registra un proveedor de salud (Caja Nacional, etc.). */
-  UUID registerHealthProvider(String registrationNo, String tenantId, String createdBy);
+  UUID registerHealthProvider(String registrationNo, UUID tenantId, String createdBy);
 
   /** Suspende un proveedor de salud. */
   void suspendHealthProvider(UUID providerId);

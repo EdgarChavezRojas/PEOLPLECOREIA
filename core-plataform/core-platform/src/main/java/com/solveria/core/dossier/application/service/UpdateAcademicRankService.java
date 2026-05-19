@@ -13,8 +13,11 @@ import com.solveria.core.dossier.domain.model.vo.DocumentCategory;
 import com.solveria.core.dossier.domain.model.vo.ValidationState;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
+import org.springframework.stereotype.Service;
+
 import java.util.UUID;
 
+@Service
 public class UpdateAcademicRankService implements UpdateAcademicRankUseCase {
 
   private final DocumentRecordRepositoryPort documentRecordRepository;

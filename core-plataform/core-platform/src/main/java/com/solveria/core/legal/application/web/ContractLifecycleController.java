@@ -1,6 +1,10 @@
 package com.solveria.core.legal.application.web;
 
 import com.solveria.core.legal.application.dto.*;
+import com.solveria.core.legal.application.dto.webRequest.ApproveContractAddendumWebDto;
+import com.solveria.core.legal.application.dto.webRequest.DraftContractWebDto;
+import com.solveria.core.legal.application.dto.webRequest.ProposeContractAddendumWebDto;
+import com.solveria.core.legal.application.dto.webRequest.TerminateContractWebDto;
 import com.solveria.core.legal.application.usecase.ApproveContractAddendumUseCase;
 import com.solveria.core.legal.application.usecase.ApproveContractUseCase;
 import com.solveria.core.legal.application.usecase.DraftContractUseCase;
@@ -8,7 +12,7 @@ import com.solveria.core.legal.application.usecase.ProposeContractAddendumUseCas
 import com.solveria.core.legal.application.usecase.TerminateContractUseCase;
 
 
-
+import com.solveria.core.security.context.SecurityTenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,6 +22,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/legal/contracts")
@@ -55,9 +61,13 @@ public class ContractLifecycleController {
             @ApiResponse(responseCode = "409", description = "Conflict: La posición ya está ocupada o no hay presupuesto", content = @Content)
     })
     public ResponseEntity<ContractResponse> draftContract(
-            @Valid @RequestBody DraftContractRequest request) {
+            @Valid @RequestBody DraftContractWebDto request) {
+        UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
 
-        ContractResponse response = draftContractUseCase.execute(request);
+        ContractResponse response = draftContractUseCase.execute(
+                request.toCommand(tenantUuid)
+        );
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -92,9 +102,9 @@ public class ContractLifecycleController {
             @ApiResponse(responseCode = "409", description = "Conflict: Hay otra adenda pendiente de aprobación o fechas superpuestas", content = @Content)
     })
     public ResponseEntity<ContractAddendumResponse> proposeAddendum(
-           @Valid @RequestBody ProposeContractAddendumRequest request) {
-
-        ContractAddendumResponse response = proposeContractAddendumUseCase.execute(request);
+           @Valid @RequestBody ProposeContractAddendumWebDto request) {
+        UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        ContractAddendumResponse response = proposeContractAddendumUseCase.execute(request.toCommand(tenantUuid));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -110,9 +120,9 @@ public class ContractLifecycleController {
     })
     public ResponseEntity<Void> approveAddendum(
 
-            @RequestBody ApproveContractAddendumRequest request) {
-
-        approveContractAddendumUseCase.execute( request);
+            @RequestBody ApproveContractAddendumWebDto request) {
+        UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        approveContractAddendumUseCase.execute( request.toCommand(tenantUuid));
         return ResponseEntity.ok().build();
     }
 
@@ -128,9 +138,9 @@ public class ContractLifecycleController {
             @ApiResponse(responseCode = "409", description = "Conflict: El contrato no está en estado ACTIVE o ya fue finalizado", content = @Content)
     })
     public ResponseEntity<Void> terminateContract(
-            @RequestBody TerminateContractRequest request) {
-
-        terminateContractUseCase.execute(request);
+            @RequestBody TerminateContractWebDto request) {
+        UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        terminateContractUseCase.execute(request.toCommand(tenantUuid));
         return ResponseEntity.ok().build();
     }
 }

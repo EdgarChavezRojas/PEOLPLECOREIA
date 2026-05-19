@@ -2,7 +2,6 @@ package com.solveria.core.financial.infrastructure.adapter;
 
 import com.solveria.core.financial.application.port.FundingSourceRepositoryPort;
 import com.solveria.core.financial.domain.model.FundingSource;
-import com.solveria.core.financial.infrastructure.jpa.FundingSourceJpa;
 import com.solveria.core.financial.infrastructure.mapper.FundingSourceMapper;
 import com.solveria.core.financial.infrastructure.repository.FundingSourceRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
@@ -11,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

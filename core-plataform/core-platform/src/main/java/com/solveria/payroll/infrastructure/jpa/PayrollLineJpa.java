@@ -36,7 +36,7 @@ public class PayrollLineJpa extends BaseEntity {
     private BigDecimal netPayable;
 
     @Column(name = "tenant_id")
-    private String tenantId;
+    private UUID tenantId;
     public UUID getLineId() { return lineId; }
     public void setLineId(UUID lineId) { this.lineId = lineId; }
     public PayrollRunJpa getPayrollRun() { return payrollRun; }
@@ -63,6 +63,6 @@ public class PayrollLineJpa extends BaseEntity {
     public BigDecimal getNetPayable() { return netPayable; }
     public void setNetPayable(BigDecimal netPayable) { this.netPayable = netPayable; }
 
-    public String getTenantId() { return tenantId; }
-    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 }

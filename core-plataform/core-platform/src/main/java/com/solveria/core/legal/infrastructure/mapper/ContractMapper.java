@@ -20,6 +20,8 @@ import com.solveria.core.legal.infrastructure.jpa.SalaryTermsEmbeddable;
 import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -52,7 +54,7 @@ public interface ContractMapper {
         jpa.getEmploymentCond(),
         jpa.getStatus(),
         jpa.getProjectId(),
-        jpa.getTenantId(),
+        (jpa.getTenantId()),
         jpa.getCreatedBy(),
         addendums,
         jpa.isTacitaReconduccionAlertSent());
@@ -114,7 +116,7 @@ public interface ContractMapper {
             "contractId", contract.getContractId(),
             "relationshipId", contract.getRelationshipId(),
             "tenantId", contract.getTenantId(),
-            "status", contract.getStatus() != null ? contract.getStatus().name() : null,
+            "status", contract.getStatus() != null ? contract.getStatus().name() : null ,
             "eventType", resolveEventType(event));
 
     try {

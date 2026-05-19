@@ -17,7 +17,7 @@ public record ProcessLiquidationCommand(
     List<BigDecimal> lastThreeMonthsBase,
     List<BigDecimal> lastThreeMonthsOthers,
     int pendingVacationDays,
-    String tenantId,
+    UUID tenantId,
     String approverUserId) {
   public ProcessLiquidationCommand {
     if (relationshipId == null) {

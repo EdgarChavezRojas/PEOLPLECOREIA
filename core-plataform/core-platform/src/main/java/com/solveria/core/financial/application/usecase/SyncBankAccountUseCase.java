@@ -5,7 +5,7 @@ import com.solveria.core.financial.application.port.DispersionPort;
 import com.solveria.core.financial.domain.event.BankAccountSyncedEvent;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class SyncBankAccountUseCase implements DispersionPort {
   @Override
   @Transactional
   public void syncBankAccount(
-      UUID personId, String bankAccountNumber, String bankCode, String tenantId, String userId) {
+      UUID personId, String bankAccountNumber, String bankCode, UUID tenantId, String userId) {
     log.info("event=SYNC_BANK_ACCOUNT personId={} bankCode={}", personId, bankCode);
 
     SyncBankAccountCommand cmd =
@@ -34,17 +34,7 @@ public class SyncBankAccountUseCase implements DispersionPort {
     BankAccountSyncedEvent event =
         new BankAccountSyncedEvent(cmd.personId(), cmd.bankAccountNumber(), cmd.bankCode());
 
-//    eventOutboxPort.publish(
-//        "BankAccount",
-//        cmd.personId(),
-//        "BANK_ACCOUNT_SYNCED",
-//        "{\"personId\":\""
-//            + cmd.personId()
-//            + "\",\"bankAccountNumber\":\""
-//            + cmd.bankAccountNumber()
-//            + "\",\"bankCode\":\""
-//            + cmd.bankCode()
-//            + "\"}");
+
 
     log.info("event=BANK_ACCOUNT_SYNCED personId={}", personId);
   }

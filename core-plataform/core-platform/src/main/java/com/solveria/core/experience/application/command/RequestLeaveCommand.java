@@ -8,5 +8,4 @@ public record RequestLeaveCommand(
     UUID personId,
     String leaveType,
     LocalDate startDate,
-    LocalDate endDate,
-    String tenantId) {}
+    LocalDate endDate) {}

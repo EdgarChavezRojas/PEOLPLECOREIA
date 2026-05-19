@@ -27,7 +27,7 @@ public class AuditLogJpa extends BaseEntity {
     private String details;
 
     @Column(name = "tenant_id", nullable = false)
-    private String tenantId;
+    private UUID tenantId;
 
 
     public UUID getAuditLogId() { return auditLogId; }
@@ -40,6 +40,6 @@ public class AuditLogJpa extends BaseEntity {
     public void setAction(String action) { this.action = action; }
     public String getDetails() { return details; }
     public void setDetails(String details) { this.details = details; }
-    public String getTenantId() { return tenantId; }
-    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 }

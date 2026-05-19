@@ -2,7 +2,6 @@ package com.solveria.payroll.domain.model.entity;
 
 import com.solveria.core.shared.exceptions.SolverExceptionImpl;
 import com.solveria.payroll.domain.model.vo.ApprovalStatus;
-import com.solveria.core.shared.exceptions.SolverException;
 
 import java.util.UUID;
 

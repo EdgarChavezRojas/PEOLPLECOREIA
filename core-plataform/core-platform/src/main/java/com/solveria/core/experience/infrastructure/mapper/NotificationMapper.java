@@ -28,14 +28,17 @@ public interface NotificationMapper {
   default Notification toDomain(NotificationJpa jpa) {
     if (jpa == null) return null;
     return Notification.rehydrate(
-        jpa.getNotificationId(),
-        jpa.getRecipientId(),
-        jpa.getChannel(),
-        jpa.getSubject(),
-        jpa.getBody(),
-        jpa.getTenantId(),
-        jpa.getSentAt(),
-        jpa.getReadAt());
+            jpa.getNotificationId(),
+            jpa.getRecipientId(),
+            jpa.getChannel(),
+            jpa.getSubject(),
+            jpa.getBody(),
+            jpa.getTenantId(),
+            jpa.getSentAt(),
+            jpa.getReadAt(),
+            jpa.isRequiresAcknowledgement(), // O jpa.getRequiresAcknowledgement() dependiendo de cómo Lombok generó el getter
+            jpa.getAcknowledgedAt(),
+            jpa.getAcknowledgedBy());
   }
 
   default String toEventPayload(Notification notification, DomainEvent event) {

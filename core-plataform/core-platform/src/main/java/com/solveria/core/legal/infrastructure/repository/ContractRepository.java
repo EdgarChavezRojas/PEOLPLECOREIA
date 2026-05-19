@@ -1,5 +1,6 @@
 package com.solveria.core.legal.infrastructure.repository;
 
+import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
 import java.time.LocalDate;
@@ -34,4 +35,8 @@ public interface ContractRepository extends JpaRepository<ContractJpa, Long> {
       @Param("contractType") ContractType contractType,
       @Param("exactDate") LocalDate exactDate,
       @Param("tenantId") String tenantId);
+
+    Optional<Contract> findByRelationshipId(UUID relationshipId);
+
+  List<Contract> findByProjectId(UUID projectId);
 }

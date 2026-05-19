@@ -1,25 +1,18 @@
 package com.solveria.core.dossier.domain.model;
 
-import com.solveria.core.dossier.domain.event.DossierEvent;
-import com.solveria.core.dossier.domain.event.DossierEventType;
+import com.solveria.core.dossier.domain.event.AssetDamageReportedEvent;
+import com.solveria.core.dossier.domain.event.AssetLoanedToWorkerEvent;
+import com.solveria.core.dossier.domain.event.AssetReturnedEvent;
+import com.solveria.core.dossier.domain.event.AssetTransferRequiredEvent;
 import com.solveria.core.dossier.domain.exception.DossierErrorCode;
 import com.solveria.core.dossier.domain.exception.InvalidAssetStateException;
 import com.solveria.core.dossier.domain.model.vo.AssetDescriptor;
 import com.solveria.core.dossier.domain.model.vo.AssetStatus;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.domain.DomainRoot;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class AssignedAsset extends DomainRoot {
 
   private UUID assignmentId;
@@ -31,14 +24,27 @@ public class AssignedAsset extends DomainRoot {
   private AssetDescriptor descriptor;
   private UUID tenantId;
 
+  public AssignedAsset() {
+  }
 
+  public AssignedAsset(UUID assignmentId, UUID workerId, String assetTag, AssetStatus status,
+                       LocalDateTime assignedAt, LocalDateTime returnedAt, AssetDescriptor descriptor, UUID tenantId) {
+    this.assignmentId = assignmentId;
+    this.workerId = workerId;
+    this.assetTag = assetTag;
+    this.status = status;
+    this.assignedAt = assignedAt;
+    this.returnedAt = returnedAt;
+    this.descriptor = descriptor;
+    this.tenantId = tenantId;
+  }
 
   public static AssignedAsset assign(
-      UUID workerId,
-      String assetTag,
-      AssetDescriptor descriptor,
-      LocalDateTime assignedAt,
-      UUID tenantId) {
+          UUID workerId,
+          String assetTag,
+          AssetDescriptor descriptor,
+          LocalDateTime assignedAt,
+          UUID tenantId) {
     if (workerId == null) {
       throw new IllegalArgumentException("workerId es requerido");
     }
@@ -51,17 +57,19 @@ public class AssignedAsset extends DomainRoot {
     if (tenantId == null) {
       throw new IllegalArgumentException("tenantId es requerido");
     }
-    AssignedAsset asset =
-        AssignedAsset.builder()
-            .assignmentId(UUID.randomUUID())
-            .workerId(workerId)
-            .assetTag(assetTag)
-            .status(AssetStatus.CUSTODY)
-            .assignedAt(assignedAt != null ? assignedAt : LocalDateTime.now())
-            .descriptor(descriptor)
-            .tenantId(tenantId)
-            .build();
-    asset.registerEvent(DossierEvent.now(DossierEventType.ASSET_LOANED_TO_WORKER));
+
+    AssignedAsset asset = new AssignedAsset(
+            UUID.randomUUID(),
+            workerId,
+            assetTag,
+            AssetStatus.CUSTODY,
+            assignedAt != null ? assignedAt : LocalDateTime.now(),
+            null,
+            descriptor,
+            tenantId
+    );
+
+    asset.registerEvent(AssetLoanedToWorkerEvent.now(asset.getAssignmentId(), asset.getWorkerId()));
     return asset;
   }
 
@@ -71,7 +79,7 @@ public class AssignedAsset extends DomainRoot {
     }
     this.status = AssetStatus.RETURNED;
     this.returnedAt = returnedAt != null ? returnedAt : LocalDateTime.now();
-    registerEvent(DossierEvent.now(DossierEventType.ASSET_RETURNED));
+    registerEvent(AssetReturnedEvent.now(this.assignmentId, this.workerId));
   }
 
   public void reportDamage(LocalDateTime returnedAt) {
@@ -80,11 +88,11 @@ public class AssignedAsset extends DomainRoot {
     }
     this.status = AssetStatus.DAMAGED;
     this.returnedAt = returnedAt != null ? returnedAt : LocalDateTime.now();
-    registerEvent(DossierEvent.now(DossierEventType.ASSET_DAMAGE_REPORTED));
+    registerEvent(AssetDamageReportedEvent.now(this.assignmentId, this.workerId));
   }
 
   public void requestTransfer() {
-    registerEvent(DossierEvent.now(DossierEventType.ASSET_TRANSFER_REQUIRED));
+    registerEvent(AssetTransferRequiredEvent.now(this.assignmentId, this.workerId));
   }
 
   public void reportInspection(AssetDescriptor updatedDescriptor, boolean minorDamageReported) {
@@ -93,9 +101,39 @@ public class AssignedAsset extends DomainRoot {
     }
     this.descriptor = updatedDescriptor;
     if (minorDamageReported) {
-      registerEvent(DossierEvent.now(DossierEventType.ASSET_DAMAGE_REPORTED));
+      registerEvent(AssetDamageReportedEvent.now(this.assignmentId, this.workerId));
     }
   }
 
+  public UUID getAssignmentId() {
+    return assignmentId;
+  }
 
+  public UUID getWorkerId() {
+    return workerId;
+  }
+
+  public String getAssetTag() {
+    return assetTag;
+  }
+
+  public AssetStatus getStatus() {
+    return status;
+  }
+
+  public LocalDateTime getAssignedAt() {
+    return assignedAt;
+  }
+
+  public LocalDateTime getReturnedAt() {
+    return returnedAt;
+  }
+
+  public AssetDescriptor getDescriptor() {
+    return descriptor;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
 }

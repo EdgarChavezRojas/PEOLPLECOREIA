@@ -1,9 +1,12 @@
 package com.solveria.core.legal.application.web;
 import com.solveria.core.legal.application.dto.GenerateContractEvidenceRequest;
 import com.solveria.core.legal.application.dto.UpdateLegalThresholdRequest;
+import com.solveria.core.legal.application.dto.webRequest.GenerateContractEvidenceWebDto;
+import com.solveria.core.legal.application.dto.webRequest.UpdateLegalThresholdWebDto;
 import com.solveria.core.legal.application.usecase.GenerateContractEvidenceUseCase;
 import com.solveria.core.legal.application.usecase.ScanExpiringContractsUseCase;
 import com.solveria.core.legal.application.usecase.UpdateLegalThresholdUseCase;
+import com.solveria.core.security.context.SecurityTenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/legal")
@@ -46,9 +51,9 @@ public class LegalComplianceController {
     })
     public ResponseEntity<Void> updateLegalThreshold(
             @Parameter(description = "ID de la regla legal a actualizar", required = true)
-            @RequestBody UpdateLegalThresholdRequest request) {
-
-        updateLegalThresholdUseCase.execute(request);
+            @RequestBody UpdateLegalThresholdWebDto request) {
+        UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        updateLegalThresholdUseCase.execute(request.toCommand(tenantUuid));
         return ResponseEntity.ok().build();
     }
 
@@ -68,9 +73,9 @@ public class LegalComplianceController {
     })
     public ResponseEntity<Object> generateContractEvidence(
             @Parameter(description = "ID del contrato", required = true)
-            @RequestBody GenerateContractEvidenceRequest request) {
-
-        var response = generateContractEvidenceUseCase.execute(request);
+            @RequestBody GenerateContractEvidenceWebDto request) {
+        UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        var response = generateContractEvidenceUseCase.execute(request.toCommand(tenantUuid));
         return ResponseEntity.ok(response);
     }
 

@@ -1,11 +1,11 @@
 package com.solveria.core.dossier.infrastructure.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solveria.core.dossier.domain.event.DossierEvent;
 import com.solveria.core.dossier.domain.model.AssignedAsset;
 import com.solveria.core.dossier.domain.model.vo.AssetDescriptor;
 import com.solveria.core.dossier.infrastructure.jpa.AssetDescriptorEmbeddable;
 import com.solveria.core.dossier.infrastructure.jpa.AssignedAssetJpa;
+import com.solveria.core.shared.events.DomainEvent;
 import java.util.Map;
 import org.mapstruct.Mapper;
 
@@ -20,16 +20,16 @@ public interface AssignedAssetMapper {
     if (jpa == null) {
       return null;
     }
-    return AssignedAsset.builder()
-        .assignmentId(jpa.getAssignmentId())
-        .workerId(jpa.getWorkerId())
-        .assetTag(jpa.getAssetTag())
-        .status(jpa.getStatus())
-        .assignedAt(jpa.getAssignedAt())
-        .returnedAt(jpa.getReturnedAt())
-        .descriptor(toDomain(jpa.getDescriptor()))
-        .tenantId(jpa.getTenantId())
-        .build();
+    return new AssignedAsset(
+            jpa.getAssignmentId(),
+            jpa.getWorkerId(),
+            jpa.getAssetTag(),
+            jpa.getStatus(),
+            jpa.getAssignedAt(),
+            jpa.getReturnedAt(),
+            toDomain(jpa.getDescriptor()),
+            jpa.getTenantId()
+    );
   }
 
   default AssetDescriptor toDomain(AssetDescriptorEmbeddable embeddable) {
@@ -40,7 +40,7 @@ public interface AssignedAssetMapper {
         embeddable.getCategory(), embeddable.getTechSpecsJson(), embeddable.getInitialState());
   }
 
-  default String toEventPayload(AssignedAsset asset, DossierEvent event) {
+  default String toEventPayload(AssignedAsset asset, DomainEvent event) {
     if (asset == null || event == null) {
       return "{}";
     }
@@ -51,7 +51,7 @@ public interface AssignedAssetMapper {
             "tenantId", asset.getTenantId(),
             "assetTag", asset.getAssetTag(),
             "status", asset.getStatus() != null ? asset.getStatus().name() : null,
-            "eventType", event.type().name());
+            "eventType", event.getClass().getSimpleName());
     try {
       return new ObjectMapper().writeValueAsString(payload);
     } catch (Exception e) {

@@ -50,7 +50,7 @@ public class CrossBcEventConsumerUseCase {
   /** Consumer: DOCUMENT_VALIDATION_REJECTED -> Push Notification to user */
   @Transactional
   public void handleDocumentValidationRejected(
-      UUID personId, String documentType, String reason, String tenantId) {
+      UUID personId, String documentType, String reason, UUID tenantId) {
     log.info(
         "event=CONSUME_DOCUMENT_VALIDATION_REJECTED personId={} docType={}",
         personId,
@@ -75,7 +75,7 @@ public class CrossBcEventConsumerUseCase {
   /** Consumer: ELIGIBILITY_SUSPENDED_BY_COMPLIANCE -> Alert for Store Manager */
   @Transactional
   public void handleEligibilitySuspended(
-      UUID modelId, UUID personId, String reason, String tenantId) {
+      UUID modelId, UUID personId, String reason, UUID tenantId) {
     log.info("event=CONSUME_ELIGIBILITY_SUSPENDED personId={} reason={}", personId, reason);
 
     PredictionModel model =

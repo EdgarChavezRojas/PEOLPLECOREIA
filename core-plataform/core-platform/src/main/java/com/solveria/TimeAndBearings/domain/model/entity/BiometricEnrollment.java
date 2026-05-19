@@ -28,24 +28,27 @@ import java.util.UUID;
  */
 public class BiometricEnrollment {
 
-    private final UUID enrollmentId;
-    private final UUID deviceId;
-    private final UUID relationshipId;
-    private final BiometricType biometricType;
-
-    /** SHA-512 del template normalizado. NUNCA la imagen raw (WF-TM04 paso 2). */
-    private final String templateHash;
-
-    /** Score de calidad de la captura biométrica (0.00 – 1.00). */
-    private final BigDecimal templateQualityScore;
-
+    private UUID enrollmentId;
+    private UUID deviceId;
+    private UUID relationshipId;
+    private BiometricType biometricType;
+    private String templateHash;
+    private BigDecimal templateQualityScore;
     private EnrollmentStatus status;
-    private final LocalDateTime enrolledAt;
+    private LocalDateTime enrolledAt;
     private LocalDateTime revokedAt;
     private RevocationReason revocationReason;
 
-    // ── Constructor: creación de nuevo enrollment ────────────────────────────
-
+    public void setEnrollmentId(UUID enrollmentId) { this.enrollmentId = enrollmentId; }
+    public void setDeviceId(UUID deviceId) { this.deviceId = deviceId; }
+    public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+    public void setBiometricType(BiometricType biometricType) { this.biometricType = biometricType; }
+    public void setTemplateHash(String templateHash) { this.templateHash = templateHash; }
+    public void setTemplateQualityScore(BigDecimal templateQualityScore) { this.templateQualityScore = templateQualityScore; }
+    public void setStatus(EnrollmentStatus status) { this.status = status; }
+    public void setEnrolledAt(LocalDateTime enrolledAt) { this.enrolledAt = enrolledAt; }
+    public void setRevokedAt(LocalDateTime revokedAt) { this.revokedAt = revokedAt; }
+    public void setRevocationReason(RevocationReason revocationReason) { this.revocationReason = revocationReason; }
     /**
      * Crea un nuevo BiometricEnrollment en estado ACTIVE.
      * Llamado por {@link ClockingDevice#enrollBiometric}

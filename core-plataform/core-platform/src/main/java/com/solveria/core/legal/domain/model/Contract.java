@@ -14,14 +14,13 @@ import com.solveria.core.legal.domain.exception.EffectiveDatingOverlapException;
 import com.solveria.core.legal.domain.exception.InvalidContractStatusException;
 import com.solveria.core.legal.domain.exception.MaxRenewalsReachedException;
 import com.solveria.core.legal.domain.exception.SegregationOfDutiesViolationException;
-import com.solveria.core.legal.domain.exception.TenantIsolationViolationException;
 import com.solveria.core.legal.domain.model.vo.AddendumStatus;
 import com.solveria.core.legal.domain.model.vo.ComplianceSnapshot;
 import com.solveria.core.legal.domain.model.vo.ContractStatus;
 import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.domain.model.vo.EmploymentCondition;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
-import com.solveria.core.security.context.SecurityTenantContext;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -31,9 +30,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-import lombok.Getter;
 
-@Getter
+
 public class Contract extends DomainRoot {
 
   private static final int MAX_RENEWALS = 2;
@@ -43,11 +41,41 @@ public class Contract extends DomainRoot {
   private final ContractType contractType;
   private final EmploymentCondition employmentCond;
   private ContractStatus status;
-  private final String projectId;
-  private final String tenantId;
+  private final UUID projectId;
+  private final UUID tenantId;
   private final String createdBy;
   private final List<ContractAddendum> addendums;
   private boolean tacitaReconduccionAlertSent;
+
+  public UUID getContractId() {
+    return contractId;
+  }
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
+  public ContractType getContractType() {
+    return contractType;
+  }
+  public EmploymentCondition getEmploymentCond() {
+    return employmentCond;
+  }
+  public ContractStatus getStatus() {
+    return status;
+  }
+  public UUID getProjectId() {
+    return projectId;
+  }
+  public UUID getTenantId() {
+    return tenantId;}
+  public String getCreatedBy() {
+    return createdBy;
+  }
+  public List<ContractAddendum> getAddendums() {
+    return addendums;
+  }
+  public boolean isTacitaReconduccionAlertSent() {
+    return tacitaReconduccionAlertSent;
+  }
 
   private Contract(
       UUID contractId,
@@ -55,8 +83,8 @@ public class Contract extends DomainRoot {
       ContractType contractType,
       EmploymentCondition employmentCond,
       ContractStatus status,
-      String projectId,
-      String tenantId,
+      UUID projectId,
+      UUID tenantId,
       String createdBy,
       List<ContractAddendum> addendums,
       boolean tacitaReconduccionAlertSent) {
@@ -70,7 +98,7 @@ public class Contract extends DomainRoot {
     this.createdBy = Objects.requireNonNull(createdBy, "createdBy");
     this.addendums = new ArrayList<>(Objects.requireNonNullElseGet(addendums, List::of));
     this.tacitaReconduccionAlertSent = tacitaReconduccionAlertSent;
-    validateTenant();
+    
   }
 
   public static Contract draft(
@@ -78,8 +106,8 @@ public class Contract extends DomainRoot {
       UUID relationshipId,
       ContractType contractType,
       EmploymentCondition employmentCond,
-      String projectId,
-      String tenantId,
+      UUID projectId,
+      UUID tenantId,
       String createdBy) {
     Contract contract =
         new Contract(
@@ -103,11 +131,12 @@ public class Contract extends DomainRoot {
       ContractType contractType,
       EmploymentCondition employmentCond,
       ContractStatus status,
-      String projectId,
-      String tenantId,
+      UUID projectId,
+      UUID tenantId,
       String createdBy,
       List<ContractAddendum> addendums,
-      boolean tacitaReconduccionAlertSent) {
+      boolean tacitaReconduccionAlertSent
+      ) {
     return new Contract(
         contractId,
         relationshipId,
@@ -122,13 +151,13 @@ public class Contract extends DomainRoot {
   }
 
   public void approve(String createdBy, String approvedBy) {
-    validateTenant();
+    
     validateSegregationOfDuties(createdBy, approvedBy);
     if (status != ContractStatus.DRAFT) {
       throw new InvalidContractStatusException(status, ContractStatus.DRAFT);
     }
     status = ContractStatus.APPROVED;
-    registerEvent(new ContractApprovedEvent(contractId, Instant.now()));
+    registerEvent(new ContractApprovedEvent(contractId, tenantId));
   }
 
   public ContractAddendum proposeAddendum(
@@ -139,7 +168,7 @@ public class Contract extends DomainRoot {
       ComplianceSnapshot snapshot,
       String createdBy,
       BigDecimal salaryFloor) {
-    validateTenant();
+    
     if (ContractType.PLAZO_FIJO.equals(contractType)) {
       validateRenewalLimit(addendums.size());
     }
@@ -160,7 +189,7 @@ public class Contract extends DomainRoot {
   }
 
   public void approveAddendum(UUID addendumId, String createdBy, String approvedBy) {
-    validateTenant();
+    
     validateSegregationOfDuties(createdBy, approvedBy);
     ContractAddendum addendum = findAddendum(addendumId);
     addendum.approve(approvedBy);
@@ -169,24 +198,24 @@ public class Contract extends DomainRoot {
   }
 
   public void terminate(String createdBy, String approvedBy) {
-    validateTenant();
+    
     validateSegregationOfDuties(createdBy, approvedBy);
     status = ContractStatus.TERMINATED;
     registerEvent(new ContractTerminatedEvent(contractId, Instant.now()));
   }
 
   public void markTacitaReconduccionRisk() {
-    validateTenant();
+    
     registerEvent(new ContractTacitaReconduccionRiskEvent(contractId, Instant.now()));
   }
 
   public void markTacitaReconduccionAlertSent() {
-    validateTenant();
+    
     this.tacitaReconduccionAlertSent = true;
   }
 
   public void validateRenewalLimit(int renewalCount) {
-    validateTenant();
+    
     if (renewalCount >= MAX_RENEWALS) {
       registerEvent(new MaxRenewalsReachedEvent(contractId, renewalCount, Instant.now()));
       throw new MaxRenewalsReachedException(renewalCount, MAX_RENEWALS);
@@ -202,12 +231,7 @@ public class Contract extends DomainRoot {
         .orElseThrow(() -> new AddendumNotFoundException(addendumId));
   }
 
-  private void validateTenant() {
-    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!Objects.equals(tenantId, currentTenantId)) {
-      throw new TenantIsolationViolationException(tenantId, currentTenantId);
-    }
-  }
+  
 
   private void validateSegregationOfDuties(String creator, String approver) {
     if (Objects.equals(creator, approver)) {
@@ -242,4 +266,5 @@ public class Contract extends DomainRoot {
     LocalDate resolvedNewTo = newTo != null ? newTo : LocalDate.MAX;
     return !newFrom.isAfter(resolvedExistingTo) && !resolvedNewTo.isBefore(existingFrom);
   }
+
 }

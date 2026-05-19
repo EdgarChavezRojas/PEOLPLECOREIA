@@ -9,8 +9,8 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AuditLogMapper {
     @Mapping(target = "id", ignore = true) // Ignores the Long id from BaseEntity
-    @Mapping(target = "auditLogId", source = "id")
+    @Mapping(target = "auditLogId", source = "auditId")
     AuditLogJpa toJpa(AuditLog domain);
-    @Mapping(target = "id", source = "auditLogId")
+    @Mapping(target = "auditId", source = "auditLogId")
     AuditLog toDomain(AuditLogJpa jpa);
 }

@@ -19,7 +19,7 @@ public interface TaxCompliancePort {
       BigDecimal totalDeclared,
       UUID docId,
       YearMonth period,
-      String tenantId,
+      UUID tenantId,
       String createdBy);
 
   /**

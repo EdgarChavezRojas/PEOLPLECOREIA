@@ -4,5 +4,5 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.time.Instant;
 import java.util.UUID;
 
-public record EvidenceGeneratedEvent(UUID contractId, String tenantId, String hash, Instant occurredAt)
+public record EvidenceGeneratedEvent(UUID contractId, UUID tenantId, String hash, Instant occurredAt)
     implements DomainEvent {}

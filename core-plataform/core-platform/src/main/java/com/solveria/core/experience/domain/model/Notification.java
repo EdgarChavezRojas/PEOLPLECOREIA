@@ -1,8 +1,9 @@
 package com.solveria.core.experience.domain.model;
 
-import com.solveria.core.experience.domain.event.MemorandumAcknowledgedEvent;
+
 import com.solveria.core.experience.domain.event.NotificationSentEvent;
 import com.solveria.core.experience.domain.model.vo.NotificationChannel;
+import com.solveria.core.shared.events.MemorandumAcknowledgedEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
 
 import java.time.Instant;
@@ -14,7 +15,7 @@ public class Notification extends DomainRoot {
   private NotificationChannel channel;
   private String subject;
   private String body;
-  private String tenantId;
+  private UUID tenantId;
   private Instant sentAt;
   private Instant readAt;
 
@@ -29,7 +30,7 @@ public class Notification extends DomainRoot {
   private Notification() {}
 
   public static Notification send(
-      UUID recipientId, NotificationChannel channel, String subject, String body, String tenantId) {
+      UUID recipientId, NotificationChannel channel, String subject, String body, UUID tenantId) {
     if (recipientId == null) throw new IllegalArgumentException("recipientId no puede ser nulo");
     if (channel == null) throw new IllegalArgumentException("Canal no puede ser nulo");
     if (subject == null || subject.isBlank()) throw new IllegalArgumentException("Asunto vacío");
@@ -61,7 +62,7 @@ public class Notification extends DomainRoot {
    * @param tenantId    Tenant
    */
   public static Notification sendMemorandum(
-      UUID recipientId, String subject, String body, String tenantId) {
+      UUID recipientId, String subject, String body, UUID tenantId) {
     if (recipientId == null) throw new IllegalArgumentException("recipientId no puede ser nulo");
     if (subject == null || subject.isBlank()) throw new IllegalArgumentException("Asunto vacío");
 
@@ -124,7 +125,7 @@ public class Notification extends DomainRoot {
       NotificationChannel channel,
       String subject,
       String body,
-      String tenantId,
+      UUID tenantId,
       Instant sentAt,
       Instant readAt,
       boolean requiresAcknowledgement,
@@ -167,7 +168,7 @@ public class Notification extends DomainRoot {
     return body;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 

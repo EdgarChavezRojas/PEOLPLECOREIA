@@ -4,7 +4,6 @@ import com.solveria.core.experience.domain.event.DisciplinaryThresholdReachedEve
 import com.solveria.core.experience.domain.event.TacitaReconduccionRiskEvent;
 import com.solveria.core.experience.domain.model.vo.ModelType;
 import com.solveria.core.experience.domain.model.vo.RiskAlert;
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
 
 import java.math.BigDecimal;
@@ -21,7 +20,7 @@ public class PredictionModel extends DomainRoot {
   private ModelType modelType;
   private String version;
   private Instant lastExecution;
-  private String tenantId;
+  private UUID tenantId;
   private List<RiskAlert> alerts;
 
 
@@ -29,12 +28,11 @@ public class PredictionModel extends DomainRoot {
     this.alerts = new ArrayList<>();
   }
 
-  public static PredictionModel create(ModelType modelType, String version, String tenantId) {
+  public static PredictionModel create(ModelType modelType, String version, UUID tenantId) {
     if (modelType == null) throw new IllegalArgumentException("modelType requerido");
     if (version == null || version.isBlank())
       throw new IllegalArgumentException("version requerida");
-    if (tenantId == null || tenantId.isBlank())
-      throw new IllegalArgumentException("tenantId requerido");
+
     PredictionModel m = new PredictionModel();
     m.modelId = UUID.randomUUID();
     m.modelType = modelType;
@@ -158,7 +156,7 @@ public class PredictionModel extends DomainRoot {
       ModelType modelType,
       String version,
       Instant lastExecution,
-      String tenantId,
+      UUID tenantId,
       List<RiskAlert> alerts) {
     PredictionModel m = new PredictionModel();
     m.modelId = modelId;
@@ -188,7 +186,7 @@ public class PredictionModel extends DomainRoot {
     return lastExecution;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 

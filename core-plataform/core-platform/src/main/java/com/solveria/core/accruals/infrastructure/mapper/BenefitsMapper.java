@@ -1,14 +1,13 @@
 package com.solveria.core.accruals.infrastructure.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solveria.core.accruals.domain.event.AccrualEvent;
+import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.accruals.domain.model.BenefitAccrual;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;
 import com.solveria.core.accruals.infrastructure.jpa.BenefitAccrualJpa;
 import com.solveria.core.accruals.infrastructure.jpa.HolidayCalendarJpa;
 import com.solveria.core.accruals.infrastructure.jpa.QuinquenioProvisionJpa;
-import java.util.Map;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -24,53 +23,47 @@ public interface BenefitsMapper {
     if (jpa == null) {
       return null;
     }
-    return HolidayCalendar.builder()
-        .holidayId(jpa.getHolidayId())
-        .holidayDate(jpa.getHolidayDate())
-        .scope(jpa.getScope())
-        .tenantId(jpa.getTenantId())
-        .build();
+    return new HolidayCalendar(
+            jpa.getHolidayId(),
+            jpa.getHolidayDate(),
+            jpa.getScope(),
+            jpa.getTenantId()
+    );
   }
 
   default QuinquenioProvision toDomain(QuinquenioProvisionJpa jpa) {
     if (jpa == null) {
       return null;
     }
-    return QuinquenioProvision.builder()
-        .provisionId(jpa.getProvisionId())
-        .relationshipId(jpa.getRelationshipId())
-        .totalAccumulated(jpa.getTotalAccumulated())
-        .penaltyActive(Boolean.TRUE.equals(jpa.getPenaltyActive()))
-        .tenantId(jpa.getTenantId())
-        .build();
+    return new QuinquenioProvision(
+            jpa.getProvisionId(),
+            jpa.getRelationshipId(),
+            jpa.getTotalAccumulated(),
+            Boolean.TRUE.equals(jpa.getPenaltyActive()),
+            jpa.getTenantId()
+    );
   }
 
   default BenefitAccrual toDomain(BenefitAccrualJpa jpa) {
     if (jpa == null) {
       return null;
     }
-    return BenefitAccrual.builder()
-        .benefitId(jpa.getBenefitId())
-        .relationshipId(jpa.getRelationshipId())
-        .benefitType(jpa.getBenefitType())
-        .fiscalYear(jpa.getFiscalYear())
-        .accruedAmount(jpa.getAccruedAmount())
-        .tenantId(jpa.getTenantId())
-        .build();
+    return new BenefitAccrual(
+            jpa.getBenefitId(),
+            jpa.getRelationshipId(),
+            jpa.getBenefitType(),
+            jpa.getFiscalYear(),
+            jpa.getAccruedAmount(),
+            jpa.getTenantId()
+    );
   }
 
-  default String toEventPayload(QuinquenioProvision provision, AccrualEvent event) {
+  default String toEventPayload(QuinquenioProvision provision, DomainEvent event) {
     if (provision == null || event == null) {
       return "{}";
     }
-    Map<String, Object> payload =
-        Map.of(
-            "provisionId", provision.getProvisionId(),
-            "relationshipId", provision.getRelationshipId(),
-            "tenantId", provision.getTenantId(),
-            "eventType", event.type().name());
     try {
-      return new ObjectMapper().writeValueAsString(payload);
+      return new ObjectMapper().writeValueAsString(event);
     } catch (Exception e) {
       throw new RuntimeException("Error serializing QuinquenioProvision event payload", e);
     }

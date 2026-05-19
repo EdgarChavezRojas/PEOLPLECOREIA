@@ -4,4 +4,4 @@ import java.util.UUID;
 
 /** Command: Solicitud de certificado digital (W14 ESS). */
 public record RequestCertificateCommand(
-    UUID personId, String certificateType, String tenantId, String createdBy) {}
+    UUID personId, String certificateType, String createdBy) {}

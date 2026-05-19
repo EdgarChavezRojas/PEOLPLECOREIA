@@ -81,7 +81,7 @@ public class AttendanceLedgerRepositoryAdapter implements AttendanceLedgerReposi
     private AttendanceLedger reconstitute(AttendanceLedgerJpa jpa) {
         AttendanceLedger domain = new AttendanceLedger(
                 jpa.getLedgerId(),
-                UUID.fromString(jpa.getTenantId()),
+                (jpa.getTenantId()),
                 jpa.getRelationshipId(),
                 jpa.getWorkDate(),
                 jpa.getShiftId(),
@@ -144,7 +144,7 @@ public class AttendanceLedgerRepositoryAdapter implements AttendanceLedgerReposi
      */
     private AttendanceLedgerJpa toJpaFull(AttendanceLedger domain) {
         AttendanceLedgerJpa jpa = mapper.toJpa(domain);
-        jpa.setTenantId(domain.getTenantId().toString());
+        jpa.setTenantId(domain.getTenantId());
         jpa.setLedgerId(domain.getLedgerId());
 
         // WorkedHoursSummary (nullable)

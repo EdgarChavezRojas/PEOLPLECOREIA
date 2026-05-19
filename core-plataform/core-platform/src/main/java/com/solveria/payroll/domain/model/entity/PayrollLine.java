@@ -13,12 +13,12 @@ public class PayrollLine {
     private BigDecimal gestoraRetained;
     private BigDecimal otherDeductions;
     private BigDecimal netPayable;
-    private final String tenantId;
+    private final UUID tenantId;
 
     public PayrollLine(UUID id, UUID runId, UUID employeeId, BigDecimal basicSalary, 
                        BigDecimal totalEarned, BigDecimal rcIvaRetained, 
                        BigDecimal gestoraRetained, BigDecimal otherDeductions, 
-                       BigDecimal netPayable, String tenantId) {
+                       BigDecimal netPayable, UUID tenantId) {
         this.id = id;
         this.runId = runId;
         this.employeeId = employeeId;
@@ -46,7 +46,7 @@ public class PayrollLine {
     public BigDecimal getGestoraRetained() { return gestoraRetained; }
     public BigDecimal getOtherDeductions() { return otherDeductions; }
     public BigDecimal getNetPayable() { return netPayable; }
-    public String getTenantId() { return tenantId; }
+    public UUID getTenantId() { return tenantId; }
 
     public void setBasicSalary(BigDecimal basicSalary) { this.basicSalary = basicSalary; }
     public void setTotalEarned(BigDecimal totalEarned) { this.totalEarned = totalEarned; }

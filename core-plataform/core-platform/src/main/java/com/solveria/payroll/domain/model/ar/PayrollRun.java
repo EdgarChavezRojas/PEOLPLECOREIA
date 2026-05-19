@@ -4,7 +4,6 @@ import com.solveria.core.shared.exceptions.SolverExceptionImpl;
 import com.solveria.payroll.domain.model.entity.PayrollLine;
 import com.solveria.payroll.domain.model.vo.PayrollRunType;
 import com.solveria.payroll.domain.model.vo.PayrollStatus;
-import com.solveria.core.shared.exceptions.SolverException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

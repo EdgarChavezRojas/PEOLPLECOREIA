@@ -28,7 +28,7 @@ public class RegisterSocialSecurityUseCase implements SocialSecurityCompliancePo
   @Override
   @Transactional
   public UUID registerSocialSecurityAccount(
-      UUID personId, String gestoraCode, String tenantId, String createdBy) {
+      UUID personId, String gestoraCode, UUID tenantId, String createdBy) {
     log.info("event=REGISTER_SSA personId={} gestoraCode={}", personId, gestoraCode);
 
     SocialSecurityAccount account =
@@ -71,7 +71,7 @@ public class RegisterSocialSecurityUseCase implements SocialSecurityCompliancePo
 
   @Override
   @Transactional
-  public UUID registerHealthProvider(String registrationNo, String tenantId, String createdBy) {
+  public UUID registerHealthProvider(String registrationNo, UUID tenantId, String createdBy) {
     log.info("event=REGISTER_HEALTH_PROVIDER registrationNo={}", registrationNo);
 
     HealthProvider provider = HealthProvider.create(registrationNo, tenantId, createdBy);

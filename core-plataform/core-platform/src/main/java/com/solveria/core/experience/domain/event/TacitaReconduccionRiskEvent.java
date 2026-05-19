@@ -19,7 +19,7 @@ public record TacitaReconduccionRiskEvent(
     LocalDate deadline,
     BigDecimal financialImpact,
     int daysUntilExpiry,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
@@ -30,7 +30,7 @@ public record TacitaReconduccionRiskEvent(
       LocalDate deadline,
       BigDecimal financialImpact,
       int daysUntilExpiry,
-      String tenantId) {
+      UUID tenantId) {
     this(
         modelId,
         contractId,

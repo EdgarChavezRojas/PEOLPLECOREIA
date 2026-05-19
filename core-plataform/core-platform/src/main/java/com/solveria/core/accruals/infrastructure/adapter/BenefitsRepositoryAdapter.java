@@ -1,7 +1,6 @@
 package com.solveria.core.accruals.infrastructure.adapter;
 
 import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
-import com.solveria.core.accruals.domain.event.AccrualEvent;
 import com.solveria.core.accruals.domain.model.BenefitAccrual;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +72,13 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   }
 
   @Override
+  public List<QuinquenioProvision> findAllQuinquenioProvisions() {
+    return quinquenioProvisionRepository.findAll().stream()
+        .map(benefitsMapper::toDomain)
+        .toList();
+  }
+
+  @Override
   public BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual) {
     BenefitAccrualJpa saved = benefitAccrualRepository.save(benefitsMapper.toJpa(accrual));
     return benefitsMapper.toDomain(saved);
@@ -95,5 +101,12 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
         .findByRelationshipIdAndBenefitTypeAndFiscalYearAndTenantId(
             relationshipId, benefitType, fiscalYear, UUID.fromString(tenantId))
         .map(benefitsMapper::toDomain);
+  }
+
+  @Override
+  public List<BenefitAccrual> findAllBenefitAccruals() {
+    return benefitAccrualRepository.findAll().stream()
+        .map(benefitsMapper::toDomain)
+        .toList();
   }
 }

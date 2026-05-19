@@ -7,9 +7,8 @@ import com.solveria.core.legal.domain.model.vo.SalaryTerms;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
-import lombok.Getter;
 
-@Getter
+
 public class ContractAddendum {
 
   private final UUID addendumId;
@@ -37,33 +36,33 @@ public class ContractAddendum {
     this.createdBy = Objects.requireNonNull(createdBy, "createdBy");
   }
 
-  //    public UUID getAddendumId() {
-  //        return addendumId;
-  //    }
-  //
-  //    public AddendumStatus getStatus() {
-  //        return status;
-  //    }
-  //
-  //    public LocalDate getEffectiveFrom() {
-  //        return effectiveFrom;
-  //    }
-  //
-  //    public LocalDate getEffectiveTo() {
-  //        return effectiveTo;
-  //    }
-  //
-  //    public SalaryTerms getSalaryTerms() {
-  //        return salaryTerms;
-  //    }
-  //
-  //    public ComplianceSnapshot getSnapshot() {
-  //        return snapshot;
-  //    }
-  //
-  //    public String getCreatedBy() {
-  //        return createdBy;
-  //    }
+      public UUID getAddendumId() {
+          return addendumId;
+      }
+
+      public AddendumStatus getStatus() {
+          return status;
+      }
+
+      public LocalDate getEffectiveFrom() {
+          return effectiveFrom;
+      }
+
+      public LocalDate getEffectiveTo() {
+          return effectiveTo;
+      }
+
+      public SalaryTerms getSalaryTerms() {
+          return salaryTerms;
+      }
+
+      public ComplianceSnapshot getSnapshot() {
+          return snapshot;
+      }
+
+      public String getCreatedBy() {
+          return createdBy;
+      }
 
   public void approve(String approvedBy) {
     validateSegregationOfDuties(createdBy, approvedBy);

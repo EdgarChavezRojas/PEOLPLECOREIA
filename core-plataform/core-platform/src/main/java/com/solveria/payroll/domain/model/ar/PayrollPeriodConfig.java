@@ -21,13 +21,13 @@ import java.util.UUID;
 public class PayrollPeriodConfig {
 
     private final UUID configId;
-    private final String tenantId;
+    private final UUID tenantId;
     private final List<PayrollPeriod> periods;
 
     /**
      * Constructor de reconstrucción (desde persistencia).
      */
-    public PayrollPeriodConfig(UUID configId, String tenantId, List<PayrollPeriod> periods) {
+    public PayrollPeriodConfig(UUID configId, UUID tenantId, List<PayrollPeriod> periods) {
         this.configId = Objects.requireNonNull(configId, "configId es requerido");
         this.tenantId = Objects.requireNonNull(tenantId, "tenantId es requerido");
         this.periods = new ArrayList<>(Objects.requireNonNullElse(periods, List.of()));
@@ -36,7 +36,7 @@ public class PayrollPeriodConfig {
     /**
      * Factory: crea una nueva configuración vacía de periodos.
      */
-    public static PayrollPeriodConfig create(String tenantId) {
+    public static PayrollPeriodConfig create(UUID tenantId) {
         return new PayrollPeriodConfig(UUID.randomUUID(), tenantId, new ArrayList<>());
     }
 
@@ -86,7 +86,7 @@ public class PayrollPeriodConfig {
     // ── Getters ──────────────────────────────────────────────────────────────
 
     public UUID getConfigId() { return configId; }
-    public String getTenantId() { return tenantId; }
+    public UUID getTenantId() { return tenantId; }
 
     /** @return vista inmutable de los periodos. */
     public List<PayrollPeriod> getPeriods() {

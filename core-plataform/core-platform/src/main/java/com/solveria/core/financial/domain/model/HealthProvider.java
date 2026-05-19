@@ -12,14 +12,14 @@ public class HealthProvider {
   private final UUID providerId;
   private final String registrationNo;
   private HealthProviderStatus status;
-  private final String tenantId;
+  private final UUID tenantId;
   private final String createdBy;
 
   private HealthProvider(
       UUID providerId,
       String registrationNo,
       HealthProviderStatus status,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     this.providerId = providerId;
     this.registrationNo = registrationNo;
@@ -28,7 +28,7 @@ public class HealthProvider {
     this.createdBy = createdBy;
   }
 
-  public static HealthProvider create(String registrationNo, String tenantId, String createdBy) {
+  public static HealthProvider create(String registrationNo, UUID tenantId, String createdBy) {
     if (registrationNo == null || registrationNo.isBlank()) {
       throw new IllegalArgumentException("Número de afiliación es obligatorio");
     }
@@ -40,7 +40,7 @@ public class HealthProvider {
       UUID providerId,
       String registrationNo,
       HealthProviderStatus status,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     return new HealthProvider(providerId, registrationNo, status, tenantId, createdBy);
   }
@@ -71,7 +71,7 @@ public class HealthProvider {
     return status;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 

@@ -1,8 +1,5 @@
 package com.solveria.core.workforce.domain.model.vo;
 
-import lombok.Getter;
-
-@Getter
 public enum PartyIdentifierType {
   CI("Carnet de Identidad"),
   PASSPORT("Pasaporte");
@@ -11,5 +8,9 @@ public enum PartyIdentifierType {
 
   PartyIdentifierType(String description) {
     this.description = description;
+  }
+
+  public String getDescription() {
+    return description;
   }
 }

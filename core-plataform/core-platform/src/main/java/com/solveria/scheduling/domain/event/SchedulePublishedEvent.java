@@ -6,6 +6,6 @@ import java.util.UUID;
 
 public record SchedulePublishedEvent(
     UUID planId,
-    Instant occurredOn
+    Instant occurredAt
 ) implements DomainEvent {
 }

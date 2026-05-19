@@ -28,7 +28,7 @@ public class AuditLogAdapter implements AuditLogPort {
 
     @Override
     public void registerEvidenceGenerated(
-            UUID contractId, String tenantId, String userId, Instant generatedAt, String hash) {
+            UUID contractId, Instant generatedAt, String hash) {
 
         // Formateamos la acción para incluir el hash dentro del límite de los 4 parámetros
         String actionDescription = String.format(ACTION_EVIDENCE_GENERATED, hash);

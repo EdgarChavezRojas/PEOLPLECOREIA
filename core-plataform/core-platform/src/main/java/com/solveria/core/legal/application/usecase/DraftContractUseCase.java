@@ -23,11 +23,10 @@ public class DraftContractUseCase {
 
   @Transactional
   public ContractResponse execute(DraftContractRequest request) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!tenantId.equals(request.tenantId())) {
-      throw new IllegalStateException("Tenant inconsistente entre request y contexto de seguridad");
-    }
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = UUID.fromString(tenantStr);
 
+    //revisar porque puede generar fallo
     UUID contractId = request.contractId() != null ? request.contractId() : UUID.randomUUID();
     String createdBy = SecurityUserContext.getUserIdentifier();
     EmploymentCondition empCond = request.employmentCond() != null ?

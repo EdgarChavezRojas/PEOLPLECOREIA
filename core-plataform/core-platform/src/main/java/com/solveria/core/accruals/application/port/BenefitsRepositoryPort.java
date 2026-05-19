@@ -19,9 +19,13 @@ public interface BenefitsRepositoryPort {
 
   Optional<QuinquenioProvision> findQuinquenioByRelationshipId(UUID relationshipId);
 
+  List<QuinquenioProvision> findAllQuinquenioProvisions();
+
   BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual);
 
   List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals);
 
   Optional<BenefitAccrual> findBenefitAccrual(UUID relationshipId, BenefitType benefitType, int fiscalYear);
+
+  List<BenefitAccrual> findAllBenefitAccruals();
 }

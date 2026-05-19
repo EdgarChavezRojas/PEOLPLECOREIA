@@ -1,8 +1,8 @@
 package com.solveria.core.workforce.infrastructure.adapter;
 
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
 import com.solveria.core.workforce.domain.model.OrgUnit;
 import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;

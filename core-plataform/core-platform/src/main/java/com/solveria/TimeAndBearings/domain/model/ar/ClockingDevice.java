@@ -58,35 +58,37 @@ import java.util.UUID;
  */
 public class ClockingDevice {
 
-    // ── Identity ──────────────────────────────────────────────────────────────
-    private final UUID deviceId;
-    private final UUID tenantId;
-    private final UUID orgUnitId;
-    private final String serialNumber;
-    private final DeviceType deviceType;
-    private final DeviceRole deviceRole;
-
-    // ── State ─────────────────────────────────────────────────────────────────
+    private UUID deviceId;
+    private UUID tenantId;
+    private UUID orgUnitId;
+    private String serialNumber;
+    private DeviceType deviceType;
+    private DeviceRole deviceRole;
     private DeviceStatus status;
-    private final LocalDateTime installedAt;
+    private LocalDateTime installedAt;
     private LocalDateTime decommissionedAt;
-
-    // ── Value Objects ─────────────────────────────────────────────────────────
     private DeviceCapabilities capabilities;
     private DeviceHeartbeat heartbeat;
+    private List<BiometricEnrollment> enrollments;
+    private List<PunchAttemptLog> punchAttemptLogs;
+    private List<DeviceAuditLog> auditLogs;
+    private List<DomainEvent> domainEvents;
 
-    // ── Children (managed exclusively by this AR) ─────────────────────────────
-    private final List<BiometricEnrollment> enrollments = new ArrayList<>();
-    private final List<PunchAttemptLog> punchAttemptLogs = new ArrayList<>();
-    private final List<DeviceAuditLog> auditLogs = new ArrayList<>();
-
-    // ── Domain Events (transient, cleared after flush) ─────────────────────────
-    private final List<DomainEvent> domainEvents = new ArrayList<>();
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    //  Factory / Reconstitution
-    // ═══════════════════════════════════════════════════════════════════════════
-
+    public void setDeviceId(UUID deviceId) { this.deviceId = deviceId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+    public void setOrgUnitId(UUID orgUnitId) { this.orgUnitId = orgUnitId; }
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+    public void setDeviceType(DeviceType deviceType) { this.deviceType = deviceType; }
+    public void setDeviceRole(DeviceRole deviceRole) { this.deviceRole = deviceRole; }
+    public void setStatus(DeviceStatus status) { this.status = status; }
+    public void setInstalledAt(LocalDateTime installedAt) { this.installedAt = installedAt; }
+    public void setDecommissionedAt(LocalDateTime decommissionedAt) { this.decommissionedAt = decommissionedAt; }
+    public void setCapabilities(DeviceCapabilities capabilities) { this.capabilities = capabilities; }
+    public void setHeartbeat(DeviceHeartbeat heartbeat) { this.heartbeat = heartbeat; }
+    public void setEnrollments(List<BiometricEnrollment> enrollments) { this.enrollments = enrollments; }
+    public void setPunchAttemptLogs(List<PunchAttemptLog> punchAttemptLogs) { this.punchAttemptLogs = punchAttemptLogs; }
+    public void setAuditLogs(List<DeviceAuditLog> auditLogs) { this.auditLogs = auditLogs; }
+    public void setDomainEvents(List<DomainEvent> domainEvents) { this.domainEvents = domainEvents; }
     /**
      * Factory: Registra un nuevo ClockingDevice en estado PROVISIONING (WF-TM04 paso 1).
      * La Invariante de Unicidad PRIMARY se verifica en la capa de aplicación ANTES de llamar

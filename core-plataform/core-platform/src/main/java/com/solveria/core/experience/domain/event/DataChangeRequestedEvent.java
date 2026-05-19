@@ -13,12 +13,12 @@ public record DataChangeRequestedEvent(
     UUID personId,
     String actionType,
     String payload,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
   public DataChangeRequestedEvent(
-      UUID actionId, UUID personId, String actionType, String payload, String tenantId) {
+      UUID actionId, UUID personId, String actionType, String payload, UUID tenantId) {
     this(actionId, personId, actionType, payload, tenantId, Instant.now());
   }
 }

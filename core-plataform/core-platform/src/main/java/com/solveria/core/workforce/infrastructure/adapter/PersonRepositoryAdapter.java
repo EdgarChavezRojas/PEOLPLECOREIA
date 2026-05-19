@@ -1,7 +1,6 @@
 package com.solveria.core.workforce.infrastructure.adapter;
 
-import com.solveria.core.shared.events.DomainEvent;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import com.solveria.core.workforce.application.port.PersonRepositoryPort;
 import com.solveria.core.workforce.domain.model.Person;
 import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;

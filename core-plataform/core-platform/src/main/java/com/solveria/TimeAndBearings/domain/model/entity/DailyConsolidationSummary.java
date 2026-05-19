@@ -23,10 +23,9 @@ import java.util.UUID;
  */
 public class DailyConsolidationSummary {
 
-    private final UUID summaryId;
-    private final UUID periodId;
-    private final LocalDate workDate;
-
+    private UUID summaryId;
+    private UUID periodId;
+    private LocalDate workDate;
     private int totalScheduled;
     private int totalAttended;
     private int totalNoShows;
@@ -35,6 +34,18 @@ public class DailyConsolidationSummary {
     private BigDecimal totalOvertimeHours;
     private BigDecimal totalNightHours;
     private LocalDateTime calculatedAt;
+
+    public void setSummaryId(UUID summaryId) { this.summaryId = summaryId; }
+    public void setPeriodId(UUID periodId) { this.periodId = periodId; }
+    public void setWorkDate(LocalDate workDate) { this.workDate = workDate; }
+    public void setTotalScheduled(int totalScheduled) { this.totalScheduled = totalScheduled; }
+    public void setTotalAttended(int totalAttended) { this.totalAttended = totalAttended; }
+    public void setTotalNoShows(int totalNoShows) { this.totalNoShows = totalNoShows; }
+    public void setTotalExceptionsPending(int totalExceptionsPending) { this.totalExceptionsPending = totalExceptionsPending; }
+    public void setTotalRegularHours(BigDecimal totalRegularHours) { this.totalRegularHours = totalRegularHours; }
+    public void setTotalOvertimeHours(BigDecimal totalOvertimeHours) { this.totalOvertimeHours = totalOvertimeHours; }
+    public void setTotalNightHours(BigDecimal totalNightHours) { this.totalNightHours = totalNightHours; }
+    public void setCalculatedAt(LocalDateTime calculatedAt) { this.calculatedAt = calculatedAt; }
 
     /**
      * Constructor de reconstrucción (desde persistencia).

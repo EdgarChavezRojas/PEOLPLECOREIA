@@ -14,7 +14,7 @@ public record CertificateGeneratedEvent(
     String certificateType,
     String sha256Hash,
     String qrValidationUrl,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
@@ -24,7 +24,7 @@ public record CertificateGeneratedEvent(
       String certificateType,
       String sha256Hash,
       String qrValidationUrl,
-      String tenantId) {
+      UUID tenantId) {
     this(actionId, personId, certificateType, sha256Hash, qrValidationUrl, tenantId, Instant.now());
   }
 }

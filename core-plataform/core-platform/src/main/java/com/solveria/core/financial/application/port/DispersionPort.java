@@ -13,5 +13,5 @@ public interface DispersionPort {
    * archivo de dispersión).
    */
   void syncBankAccount(
-      UUID personId, String bankAccountNumber, String bankCode, String tenantId, String userId);
+      UUID personId, String bankAccountNumber, String bankCode, UUID tenantId, String userId);
 }

@@ -1,5 +1,6 @@
 package com.solveria.core.workforce.application.usecase;
 
+import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.workforce.application.port.PersonRepositoryPort;
 import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.Person;
@@ -9,9 +10,11 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @RequiredArgsConstructor
+@Service
 public class UpdatePersonUseCase {
 
   private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
@@ -27,7 +30,8 @@ public class UpdatePersonUseCase {
         personRepositoryPort
             .findByPersonId(personId)
             .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
-
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = UUID.fromString(tenantStr);
     person.updateMasterData(
         person.getFirstName(),
         person.getLastName(),
@@ -35,10 +39,11 @@ public class UpdatePersonUseCase {
         person.getGender(),
         maritalStatus,
         professionTitle,
-        person.getGlobalId());
+        person.getGlobalId(),
+            tenantId);
 
-    if (contacts != null && !contacts.isEmpty() && contacts.get(0) != null) {
-      person.updateContactPoint(contacts.get(0));
+    if (contacts != null && !contacts.isEmpty() && contacts.getFirst() != null) {
+      person.updateContactPoint(contacts.getFirst(), tenantId);
     }
 
     personRepositoryPort.save(person);

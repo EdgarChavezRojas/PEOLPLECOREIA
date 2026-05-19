@@ -12,7 +12,7 @@ public record ContractResponse(
     ContractType contractType,
     EmploymentCondition employmentCond,
     ContractStatus status,
-    String projectId,
-    String tenantId,
+    UUID projectId,
+    UUID tenantId,
     List<ContractAddendumResponse> addendums) {}
 

@@ -473,7 +473,7 @@ public interface BenefitsRepositoryPort {
 package com.solveria.core.accruals.infrastructure.adapter;
 
 import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
-import com.solveria.core.accruals.domain.event.AccrualEvent;
+
 import com.solveria.core.accruals.domain.model.BenefitAccrual;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;

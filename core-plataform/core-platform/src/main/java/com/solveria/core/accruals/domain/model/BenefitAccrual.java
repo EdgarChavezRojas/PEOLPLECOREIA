@@ -3,15 +3,7 @@ package com.solveria.core.accruals.domain.model;
 import com.solveria.core.accruals.domain.model.vo.BenefitType;
 import java.math.BigDecimal;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class BenefitAccrual {
 
   private UUID benefitId;
@@ -21,12 +13,24 @@ public class BenefitAccrual {
   private BigDecimal accruedAmount;
   private UUID tenantId;
 
+  public BenefitAccrual() {
+  }
+
+  public BenefitAccrual(UUID benefitId, UUID relationshipId, BenefitType benefitType, int fiscalYear, BigDecimal accruedAmount, UUID tenantId) {
+    this.benefitId = benefitId;
+    this.relationshipId = relationshipId;
+    this.benefitType = benefitType;
+    this.fiscalYear = fiscalYear;
+    this.accruedAmount = accruedAmount;
+    this.tenantId = tenantId;
+  }
+
   public static BenefitAccrual open(
-      UUID relationshipId,
-      BenefitType benefitType,
-      int fiscalYear,
-      BigDecimal accruedAmount,
-      UUID tenantId) {
+          UUID relationshipId,
+          BenefitType benefitType,
+          int fiscalYear,
+          BigDecimal accruedAmount,
+          UUID tenantId) {
     if (relationshipId == null) {
       throw new IllegalArgumentException("relationshipId is required");
     }
@@ -42,14 +46,14 @@ public class BenefitAccrual {
     if (tenantId == null) {
       throw new IllegalArgumentException("tenantId is required");
     }
-    return BenefitAccrual.builder()
-        .benefitId(UUID.randomUUID())
-        .relationshipId(relationshipId)
-        .benefitType(benefitType)
-        .fiscalYear(fiscalYear)
-        .accruedAmount(accruedAmount)
-        .tenantId(tenantId)
-        .build();
+    return new BenefitAccrual(
+            UUID.randomUUID(),
+            relationshipId,
+            benefitType,
+            fiscalYear,
+            accruedAmount,
+            tenantId
+    );
   }
 
   public void addAccrual(BigDecimal amount) {
@@ -58,4 +62,12 @@ public class BenefitAccrual {
     }
     accruedAmount = accruedAmount.add(amount);
   }
+
+  // Getters
+  public UUID getBenefitId() { return benefitId; }
+  public UUID getRelationshipId() { return relationshipId; }
+  public BenefitType getBenefitType() { return benefitType; }
+  public int getFiscalYear() { return fiscalYear; }
+  public BigDecimal getAccruedAmount() { return accruedAmount; }
+  public UUID getTenantId() { return tenantId; }
 }

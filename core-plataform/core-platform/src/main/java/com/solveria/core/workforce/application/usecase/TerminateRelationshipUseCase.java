@@ -9,9 +9,11 @@ import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @RequiredArgsConstructor
+@Service
 public class TerminateRelationshipUseCase {
 
   private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";

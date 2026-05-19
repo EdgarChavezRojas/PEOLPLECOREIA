@@ -27,7 +27,7 @@ public class ManagerSelfServiceUseCase implements ManagerSelfServicePI {
   public void approveDataChange(UUID actionId, UUID approvedBy, String tenantId) {
     log.info("event=DATA_CHANGE_APPROVAL actionId={} approvedBy={}", actionId, approvedBy);
 
-    ApproveDataChangeCommand cmd = new ApproveDataChangeCommand(actionId, approvedBy, tenantId);
+    ApproveDataChangeCommand cmd = new ApproveDataChangeCommand(actionId, approvedBy);
 
     SelfServiceAction action =
         selfServiceActionPO
@@ -52,7 +52,7 @@ public class ManagerSelfServiceUseCase implements ManagerSelfServicePI {
     log.info("event=DATA_CHANGE_REJECTION actionId={} rejectedBy={}", actionId, rejectedBy);
 
     RejectDataChangeCommand cmd =
-        new RejectDataChangeCommand(actionId, rejectedBy, rejectionReason, tenantId);
+        new RejectDataChangeCommand(actionId, rejectedBy, rejectionReason);
 
     SelfServiceAction action =
         selfServiceActionPO

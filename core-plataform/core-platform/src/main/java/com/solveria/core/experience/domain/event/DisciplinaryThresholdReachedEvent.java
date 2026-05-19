@@ -10,21 +10,21 @@ import java.util.UUID;
  */
 public record DisciplinaryThresholdReachedEvent(
     UUID modelId,
-    UUID personId,
+    UUID relationshipId,
     int memorandumCount,
     int periodMonths,
     String recommendation,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
   public DisciplinaryThresholdReachedEvent(
       UUID modelId,
-      UUID personId,
+      UUID relationshipId,
       int memorandumCount,
       int periodMonths,
       String recommendation,
-      String tenantId) {
-    this(modelId, personId, memorandumCount, periodMonths, recommendation, tenantId, Instant.now());
+      UUID tenantId) {
+    this(modelId, relationshipId, memorandumCount, periodMonths, recommendation, tenantId, Instant.now());
   }
 }

@@ -1,6 +1,8 @@
 package com.solveria.core.workforce.application.port;
 
 import com.solveria.core.workforce.domain.model.Relationship;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +17,5 @@ public interface RelationshipRepositoryPort {
 
   /** Valida que no exista vínculo laboral primario para una persona en un tenant */
   boolean existsPrimaryRelationshipForPersonInTenant(UUID personId, UUID tenantId);
+  List<Relationship> findByPersonId(UUID personId);
 }

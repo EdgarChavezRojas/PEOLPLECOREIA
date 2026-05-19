@@ -25,33 +25,29 @@ import java.util.UUID;
  */
 public class TimeEntry {
 
-    private final UUID entryId;
-    private final UUID ledgerId;
+    private UUID entryId;
+    private UUID ledgerId;
+    private LocalDateTime punchTime;
+    private PunchType punchType;
+    private PunchContext punchContext;
+    private GeoValidationSnapshot geoSnapshot;
+    private String deviceSignature;
+    private boolean isRetroactive;
+    private UUID retroactiveApproverId;
+    private UUID correctsEntryId;
+    private boolean fraudFlag;
 
-    /**
-     * Hora del servidor NTP. NOT NULL. Asignada exclusivamente por el servidor (P-TM26).
-     * Si llega un timestamp embebido del cliente, se ignora.
-     */
-    private final LocalDateTime punchTime;
-
-    private final PunchType punchType;
-    private final PunchContext punchContext;
-    private final GeoValidationSnapshot geoSnapshot;
-
-    /** Firma digital del dispositivo. NOT NULL si source=KIOSK/BIOMETRIC_READER (Invariante Device Signature). */
-    private final String deviceSignature;
-
-    /** TRUE si fue creado por un MSS para una fecha pasada (P-TM32). */
-    private final boolean isRetroactive;
-
-    /** FK a User (MSS). NOT NULL si isRetroactive=TRUE (P-TM32). */
-    private final UUID retroactiveApproverId;
-
-    /** FK a TimeEntry (self-ref). Para entradas de corrección, referencia al entry original. */
-    private final UUID correctsEntryId;
-
-    /** TRUE si el motor anti-fraude detectó anomalía (P-TM30). */
-    private final boolean fraudFlag;
+    public void setEntryId(UUID entryId) { this.entryId = entryId; }
+    public void setLedgerId(UUID ledgerId) { this.ledgerId = ledgerId; }
+    public void setPunchTime(LocalDateTime punchTime) { this.punchTime = punchTime; }
+    public void setPunchType(PunchType punchType) { this.punchType = punchType; }
+    public void setPunchContext(PunchContext punchContext) { this.punchContext = punchContext; }
+    public void setGeoSnapshot(GeoValidationSnapshot geoSnapshot) { this.geoSnapshot = geoSnapshot; }
+    public void setDeviceSignature(String deviceSignature) { this.deviceSignature = deviceSignature; }
+    public void setIsRetroactive(boolean isRetroactive) { this.isRetroactive = isRetroactive; }
+    public void setRetroactiveApproverId(UUID retroactiveApproverId) { this.retroactiveApproverId = retroactiveApproverId; }
+    public void setCorrectsEntryId(UUID correctsEntryId) { this.correctsEntryId = correctsEntryId; }
+    public void setFraudFlag(boolean fraudFlag) { this.fraudFlag = fraudFlag; }
 
     /** Package-private: solo el AR puede construir TimeEntry. */
     public TimeEntry(

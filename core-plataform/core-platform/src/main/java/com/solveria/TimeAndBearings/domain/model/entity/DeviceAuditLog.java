@@ -14,23 +14,19 @@ import java.util.UUID;
  */
 public class DeviceAuditLog {
 
-    private final UUID auditLogId;
-    private final UUID deviceId;
+    private UUID auditLogId;
+    private UUID deviceId;
+    private String eventType;
+    private String actorId;
+    private LocalDateTime occurredAt;
+    private String description;
 
-    /** Tipo de evento de ciclo de vida (e.g., "PROVISIONED", "ACTIVATED", "DECOMMISSIONED", "BIOMETRIC_REVOKED_BULK"). */
-    private final String eventType;
-
-    /** Actor que disparó el evento: UUID del usuario o "SYSTEM" para eventos automáticos. */
-    private final String actorId;
-
-    /** Hora del servidor NTP del evento. Inmutable. */
-    private final LocalDateTime occurredAt;
-
-    /** Descripción detallada del evento para auditoría. Inmutable. */
-    private final String description;
-
-    // ── Constructor ──────────────────────────────────────────────────────────
-
+    public void setAuditLogId(UUID auditLogId) { this.auditLogId = auditLogId; }
+    public void setDeviceId(UUID deviceId) { this.deviceId = deviceId; }
+    public void setEventType(String eventType) { this.eventType = eventType; }
+    public void setActorId(String actorId) { this.actorId = actorId; }
+    public void setOccurredAt(LocalDateTime occurredAt) { this.occurredAt = occurredAt; }
+    public void setDescription(String description) { this.description = description; }
     public DeviceAuditLog(
             UUID auditLogId,
             UUID deviceId,

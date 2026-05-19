@@ -8,14 +8,11 @@ import com.solveria.core.legal.application.port.DigitalKardexPort;
 import com.solveria.core.legal.domain.event.EvidenceGeneratedEvent;
 import com.solveria.core.legal.domain.exception.ContractNotFoundException;
 import com.solveria.core.legal.domain.exception.EvidenceDataMissingException;
-import com.solveria.core.legal.domain.exception.TenantMismatchException;
 import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.ContractAddendum;
 import com.solveria.core.legal.domain.model.vo.AddendumStatus;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
-import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.security.context.SecurityUserContext;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -23,6 +20,8 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,10 +42,7 @@ public class GenerateContractEvidenceUseCase {
 
   @Transactional
   public ContractEvidenceResponse execute(GenerateContractEvidenceRequest request) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!tenantId.equals(request.tenantId())) {
-      throw new TenantMismatchException(request.tenantId(), tenantId);
-    }
+
 
     Contract contract =
             contractRepositoryPort
@@ -61,21 +57,21 @@ public class GenerateContractEvidenceUseCase {
             contract.getContractId(),
             evidenceData.salaryTerms,
             evidenceData.startDate,
-            tenantId,
+            request.tenantId(),
             generatedAt);
 
     // CAMBIO 2: Pasamos los bytes al puerto y este nos DEVUELVE el hash oficial del Kardex
-    String hash = digitalKardexPort.storeEvidence(contract.getContractId(), tenantId, fileContent, generatedAt);
+    String hash = digitalKardexPort.storeEvidence(contract.getContractId(), request.tenantId(), fileContent, generatedAt);
 
     auditLogPort.registerEvidenceGenerated(
-            contract.getContractId(), tenantId, SecurityUserContext.getUserIdentifier(), generatedAt, hash);
+            contract.getContractId(), generatedAt, hash);
     eventOutboxPort.publish(List.of(new EvidenceGeneratedEvent(
-            contract.getContractId(), tenantId, hash, generatedAt)));
+            contract.getContractId(), request.tenantId(), hash, generatedAt)));
 
     log.info(
             "event=LEGAL_CONTRACT_EVIDENCE_SUCCESS contractId={} tenantId={}",
             contract.getContractId(),
-            tenantId);
+            request.tenantId());
 
     return new ContractEvidenceResponse(contract.getContractId(), hash, generatedAt);
   }
@@ -104,7 +100,7 @@ public class GenerateContractEvidenceUseCase {
           java.util.UUID contractId,
           SalaryTerms salaryTerms,
           LocalDate startDate,
-          String tenantId,
+          UUID tenantId,
           Instant generatedAt) {
 
     // String.join es la mejor práctica en Java para unir elementos con un delimitador específico.
@@ -112,7 +108,7 @@ public class GenerateContractEvidenceUseCase {
             contractId.toString(),
             salaryTerms.basicSalary().toString(),
             startDate.toString(),
-            tenantId,
+            tenantId.toString(),
             generatedAt.toString()
     );
 

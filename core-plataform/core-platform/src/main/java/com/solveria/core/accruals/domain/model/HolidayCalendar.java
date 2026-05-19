@@ -3,21 +3,23 @@ package com.solveria.core.accruals.domain.model;
 import com.solveria.core.accruals.domain.model.vo.HolidayScope;
 import java.time.LocalDate;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class HolidayCalendar {
 
   private UUID holidayId;
   private LocalDate holidayDate;
   private HolidayScope scope;
   private UUID tenantId;
+
+  public HolidayCalendar() {
+  }
+
+  public HolidayCalendar(UUID holidayId, LocalDate holidayDate, HolidayScope scope, UUID tenantId) {
+    this.holidayId = holidayId;
+    this.holidayDate = holidayDate;
+    this.scope = scope;
+    this.tenantId = tenantId;
+  }
 
   public static HolidayCalendar register(LocalDate holidayDate, HolidayScope scope, UUID tenantId) {
     if (holidayDate == null) {
@@ -29,12 +31,12 @@ public class HolidayCalendar {
     if (tenantId == null) {
       throw new IllegalArgumentException("tenantId is required");
     }
-    return HolidayCalendar.builder()
-        .holidayId(UUID.randomUUID())
-        .holidayDate(holidayDate)
-        .scope(scope)
-        .tenantId(tenantId)
-        .build();
+    return new HolidayCalendar(
+            UUID.randomUUID(),
+            holidayDate,
+            scope,
+            tenantId
+    );
   }
 
   public boolean appliesTo(LocalDate date) {
@@ -43,4 +45,10 @@ public class HolidayCalendar {
     }
     return holidayDate.equals(date);
   }
+
+  // Getters
+  public UUID getHolidayId() { return holidayId; }
+  public LocalDate getHolidayDate() { return holidayDate; }
+  public HolidayScope getScope() { return scope; }
+  public UUID getTenantId() { return tenantId; }
 }

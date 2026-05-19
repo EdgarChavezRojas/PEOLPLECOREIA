@@ -58,32 +58,31 @@ import java.util.UUID;
  */
 public class TimesheetPeriod {
 
-    // ── Identidad ─────────────────────────────────────────────────────────────
-    private final UUID periodId;
-    private final UUID tenantId;
-    private final UUID orgUnitId;
-
-    // ── Límites temporales (VO inmutable) ────────────────────────────────────
-    private final PeriodBoundary periodBoundary;
-
-    // ── Estado mutable del ciclo de vida ─────────────────────────────────────
+    private UUID periodId;
+    private UUID tenantId;
+    private UUID orgUnitId;
+    private PeriodBoundary periodBoundary;
     private PeriodStatus status;
     private LocalDateTime closedAt;
-    private UUID closedBy;           // null si cierre fue AUTO
+    private UUID closedBy;
     private ClosureType closureType;
     private LocalDateTime payrollEventEmittedAt;
+    private List<DailyConsolidationSummary> dailySummaries;
+    private PayrollHandoffPackage handoffPackage;
+    private List<DomainEvent> domainEvents;
 
-    // ── Entidades hijas gestionadas exclusivamente por este AR ───────────────
-    private final List<DailyConsolidationSummary> dailySummaries;
-    private PayrollHandoffPackage handoffPackage; // null hasta el cierre
-
-    // ── Eventos de dominio pendientes de publicar ────────────────────────────
-    private final List<DomainEvent> domainEvents;
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Constructores
-    // ─────────────────────────────────────────────────────────────────────────
-
+    public void setPeriodId(UUID periodId) { this.periodId = periodId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+    public void setOrgUnitId(UUID orgUnitId) { this.orgUnitId = orgUnitId; }
+    public void setPeriodBoundary(PeriodBoundary periodBoundary) { this.periodBoundary = periodBoundary; }
+    public void setStatus(PeriodStatus status) { this.status = status; }
+    public void setClosedAt(LocalDateTime closedAt) { this.closedAt = closedAt; }
+    public void setClosedBy(UUID closedBy) { this.closedBy = closedBy; }
+    public void setClosureType(ClosureType closureType) { this.closureType = closureType; }
+    public void setPayrollEventEmittedAt(LocalDateTime payrollEventEmittedAt) { this.payrollEventEmittedAt = payrollEventEmittedAt; }
+    public void setDailySummaries(List<DailyConsolidationSummary> dailySummaries) { this.dailySummaries = dailySummaries; }
+    public void setHandoffPackage(PayrollHandoffPackage handoffPackage) { this.handoffPackage = handoffPackage; }
+    public void setDomainEvents(List<DomainEvent> domainEvents) { this.domainEvents = domainEvents; }
     /**
      * Constructor de reconstrucción (desde persistencia / repositorio).
      * Restaura el estado completo del agregado sin disparar eventos.

@@ -1,9 +1,10 @@
 package com.solveria.core.accruals.domain;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.solveria.core.accruals.domain.event.AccrualEvent;
-import com.solveria.core.accruals.domain.event.AccrualEventType;
+import com.solveria.core.accruals.domain.event.VacationBalanceThresholdLowEvent;
 import com.solveria.core.accruals.domain.exception.InsufficientAccrualBalanceException;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.model.vo.AccrualBalanceType;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-class AccrualBalanceTest {
+class  AccrualBalanceTest {
 
   @Test
   void requestLeaveEmitsThresholdEventWhenInsufficientBalance() {
@@ -32,14 +33,16 @@ class AccrualBalanceTest {
             balance.requestLeave(
                 LocalDate.now(), LocalDate.now().plusDays(1), BigDecimal.valueOf(6)));
 
-    boolean hasThresholdEvent =
+    VacationBalanceThresholdLowEvent event =
         balance.pullDomainEvents().stream()
-            .filter(AccrualEvent.class::isInstance)
-            .map(AccrualEvent.class::cast)
-            .anyMatch(event -> event.type() == AccrualEventType.VACATION_BALANCE_THRESHOLD_LOW);
+            .filter(VacationBalanceThresholdLowEvent.class::isInstance)
+            .map(VacationBalanceThresholdLowEvent.class::cast)
+            .findFirst()
+            .orElse(null);
 
-    if (!hasThresholdEvent) {
-      throw new AssertionError("Expected VACATION_BALANCE_THRESHOLD_LOW event");
-    }
+    assertNotNull(event, "Expected VacationBalanceThresholdLowEvent");
+    assertEquals(balance.getBalanceId(), event.balanceId());
+    assertEquals(0, event.requestedDays().compareTo(BigDecimal.valueOf(6)));
+    assertEquals(0, event.currentBalance().compareTo(BigDecimal.valueOf(5)));
   }
 }

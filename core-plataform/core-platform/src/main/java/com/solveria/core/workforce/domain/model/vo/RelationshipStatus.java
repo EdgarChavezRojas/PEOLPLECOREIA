@@ -1,8 +1,5 @@
 package com.solveria.core.workforce.domain.model.vo;
 
-import lombok.Getter;
-
-@Getter
 public enum RelationshipStatus {
   DRAFT("DRAFT"),
   ACTIVE("ACTIVE"),
@@ -13,5 +10,9 @@ public enum RelationshipStatus {
 
   RelationshipStatus(String label) {
     this.label = label;
+  }
+
+  public String getLabel() {
+    return label;
   }
 }

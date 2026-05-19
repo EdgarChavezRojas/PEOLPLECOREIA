@@ -34,16 +34,13 @@ public class ProposeContractAddendumUseCase {
 
   private final ContractRepositoryPort contractRepositoryPort;
   private final PolicyRuleRepositoryPort policyRuleRepositoryPort;
-
+  //en un futuro sera implementado con una clase application properties
   @Value("${legal.policies.smn.id}")
   private String smnPolicyId;
 
   @Transactional
   public ContractAddendumResponse execute(ProposeContractAddendumRequest request) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!tenantId.equals(request.tenantId())) {
-      throw new TenantMismatchException(request.tenantId(), tenantId);
-    }
+
 
     Contract contract =
         contractRepositoryPort

@@ -356,7 +356,7 @@ public final class QuinquenioPolicy {
 ==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\AccrualBalance.java ====
 package com.solveria.core.accruals.domain.model;
 
-import com.solveria.core.accruals.domain.event.AccrualEvent;
+
 import com.solveria.core.accruals.domain.event.AccrualEventType;
 import com.solveria.core.accruals.domain.exception.InsufficientAccrualBalanceException;
 import com.solveria.core.accruals.domain.exception.InvalidAccrualStateException;
@@ -656,7 +656,7 @@ public class HolidayCalendar {
 ==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\QuinquenioProvision.java ====
 package com.solveria.core.accruals.domain.model;
 
-import com.solveria.core.accruals.domain.event.AccrualEvent;
+
 import com.solveria.core.accruals.domain.event.AccrualEventType;
 import com.solveria.core.accruals.domain.policy.QuinquenioPolicy;
 import com.solveria.core.shared.events.DomainEvent;

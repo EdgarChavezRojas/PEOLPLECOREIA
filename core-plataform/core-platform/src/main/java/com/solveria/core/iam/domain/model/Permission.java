@@ -1,6 +1,7 @@
 package com.solveria.core.iam.domain.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Pure domain model for Permission - no persistence framework dependencies.
@@ -15,7 +16,7 @@ public class Permission {
   private Long resourceId;
   private Long actionId;
   private Long fieldId;
-  private String tenantId;
+  private UUID tenantId;
   private Long version;
   private LocalDateTime createdAt;
   private String createdBy;
@@ -42,7 +43,7 @@ public class Permission {
       Long resourceId,
       Long actionId,
       Long fieldId,
-      String tenantId,
+      UUID tenantId,
       Long version,
       LocalDateTime createdAt,
       String createdBy,
@@ -86,11 +87,11 @@ public class Permission {
     return fieldId;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 
-  public void setTenantId(String tenantId) {
+  public void setTenantId(UUID tenantId) {
     this.tenantId = tenantId;
   }
 

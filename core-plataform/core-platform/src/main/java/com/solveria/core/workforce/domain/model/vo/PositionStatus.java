@@ -1,8 +1,5 @@
 package com.solveria.core.workforce.domain.model.vo;
 
-import lombok.Getter;
-
-@Getter
 public enum PositionStatus {
   VACANT("VACANT"),
   OCCUPIED("OCCUPIED"),
@@ -12,5 +9,9 @@ public enum PositionStatus {
 
   PositionStatus(String label) {
     this.label = label;
+  }
+
+  public String getLabel() {
+    return label;
   }
 }

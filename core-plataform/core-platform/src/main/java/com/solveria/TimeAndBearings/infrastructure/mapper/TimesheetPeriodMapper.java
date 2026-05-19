@@ -58,7 +58,7 @@ public abstract class TimesheetPeriodMapper {
 
         TimesheetPeriodJpa jpa = new TimesheetPeriodJpa();
         jpa.setPeriodId(domain.getPeriodId());
-        jpa.setTenantId(domain.getTenantId().toString());
+        jpa.setTenantId(domain.getTenantId());
         jpa.setOrgUnitId(domain.getOrgUnitId());
 
         // PeriodBoundary VO → columnas aplanadas
@@ -182,7 +182,7 @@ public abstract class TimesheetPeriodMapper {
 
         return new TimesheetPeriod(
                 jpa.getPeriodId(),
-                java.util.UUID.fromString(jpa.getTenantId()),
+                jpa.getTenantId(),
                 jpa.getOrgUnitId(),
                 boundary,
                 PeriodStatus.valueOf(jpa.getStatus()),

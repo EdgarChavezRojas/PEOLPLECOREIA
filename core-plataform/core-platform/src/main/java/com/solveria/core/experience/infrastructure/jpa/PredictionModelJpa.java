@@ -33,7 +33,7 @@ public class PredictionModelJpa {
   private Instant lastExecution;
 
   @Column(name = "tenant_id", length = 50, nullable = false)
-  private String tenantId;
+  private UUID tenantId;
 
   /** RiskAlerts serializadas como JSON array. */
   @Column(name = "alerts", columnDefinition = "TEXT")

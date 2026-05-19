@@ -1,8 +1,7 @@
 package com.solveria.core.workforce.infrastructure.adapter;
 
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
 import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
@@ -10,6 +9,8 @@ import com.solveria.core.workforce.domain.model.vo.RelationshipType;
 import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
 import com.solveria.core.workforce.infrastructure.mapper.RelationshipMapper;
 import com.solveria.core.workforce.infrastructure.repository.RelationshipRepository;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -58,5 +59,14 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
     }
     return relationshipRepository.existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
         personId, currentTenantId, RelationshipType.LABOR, RelationshipStatus.ACTIVE);
+  }
+
+  @Override
+  public List<Relationship> findByPersonId(UUID personId) {
+    List<RelationshipJpa> jpaEntities = relationshipRepository.findByPersonId(personId);
+
+    return jpaEntities.stream()
+            .map(relationshipMapper::toDomain) // Transforma cada JPA a Modelo de Dominio
+            .toList();
   }
 }

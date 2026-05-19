@@ -30,7 +30,7 @@ public class SelfServiceActionJpa {
   private String payload;
 
   @Column(name = "tenant_id", length = 50, nullable = false)
-  private String tenantId;
+  private UUID tenantId;
 
   @Column(name = "created_by", length = 100, nullable = false)
   private String createdBy;

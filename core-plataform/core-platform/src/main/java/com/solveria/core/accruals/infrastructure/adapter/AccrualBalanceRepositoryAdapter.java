@@ -1,7 +1,6 @@
 package com.solveria.core.accruals.infrastructure.adapter;
 
 import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
-import com.solveria.core.accruals.domain.event.AccrualEvent;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.infrastructure.jpa.AccrualBalanceJpa;
 import com.solveria.core.accruals.infrastructure.mapper.AccrualBalanceMapper;
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,5 +43,27 @@ public class AccrualBalanceRepositoryAdapter implements AccrualBalanceRepository
     return accrualBalanceRepository
         .findByBalanceIdAndTenantId(balanceId, UUID.fromString(tenantId))
         .map(accrualBalanceMapper::toDomain);
+  }
+
+  @Override
+  public List<AccrualBalance> findAll() {
+    return accrualBalanceRepository.findAll().stream()
+        .map(accrualBalanceMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<AccrualBalance> findAllByRelationshipId(UUID relationshipId) {
+    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    if (tenantId == null || tenantId.isBlank()) {
+      return accrualBalanceRepository.findByRelationshipId(relationshipId).stream()
+          .map(accrualBalanceMapper::toDomain)
+          .toList();
+    }
+    return accrualBalanceRepository
+        .findByRelationshipIdAndTenantId(relationshipId, UUID.fromString(tenantId))
+        .stream()
+        .map(accrualBalanceMapper::toDomain)
+        .toList();
   }
 }

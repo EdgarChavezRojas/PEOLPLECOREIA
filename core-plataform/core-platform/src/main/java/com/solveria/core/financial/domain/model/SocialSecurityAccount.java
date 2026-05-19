@@ -24,7 +24,7 @@ public class SocialSecurityAccount extends DomainRoot {
   private final String gestoraCode;
   private final ContributionRate contributionRate;
   private LocalDate lastContribution;
-  private final String tenantId;
+  private final UUID tenantId;
   private final String createdBy;
 
 
@@ -35,7 +35,7 @@ public class SocialSecurityAccount extends DomainRoot {
       String gestoraCode,
       ContributionRate contributionRate,
       LocalDate lastContribution,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     this.ssaId = ssaId;
     this.personId = personId;
@@ -48,7 +48,7 @@ public class SocialSecurityAccount extends DomainRoot {
 
   /** Factory: crea una nueva cuenta de seguridad social con la tasa fija del 12.71%. */
   public static SocialSecurityAccount create(
-      UUID personId, String gestoraCode, String tenantId, String createdBy) {
+      UUID personId, String gestoraCode, UUID tenantId, String createdBy) {
     if (personId == null) {
       throw new IllegalArgumentException("personId es obligatorio");
     }
@@ -72,7 +72,7 @@ public class SocialSecurityAccount extends DomainRoot {
       String gestoraCode,
       BigDecimal contributionRateValue,
       LocalDate lastContribution,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     return new SocialSecurityAccount(
         ssaId,
@@ -126,7 +126,7 @@ public class SocialSecurityAccount extends DomainRoot {
     return lastContribution;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 

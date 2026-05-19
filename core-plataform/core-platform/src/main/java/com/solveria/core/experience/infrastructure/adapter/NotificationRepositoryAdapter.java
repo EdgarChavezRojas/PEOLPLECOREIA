@@ -6,12 +6,12 @@ import com.solveria.core.experience.infrastructure.jpa.NotificationJpa;
 import com.solveria.core.experience.infrastructure.mapper.NotificationMapper;
 import com.solveria.core.experience.infrastructure.repository.NotificationRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.events.DomainEvent;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

@@ -1,31 +1,33 @@
 package com.solveria.core.dossier.application.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solveria.core.dossier.application.command.ComplianceDecision;
 import com.solveria.core.dossier.application.command.VerifyDocumentComplianceCommand;
 import com.solveria.core.dossier.application.port.DocumentRecordRepositoryPort;
 import com.solveria.core.dossier.application.usecase.VerifyDocumentComplianceUseCase;
-import com.solveria.core.dossier.domain.event.DossierEventType;
+
+import com.solveria.core.dossier.domain.event.MandatoryComplianceDocMissingEvent;
 import com.solveria.core.dossier.domain.exception.DocumentNotFoundException;
 import com.solveria.core.dossier.domain.model.DocumentRecord;
 import com.solveria.core.dossier.domain.model.vo.DocumentMetadata;
 import com.solveria.core.dossier.domain.policy.DocumentCompliancePolicy;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
+import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
+@Service
 public class VerifyDocumentComplianceService implements VerifyDocumentComplianceUseCase {
 
   private final DocumentRecordRepositoryPort documentRecordRepository;
   private final EventOutboxPort eventOutboxPort;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+
 
   public VerifyDocumentComplianceService(
       DocumentRecordRepositoryPort documentRecordRepository, EventOutboxPort eventOutboxPort) {
@@ -118,29 +120,16 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
   }
 
   private void publishMissingDocEvent(VerifyDocumentComplianceCommand command) {
-    UUID aggregateId =
-        command.relationshipId() != null ? command.relationshipId() : UUID.randomUUID();
-    String payload = buildMissingDocPayload(command);
-//    eventOutboxPort.publish(
-//        "DocumentRecord",
-//        aggregateId,
-//        DossierEventType.MANDATORY_COMPLIANCE_DOC_MISSING.name(),
-//        payload);
+    UUID aggregateId = command.relationshipId() != null ? command.relationshipId() : UUID.randomUUID();
+
+    // Instanciamos el nuevo evento
+    MandatoryComplianceDocMissingEvent event = MandatoryComplianceDocMissingEvent.now(aggregateId);
+
+    // Publicamos a través del puerto
+    eventOutboxPort.publish(List.of(event));
   }
 
-  private String buildMissingDocPayload(VerifyDocumentComplianceCommand command) {
-    try {
-      return objectMapper.writeValueAsString(
-          Map.of(
-              "relationshipId", command.relationshipId(),
-              "tenantId", command.tenantId(),
-              "docCategory", command.docCategory() != null ? command.docCategory().name() : null,
-              "docType", command.docType(),
-              "eventType", DossierEventType.MANDATORY_COMPLIANCE_DOC_MISSING.name()));
-    } catch (Exception e) {
-      return "{}";
-    }
-  }
+
 
   private String computeSha256(byte[] input) {
     try {

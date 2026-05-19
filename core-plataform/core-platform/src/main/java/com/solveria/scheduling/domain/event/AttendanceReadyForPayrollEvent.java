@@ -7,6 +7,6 @@ import java.util.UUID;
 public record AttendanceReadyForPayrollEvent(
     UUID recordId,
     UUID relationshipId,
-    Instant occurredOn
+    Instant occurredAt
 ) implements DomainEvent {
 }

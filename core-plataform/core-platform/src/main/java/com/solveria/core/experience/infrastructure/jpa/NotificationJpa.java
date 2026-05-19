@@ -33,7 +33,7 @@ public class NotificationJpa {
   private String body;
 
   @Column(name = "tenant_id", length = 50, nullable = false)
-  private String tenantId;
+  private UUID tenantId;
 
   @Column(name = "sent_at", nullable = false, updatable = false)
   private Instant sentAt;
@@ -41,4 +41,10 @@ public class NotificationJpa {
   /** Auditoría de notificación legal: cuándo fue leída. */
   @Column(name = "read_at")
   private Instant readAt;
+  @Column(name = "read_by")
+  private boolean requiresAcknowledgement;
+  @Column(name = "acknowledged_at", nullable = false, updatable = false)
+  private Instant acknowledgedAt;
+  @Column(name = "acknowledged_by", nullable = false)
+  private UUID acknowledgedBy;
 }

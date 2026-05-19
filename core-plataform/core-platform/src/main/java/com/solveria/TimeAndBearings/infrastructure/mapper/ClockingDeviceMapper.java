@@ -63,7 +63,8 @@ public interface ClockingDeviceMapper {
     void updateJpaFromDomain(ClockingDevice domain, @MappingTarget ClockingDeviceJpa jpa);
 
     /** Maps JPA → domain AR (reconstitution). Children loaded separately via loadXxx(). */
-    @Mapping(target = "tenantId", expression = "java(java.util.UUID.fromString(jpa.getTenantId()))")
+    //@Mapping(target = "tenantId", expression = "jpa.getTenantId()")
+    @Mapping(target = "domainEvents", ignore = true)
     ClockingDevice toDomain(ClockingDeviceJpa jpa);
 
     // ── DeviceCapabilities VO ↔ Embeddable ────────────────────────────────────

@@ -19,7 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 
 
-import com.solveria.core.shared.outbox.port.EventOutboxPort;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,10 +37,7 @@ public class UpdateLegalThresholdUseCase {
 
   @Transactional
   public void execute(UpdateLegalThresholdRequest request) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!tenantId.equals(request.tenantId())) {
-      throw new TenantMismatchException(request.tenantId(), tenantId);
-    }
+
 
     PolicyRule policyRule =
         policyRuleRepositoryPort
@@ -75,6 +72,6 @@ public class UpdateLegalThresholdUseCase {
     log.info(
         "event=LEGAL_POLICY_THRESHOLD_UPDATE_SUCCESS ruleName={} tenantId={}",
         policyRule.getPolicyName(),
-        tenantId);
+        request.tenantId());
   }
 }

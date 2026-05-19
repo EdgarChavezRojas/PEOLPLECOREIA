@@ -13,12 +13,12 @@ public record DataChangeRejectedEvent(
     UUID personId,
     String rejectionReason,
     UUID rejectedBy,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
   public DataChangeRejectedEvent(
-      UUID actionId, UUID personId, String rejectionReason, UUID rejectedBy, String tenantId) {
+      UUID actionId, UUID personId, String rejectionReason, UUID rejectedBy, UUID tenantId) {
     this(actionId, personId, rejectionReason, rejectedBy, tenantId, Instant.now());
   }
 }

@@ -25,9 +25,7 @@ public class ApproveContractUseCase {
   @Transactional
   public ContractResponse execute(ApproveContractRequest request) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (!tenantId.equals(request.tenantId())) {
-      throw new IllegalStateException("Tenant inconsistente entre request y contexto de seguridad");
-    }
+
 
     Contract contract =
         contractRepositoryPort

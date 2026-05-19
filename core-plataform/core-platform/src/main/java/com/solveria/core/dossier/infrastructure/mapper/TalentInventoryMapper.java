@@ -1,7 +1,6 @@
 package com.solveria.core.dossier.infrastructure.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solveria.core.dossier.domain.event.DossierEvent;
 import com.solveria.core.dossier.domain.model.PerformanceSnapshot;
 import com.solveria.core.dossier.domain.model.SkillSet;
 import com.solveria.core.dossier.domain.model.TalentInventory;
@@ -10,6 +9,7 @@ import com.solveria.core.dossier.infrastructure.jpa.PerformanceSnapshotJpa;
 import com.solveria.core.dossier.infrastructure.jpa.SkillSetJpa;
 import com.solveria.core.dossier.infrastructure.jpa.TalentInventoryJpa;
 import com.solveria.core.dossier.infrastructure.jpa.TrainingHistoryJpa;
+import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Map;
 import org.mapstruct.AfterMapping;
@@ -32,25 +32,26 @@ public interface TalentInventoryMapper {
       return null;
     }
     List<PerformanceSnapshot> snapshots =
-        jpa.getPerformanceSnapshots() == null
-            ? List.of()
-            : jpa.getPerformanceSnapshots().stream().map(this::toDomain).toList();
+            jpa.getPerformanceSnapshots() == null
+                    ? List.of()
+                    : jpa.getPerformanceSnapshots().stream().map(this::toDomain).toList();
     List<SkillSet> skills =
-        jpa.getSkillSets() == null
-            ? List.of()
-            : jpa.getSkillSets().stream().map(this::toDomain).toList();
+            jpa.getSkillSets() == null
+                    ? List.of()
+                    : jpa.getSkillSets().stream().map(this::toDomain).toList();
     List<TrainingHistory> trainings =
-        jpa.getTrainingHistory() == null
-            ? List.of()
-            : jpa.getTrainingHistory().stream().map(this::toDomain).toList();
-    return TalentInventory.builder()
-        .inventoryId(jpa.getInventoryId())
-        .relationshipId(jpa.getRelationshipId())
-        .tenantId(jpa.getTenantId())
-        .performanceSnapshots(snapshots)
-        .skillSets(skills)
-        .trainingHistory(trainings)
-        .build();
+            jpa.getTrainingHistory() == null
+                    ? List.of()
+                    : jpa.getTrainingHistory().stream().map(this::toDomain).toList();
+
+    return new TalentInventory(
+            jpa.getInventoryId(),
+            jpa.getRelationshipId(),
+            jpa.getTenantId(),
+            snapshots,
+            skills,
+            trainings
+    );
   }
 
   default PerformanceSnapshot toDomain(PerformanceSnapshotJpa jpa) {
@@ -96,7 +97,7 @@ public interface TalentInventoryMapper {
     }
   }
 
-  default String toEventPayload(TalentInventory inventory, DossierEvent event) {
+  default String toEventPayload(TalentInventory inventory, DomainEvent event) {
     if (inventory == null || event == null) {
       return "{}";
     }
@@ -105,7 +106,7 @@ public interface TalentInventoryMapper {
             "inventoryId", inventory.getInventoryId(),
             "relationshipId", inventory.getRelationshipId(),
             "tenantId", inventory.getTenantId(),
-            "eventType", event.type().name());
+            "eventType", event.getClass().getSimpleName());
     try {
       return new ObjectMapper().writeValueAsString(payload);
     } catch (Exception e) {

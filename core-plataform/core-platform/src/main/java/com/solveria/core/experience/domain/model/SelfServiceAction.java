@@ -35,7 +35,7 @@ public class SelfServiceAction extends DomainRoot {
   private UUID personId;
   private ActionType actionType;
   private String payload;
-  private String tenantId;
+  private UUID tenantId;
   private String createdBy;
   private Instant createdAt;
 
@@ -62,7 +62,7 @@ public class SelfServiceAction extends DomainRoot {
    * @param createdBy ID del usuario que crea la solicitud (debe ser el mismo personId para ESS)
    */
   public static SelfServiceAction requestDataUpdate(
-      UUID personId, String payload, String tenantId, String createdBy) {
+      UUID personId, String payload, UUID tenantId, String createdBy) {
     validateCommonArgs(personId, tenantId, createdBy);
     if (payload == null || payload.isBlank()) {
       throw new IllegalArgumentException("El payload de datos a modificar no puede estar vacío");
@@ -97,7 +97,7 @@ public class SelfServiceAction extends DomainRoot {
    * @param createdBy ID del usuario creador
    */
   public static SelfServiceAction requestCertificate(
-      UUID personId, CertificatePayload certificatePayload, String tenantId, String createdBy) {
+      UUID personId, CertificatePayload certificatePayload, UUID tenantId, String createdBy) {
     validateCommonArgs(personId, tenantId, createdBy);
     if (certificatePayload == null) {
       throw new IllegalArgumentException("El payload del certificado es obligatorio");
@@ -144,7 +144,7 @@ public class SelfServiceAction extends DomainRoot {
       String leaveType,
       LocalDate startDate,
       LocalDate endDate,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     validateCommonArgs(personId, tenantId, createdBy);
     if (leaveType == null || leaveType.isBlank()) {
@@ -260,7 +260,7 @@ public class SelfServiceAction extends DomainRoot {
       UUID personId,
       ActionType actionType,
       String payload,
-      String tenantId,
+      UUID tenantId,
       String createdBy,
       Instant createdAt,
       ApprovalWorkflow approvalWorkflow,
@@ -300,7 +300,7 @@ public class SelfServiceAction extends DomainRoot {
     return payload;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 
@@ -322,13 +322,11 @@ public class SelfServiceAction extends DomainRoot {
 
   // ─── Private Helpers ───────────────────────────────────────────
 
-  private static void validateCommonArgs(UUID personId, String tenantId, String createdBy) {
+  private static void validateCommonArgs(UUID personId, UUID tenantId, String createdBy) {
     if (personId == null) {
       throw new IllegalArgumentException("personId no puede ser nulo");
     }
-    if (tenantId == null || tenantId.isBlank()) {
-      throw new IllegalArgumentException("tenantId no puede estar vacío");
-    }
+
     if (createdBy == null || createdBy.isBlank()) {
       throw new IllegalArgumentException("createdBy no puede estar vacío");
     }

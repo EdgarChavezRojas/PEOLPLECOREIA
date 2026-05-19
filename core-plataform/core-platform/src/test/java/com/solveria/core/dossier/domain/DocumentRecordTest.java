@@ -1,10 +1,11 @@
 package com.solveria.core.dossier.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.solveria.core.dossier.domain.event.DossierEvent;
-import com.solveria.core.dossier.domain.event.DossierEventType;
+import com.solveria.core.dossier.domain.event.DocumentRecordedEvent;
+import com.solveria.core.dossier.domain.event.HealthCardExpirationWarningEvent;
 import com.solveria.core.dossier.domain.model.DocumentRecord;
 import com.solveria.core.dossier.domain.model.vo.DocumentCategory;
 import com.solveria.core.dossier.domain.model.vo.DocumentMetadata;
@@ -29,14 +30,14 @@ class DocumentRecordTest {
             metadata,
             UUID.randomUUID());
 
-    List<DossierEvent> events =
+    List<DocumentRecordedEvent> events =
         record.pullDomainEvents().stream()
-            .filter(DossierEvent.class::isInstance)
-            .map(DossierEvent.class::cast)
+            .filter(DocumentRecordedEvent.class::isInstance)
+            .map(DocumentRecordedEvent.class::cast)
             .toList();
 
     assertEquals(1, events.size());
-    assertEquals(DossierEventType.DOCUMENT_RECORDED, events.get(0).type());
+    assertInstanceOf(DocumentRecordedEvent.class, events.get(0));
   }
 
   @Test
@@ -57,9 +58,7 @@ class DocumentRecordTest {
 
     boolean hasWarning =
         record.pullDomainEvents().stream()
-            .filter(DossierEvent.class::isInstance)
-            .map(DossierEvent.class::cast)
-            .anyMatch(event -> event.type() == DossierEventType.HEALTH_CARD_EXPIRATION_WARNING);
+            .anyMatch(HealthCardExpirationWarningEvent.class::isInstance);
 
     assertTrue(hasWarning);
   }

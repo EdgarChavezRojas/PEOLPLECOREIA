@@ -13,12 +13,12 @@ public record NotificationSentEvent(
     UUID recipientId,
     String channel,
     String subject,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
   public NotificationSentEvent(
-      UUID notificationId, UUID recipientId, String channel, String subject, String tenantId) {
+      UUID notificationId, UUID recipientId, String channel, String subject, UUID tenantId) {
     this(notificationId, recipientId, channel, subject, tenantId, Instant.now());
   }
 }

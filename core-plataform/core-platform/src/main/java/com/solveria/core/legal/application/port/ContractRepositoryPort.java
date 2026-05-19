@@ -2,6 +2,8 @@ package com.solveria.core.legal.application.port;
 
 import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.vo.ContractType;
+
+import javax.swing.text.html.Option;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +19,8 @@ public interface ContractRepositoryPort {
 
   List<Contract> findContractsExpiringExactlyOn(
       ContractType type, LocalDate exactDate, String tenantId);
+
+  Optional<Contract> findByRelationshipId(UUID relationId);
+
+  List<Contract> findByProjectId(UUID projectId);
 }

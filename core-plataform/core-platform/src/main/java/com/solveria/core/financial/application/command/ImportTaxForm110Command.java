@@ -10,7 +10,7 @@ public record ImportTaxForm110Command(
     BigDecimal totalDeclared,
     UUID docId,
     YearMonth period,
-    String tenantId,
+    UUID tenantId,
     String createdBy) {
   public ImportTaxForm110Command {
     if (personId == null) {

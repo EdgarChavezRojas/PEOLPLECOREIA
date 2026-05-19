@@ -59,7 +59,7 @@ public class ValidateFundingSourceUseCase implements BudgetAllocationPort {
   @Override
   @Transactional
   public UUID createFundingSource(
-      String projectCode, BigDecimal totalBudget, String tenantId, String createdBy) {
+      String projectCode, BigDecimal totalBudget, UUID tenantId, String createdBy) {
     log.info("event=CREATE_FUNDING_SOURCE projectCode={} totalBudget={}", projectCode, totalBudget);
 
     FundingSource source = FundingSource.create(projectCode, totalBudget, tenantId, createdBy);

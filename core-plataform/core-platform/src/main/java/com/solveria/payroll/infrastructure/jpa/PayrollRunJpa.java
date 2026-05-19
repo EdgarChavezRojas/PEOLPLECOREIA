@@ -24,7 +24,7 @@ public class PayrollRunJpa extends BaseEntity {
     private String status;
 
     @Column(name = "tenant_id")
-    private String tenantId;
+    private UUID tenantId;
 
     @OneToMany(mappedBy = "payrollRun", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PayrollLineJpa> lines = new ArrayList<>();
@@ -42,8 +42,8 @@ public class PayrollRunJpa extends BaseEntity {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public String getTenantId() { return tenantId; }
-    public void setTenantId(String tenantId) { this.tenantId = tenantId; }
+    public UUID getTenantId() { return tenantId; }
+    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
     public List<PayrollLineJpa> getLines() { return lines; }
     public void setLines(List<PayrollLineJpa> lines) { this.lines = lines; }

@@ -1,24 +1,13 @@
 package com.solveria.core.workforce.domain.model;
 
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
 import com.solveria.core.workforce.domain.event.PositionAssignedEvent;
 import com.solveria.core.workforce.domain.event.PositionVacatedEvent;
 import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
 import com.solveria.core.workforce.domain.model.vo.PositionStatus;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Position extends DomainRoot {
 
   private UUID positionId;
@@ -29,7 +18,38 @@ public class Position extends DomainRoot {
   private HeadcountPlan headcountPlan;
   private UUID personId;
 
+  public Position() {}
 
+  public Position(UUID positionId, UUID unitId, Job job, PositionStatus status, Boolean isBudgeted, HeadcountPlan headcountPlan, UUID personId) {
+    this.positionId = positionId;
+    this.unitId = unitId;
+    this.job = job;
+    this.status = status;
+    this.isBudgeted = isBudgeted;
+    this.headcountPlan = headcountPlan;
+    this.personId = personId;
+  }
+
+  public UUID getPositionId() { return positionId; }
+  public void setPositionId(UUID positionId) { this.positionId = positionId; }
+
+  public UUID getUnitId() { return unitId; }
+  public void setUnitId(UUID unitId) { this.unitId = unitId; }
+
+  public Job getJob() { return job; }
+  public void setJob(Job job) { this.job = job; }
+
+  public PositionStatus getStatus() { return status; }
+  public void setStatus(PositionStatus status) { this.status = status; }
+
+  public Boolean getIsBudgeted() { return isBudgeted; }
+  public void setIsBudgeted(Boolean isBudgeted) { this.isBudgeted = isBudgeted; }
+
+  public HeadcountPlan getHeadcountPlan() { return headcountPlan; }
+  public void setHeadcountPlan(HeadcountPlan headcountPlan) { this.headcountPlan = headcountPlan; }
+
+  public UUID getPersonId() { return personId; }
+  public void setPersonId(UUID personId) { this.personId = personId; }
 
   public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
     if (unitId == null || jobId == null || maxSlots == null) {
@@ -38,16 +58,18 @@ public class Position extends DomainRoot {
     if (maxSlots <= 0) {
       throw new IllegalArgumentException("maxSlots debe ser mayor a 0");
     }
+    Job associatedJob = new Job();
+    associatedJob.setJobId(jobId);
 
-    return Position.builder()
-        .positionId(UUID.randomUUID())
-        .unitId(unitId)
-        .job(Job.builder().jobId(jobId).build())
-        .status(PositionStatus.VACANT)
-        .isBudgeted(isBudgeted != null ? isBudgeted : false)
-        .headcountPlan(HeadcountPlan.create(maxSlots))
-        .personId(null)
-        .build();
+    return new Position(
+            UUID.randomUUID(),
+            unitId,
+            associatedJob,
+            PositionStatus.VACANT,
+            isBudgeted != null ? isBudgeted : false,
+            HeadcountPlan.create(maxSlots),
+            null
+    );
   }
 
   public UUID getJobId() {
@@ -90,6 +112,4 @@ public class Position extends DomainRoot {
   public void updateBudgeted(boolean budgeted) {
     this.isBudgeted = budgeted;
   }
-
-
 }

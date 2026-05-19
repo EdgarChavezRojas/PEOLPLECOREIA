@@ -11,11 +11,11 @@ import java.util.UUID;
 public record DataChangeCancelledEvent(
     UUID actionId,
     UUID personId,
-    String tenantId,
+    UUID tenantId,
     Instant occurredAt)
     implements DomainEvent {
 
-  public DataChangeCancelledEvent(UUID actionId, UUID personId, String tenantId) {
+  public DataChangeCancelledEvent(UUID actionId, UUID personId, UUID tenantId) {
     this(actionId, personId, tenantId, Instant.now());
   }
 }

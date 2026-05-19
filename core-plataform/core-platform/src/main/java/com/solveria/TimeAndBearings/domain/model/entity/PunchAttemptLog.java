@@ -19,24 +19,23 @@ import java.util.UUID;
  */
 public class PunchAttemptLog {
 
-    private final UUID attemptId;
-    private final UUID deviceId;
-    private final LocalDateTime attemptedAt;
-    private final UUID relationshipId;
-    private final AuthMethod authMethod;
-    private final AuthResult authResult;
-
-    /**
-     * TRUE si FRAUD_DETECTED o si el collaborador acumuló ≥3 fallos consecutivos (P-TM30).
-     * Dispara SecurityPunchIncidentEvent. El dispositivo NO se bloquea.
-     */
-    private final boolean securityIncident;
-
-    /**
-     * FK a User (MSS / Seguridad). NOT NULL si {@code securityIncident=TRUE}.
-     * Puede asignarse de forma asíncrona tras la creación inicial del log.
-     */
+    private UUID attemptId;
+    private UUID deviceId;
+    private LocalDateTime attemptedAt;
+    private UUID relationshipId;
+    private AuthMethod authMethod;
+    private AuthResult authResult;
+    private boolean securityIncident;
     private UUID incidentEscalatedTo;
+
+    public void setAttemptId(UUID attemptId) { this.attemptId = attemptId; }
+    public void setDeviceId(UUID deviceId) { this.deviceId = deviceId; }
+    public void setAttemptedAt(LocalDateTime attemptedAt) { this.attemptedAt = attemptedAt; }
+    public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+    public void setAuthMethod(AuthMethod authMethod) { this.authMethod = authMethod; }
+    public void setAuthResult(AuthResult authResult) { this.authResult = authResult; }
+    public void setSecurityIncident(boolean securityIncident) { this.securityIncident = securityIncident; }
+    public void setIncidentEscalatedTo(UUID incidentEscalatedTo) { this.incidentEscalatedTo = incidentEscalatedTo; }
 
     // ── Constructor ──────────────────────────────────────────────────────────
 

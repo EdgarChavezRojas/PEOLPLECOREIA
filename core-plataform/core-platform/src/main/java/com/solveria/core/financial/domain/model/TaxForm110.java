@@ -22,7 +22,7 @@ public class TaxForm110 extends DomainRoot {
   private BigDecimal verifiedCredit;
   private final UUID docId;
   private final YearMonth period;
-  private final String tenantId;
+  private final UUID tenantId;
   private final String createdBy;
 
 
@@ -34,7 +34,7 @@ public class TaxForm110 extends DomainRoot {
       BigDecimal verifiedCredit,
       UUID docId,
       YearMonth period,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     this.formId = formId;
     this.personId = personId;
@@ -55,7 +55,7 @@ public class TaxForm110 extends DomainRoot {
       BigDecimal totalDeclared,
       UUID docId,
       YearMonth period,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     if (personId == null) {
       throw new IllegalArgumentException("personId es obligatorio");
@@ -82,7 +82,7 @@ public class TaxForm110 extends DomainRoot {
       BigDecimal verifiedCredit,
       UUID docId,
       YearMonth period,
-      String tenantId,
+      UUID tenantId,
       String createdBy) {
     return new TaxForm110(
         formId, personId, totalDeclared, verifiedCredit, docId, period, tenantId, createdBy);
@@ -125,7 +125,7 @@ public class TaxForm110 extends DomainRoot {
     return period;
   }
 
-  public String getTenantId() {
+  public UUID getTenantId() {
     return tenantId;
   }
 

@@ -1,13 +1,13 @@
 package com.solveria.core.dossier.infrastructure.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solveria.core.dossier.domain.event.DossierEvent;
 import com.solveria.core.dossier.domain.model.DocumentRecord;
 import com.solveria.core.dossier.domain.model.vo.DocumentMetadata;
 import com.solveria.core.dossier.domain.model.vo.ValidationStatus;
 import com.solveria.core.dossier.infrastructure.jpa.DocumentMetadataEmbeddable;
 import com.solveria.core.dossier.infrastructure.jpa.DocumentRecordJpa;
 import com.solveria.core.dossier.infrastructure.jpa.ValidationStatusEmbeddable;
+import com.solveria.core.shared.events.DomainEvent;
 import java.util.Map;
 import org.mapstruct.Mapper;
 
@@ -24,17 +24,17 @@ public interface DocumentRecordMapper {
     if (jpa == null) {
       return null;
     }
-    return DocumentRecord.builder()
-        .docId(jpa.getDocId())
-        .relationshipId(jpa.getRelationshipId())
-        .docCategory(jpa.getDocCategory())
-        .docType(jpa.getDocType())
-        .critical(Boolean.TRUE.equals(jpa.getCritical()))
-        .validationStatus(toDomain(jpa.getValidationStatus()))
-        .metadata(toDomain(jpa.getMetadata()))
-        .tenantId(jpa.getTenantId())
-        .expirationWarningSent(Boolean.TRUE.equals(jpa.getExpirationWarningSent()))
-        .build();
+    return new DocumentRecord(
+            jpa.getDocId(),
+            jpa.getRelationshipId(),
+            jpa.getDocCategory(),
+            jpa.getDocType(),
+            Boolean.TRUE.equals(jpa.getCritical()),
+            toDomain(jpa.getValidationStatus()),
+            toDomain(jpa.getMetadata()),
+            jpa.getTenantId(),
+            Boolean.TRUE.equals(jpa.getExpirationWarningSent())
+    );
   }
 
   default ValidationStatus toDomain(ValidationStatusEmbeddable embeddable) {
@@ -59,7 +59,7 @@ public interface DocumentRecordMapper {
         embeddable.getExpiryDate());
   }
 
-  default String toEventPayload(DocumentRecord record, DossierEvent event) {
+  default String toEventPayload(DocumentRecord record, DomainEvent event) {
     if (record == null || event == null) {
       return "{}";
     }
@@ -75,7 +75,7 @@ public interface DocumentRecordMapper {
                         && record.getValidationStatus().currentState() != null
                     ? record.getValidationStatus().currentState().name()
                     : null,
-            "eventType", event.type().name());
+            "eventType", event.getClass().getSimpleName());
     try {
       return new ObjectMapper().writeValueAsString(payload);
     } catch (Exception e) {

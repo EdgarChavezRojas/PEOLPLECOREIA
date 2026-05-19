@@ -1,8 +1,5 @@
 package com.solveria.core.workforce.domain.model.vo;
 
-import lombok.Getter;
-
-@Getter
 public enum AcademicRank {
   ASSITANT("Auxiliar"),
   DEPUTY("Adjunto"),
@@ -13,5 +10,9 @@ public enum AcademicRank {
 
   AcademicRank(String label) {
     this.label = label;
+  }
+
+  public String getLabel() {
+    return label;
   }
 }
