@@ -8,61 +8,114 @@ import java.util.UUID;
 @Entity
 @Table(name = "prl_payroll_line")
 public class PayrollLineJpa extends BaseEntity {
-    @Column(name = "line_id", updatable = false, columnDefinition = "UUID")
-    private UUID lineId;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "run_id")
-    private PayrollRunJpa payrollRun;
+  @Column(name = "line_id", updatable = false, columnDefinition = "UUID")
+  private UUID lineId;
 
-    @Column(name = "employee_id")
-    private UUID employeeId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "run_id")
+  private PayrollRunJpa payrollRun;
 
-    @Column(name = "basic_salary")
-    private BigDecimal basicSalary;
+  @Column(name = "employee_id")
+  private UUID employeeId;
 
-    @Column(name = "total_earned")
-    private BigDecimal totalEarned;
+  @Column(name = "basic_salary")
+  private BigDecimal basicSalary;
 
-    @Column(name = "rc_iva_retained")
-    private BigDecimal rcIvaRetained;
+  @Column(name = "total_earned")
+  private BigDecimal totalEarned;
 
-    @Column(name = "gestora_retained")
-    private BigDecimal gestoraRetained;
+  @Column(name = "rc_iva_retained")
+  private BigDecimal rcIvaRetained;
 
-    @Column(name = "other_deductions")
-    private BigDecimal otherDeductions;
+  @Column(name = "gestora_retained")
+  private BigDecimal gestoraRetained;
 
-    @Column(name = "net_payable")
-    private BigDecimal netPayable;
+  @Column(name = "other_deductions")
+  private BigDecimal otherDeductions;
 
-    @Column(name = "tenant_id")
-    private UUID tenantId;
-    public UUID getLineId() { return lineId; }
-    public void setLineId(UUID lineId) { this.lineId = lineId; }
-    public PayrollRunJpa getPayrollRun() { return payrollRun; }
-    public void setPayrollRun(PayrollRunJpa payrollRun) { this.payrollRun = payrollRun; }
+  @Column(name = "net_payable")
+  private BigDecimal netPayable;
 
-    public UUID getEmployeeId() { return employeeId; }
-    public void setEmployeeId(UUID employeeId) { this.employeeId = employeeId; }
+  @Column(name = "tenant_id")
+  private UUID tenantId;
 
-    public BigDecimal getBasicSalary() { return basicSalary; }
-    public void setBasicSalary(BigDecimal basicSalary) { this.basicSalary = basicSalary; }
+  public UUID getLineId() {
+    return lineId;
+  }
 
-    public BigDecimal getTotalEarned() { return totalEarned; }
-    public void setTotalEarned(BigDecimal totalEarned) { this.totalEarned = totalEarned; }
+  public void setLineId(UUID lineId) {
+    this.lineId = lineId;
+  }
 
-    public BigDecimal getRcIvaRetained() { return rcIvaRetained; }
-    public void setRcIvaRetained(BigDecimal rcIvaRetained) { this.rcIvaRetained = rcIvaRetained; }
+  public PayrollRunJpa getPayrollRun() {
+    return payrollRun;
+  }
 
-    public BigDecimal getGestoraRetained() { return gestoraRetained; }
-    public void setGestoraRetained(BigDecimal gestoraRetained) { this.gestoraRetained = gestoraRetained; }
+  public void setPayrollRun(PayrollRunJpa payrollRun) {
+    this.payrollRun = payrollRun;
+  }
 
-    public BigDecimal getOtherDeductions() { return otherDeductions; }
-    public void setOtherDeductions(BigDecimal otherDeductions) { this.otherDeductions = otherDeductions; }
+  public UUID getEmployeeId() {
+    return employeeId;
+  }
 
-    public BigDecimal getNetPayable() { return netPayable; }
-    public void setNetPayable(BigDecimal netPayable) { this.netPayable = netPayable; }
+  public void setEmployeeId(UUID employeeId) {
+    this.employeeId = employeeId;
+  }
 
-    public UUID getTenantId() { return tenantId; }
-    public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
+  public BigDecimal getBasicSalary() {
+    return basicSalary;
+  }
+
+  public void setBasicSalary(BigDecimal basicSalary) {
+    this.basicSalary = basicSalary;
+  }
+
+  public BigDecimal getTotalEarned() {
+    return totalEarned;
+  }
+
+  public void setTotalEarned(BigDecimal totalEarned) {
+    this.totalEarned = totalEarned;
+  }
+
+  public BigDecimal getRcIvaRetained() {
+    return rcIvaRetained;
+  }
+
+  public void setRcIvaRetained(BigDecimal rcIvaRetained) {
+    this.rcIvaRetained = rcIvaRetained;
+  }
+
+  public BigDecimal getGestoraRetained() {
+    return gestoraRetained;
+  }
+
+  public void setGestoraRetained(BigDecimal gestoraRetained) {
+    this.gestoraRetained = gestoraRetained;
+  }
+
+  public BigDecimal getOtherDeductions() {
+    return otherDeductions;
+  }
+
+  public void setOtherDeductions(BigDecimal otherDeductions) {
+    this.otherDeductions = otherDeductions;
+  }
+
+  public BigDecimal getNetPayable() {
+    return netPayable;
+  }
+
+  public void setNetPayable(BigDecimal netPayable) {
+    this.netPayable = netPayable;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
+
+  public void setTenantId(UUID tenantId) {
+    this.tenantId = tenantId;
+  }
 }

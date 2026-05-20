@@ -6,10 +6,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record AccrualBalanceDeductedEvent(
-    UUID balanceId,
-    BigDecimal deductedDays,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID balanceId, BigDecimal deductedDays, Instant occurredAt) implements DomainEvent {
 
   public AccrualBalanceDeductedEvent {
     if (balanceId == null) {
@@ -27,4 +24,3 @@ public record AccrualBalanceDeductedEvent(
     return new AccrualBalanceDeductedEvent(balanceId, deductedDays, Instant.now());
   }
 }
-

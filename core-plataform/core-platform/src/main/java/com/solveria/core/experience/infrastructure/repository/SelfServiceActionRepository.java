@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SelfServiceActionRepository extends JpaRepository<SelfServiceActionJpa, UUID> {
 
-  Optional<SelfServiceActionJpa> findByActionIdAndTenantId(UUID actionId, String tenantId);
+  Optional<SelfServiceActionJpa> findByActionIdAndTenantId(UUID actionId, UUID tenantId);
 
-  List<SelfServiceActionJpa> findByPersonIdAndTenantId(UUID personId, String tenantId);
+  List<SelfServiceActionJpa> findByPersonIdAndTenantId(UUID personId, UUID tenantId);
 }

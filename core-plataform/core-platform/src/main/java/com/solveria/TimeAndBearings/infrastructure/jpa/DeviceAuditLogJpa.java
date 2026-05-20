@@ -6,56 +6,86 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * JPA Entity for {@code device_audit_log} table — Aggregate 15.
- * Extends {@link BaseEntity}. Append-only — immutable after creation.
+ * JPA Entity for {@code device_audit_log} table — Aggregate 15. Extends {@link BaseEntity}.
+ * Append-only — immutable after creation.
  *
- * <p>Registra todos los eventos del ciclo de vida del ClockingDevice:
- * PROVISIONED, ACTIVATED, SUSPENDED, DECOMMISSIONED, BIOMETRIC_ENROLLED, BIOMETRIC_REVOKED_BULK.
+ * <p>Registra todos los eventos del ciclo de vida del ClockingDevice: PROVISIONED, ACTIVATED,
+ * SUSPENDED, DECOMMISSIONED, BIOMETRIC_ENROLLED, BIOMETRIC_REVOKED_BULK.
  */
 @Entity
 @Table(name = "device_audit_log")
 public class DeviceAuditLogJpa extends BaseEntity {
 
-    @Id
-    @Column(name = "audit_log_id", nullable = false, updatable = false, columnDefinition = "UUID")
-    private UUID auditLogId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "device_id", nullable = false, updatable = false)
-    private ClockingDeviceJpa device;
+  @Column(name = "audit_log_id", nullable = false, updatable = false, columnDefinition = "UUID")
+  private UUID auditLogId;
 
-    @Column(name = "event_type", nullable = false, length = 50)
-    private String eventType;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "device_id", nullable = false, updatable = false)
+  private ClockingDeviceJpa device;
 
-    /** UUID del actor o "SYSTEM" para eventos automáticos. */
-    @Column(name = "actor_id", length = 100)
-    private String actorId;
+  @Column(name = "event_type", nullable = false, length = 50)
+  private String eventType;
 
-    @Column(name = "occurred_at", nullable = false, updatable = false)
-    private LocalDateTime occurredAt;
+  /** UUID del actor o "SYSTEM" para eventos automáticos. */
+  @Column(name = "actor_id", length = 100)
+  private String actorId;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
+  @Column(name = "occurred_at", nullable = false, updatable = false)
+  private LocalDateTime occurredAt;
 
-    public DeviceAuditLogJpa() {}
+  @Column(name = "description", columnDefinition = "TEXT")
+  private String description;
 
-    // ── Getters & Setters ──────────────────────────────────────────────────────
+  public DeviceAuditLogJpa() {}
 
-    public UUID getAuditLogId()            { return auditLogId; }
-    public void setAuditLogId(UUID id)     { this.auditLogId = id; }
+  // ── Getters & Setters ──────────────────────────────────────────────────────
 
-    public ClockingDeviceJpa getDevice()       { return device; }
-    public void setDevice(ClockingDeviceJpa d) { this.device = d; }
+  public UUID getAuditLogId() {
+    return auditLogId;
+  }
 
-    public String getEventType()         { return eventType; }
-    public void setEventType(String e)   { this.eventType = e; }
+  public void setAuditLogId(UUID id) {
+    this.auditLogId = id;
+  }
 
-    public String getActorId()         { return actorId; }
-    public void setActorId(String a)   { this.actorId = a; }
+  public ClockingDeviceJpa getDevice() {
+    return device;
+  }
 
-    public LocalDateTime getOccurredAt()        { return occurredAt; }
-    public void setOccurredAt(LocalDateTime d)  { this.occurredAt = d; }
+  public void setDevice(ClockingDeviceJpa d) {
+    this.device = d;
+  }
 
-    public String getDescription()         { return description; }
-    public void setDescription(String d)   { this.description = d; }
+  public String getEventType() {
+    return eventType;
+  }
+
+  public void setEventType(String e) {
+    this.eventType = e;
+  }
+
+  public String getActorId() {
+    return actorId;
+  }
+
+  public void setActorId(String a) {
+    this.actorId = a;
+  }
+
+  public LocalDateTime getOccurredAt() {
+    return occurredAt;
+  }
+
+  public void setOccurredAt(LocalDateTime d) {
+    this.occurredAt = d;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String d) {
+    this.description = d;
+  }
 }

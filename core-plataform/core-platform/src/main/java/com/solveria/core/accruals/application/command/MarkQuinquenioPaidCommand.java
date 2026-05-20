@@ -5,4 +5,3 @@ import java.util.UUID;
 
 public record MarkQuinquenioPaidCommand(
     UUID relationshipId, LocalDate paymentDate, String location) {}
-

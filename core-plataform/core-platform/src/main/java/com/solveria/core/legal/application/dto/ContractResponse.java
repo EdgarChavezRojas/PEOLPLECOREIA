@@ -15,4 +15,3 @@ public record ContractResponse(
     UUID projectId,
     UUID tenantId,
     List<ContractAddendumResponse> addendums) {}
-

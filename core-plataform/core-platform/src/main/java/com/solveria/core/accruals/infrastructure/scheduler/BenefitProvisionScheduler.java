@@ -14,7 +14,8 @@ public class BenefitProvisionScheduler {
   public BenefitProvisionScheduler(ProvisionBenefitBatchUseCase provisionBenefitBatchUseCase) {
     this.provisionBenefitBatchUseCase = provisionBenefitBatchUseCase;
   }
-  //ocupa su propio configuration para definir a que hora se realiza
+
+  // ocupa su propio configuration para definir a que hora se realiza
   // como el modulo de dossier
   @Scheduled(cron = "0 0 23 L * ?")
   public void runMonthlyBenefitProvision() {
@@ -24,4 +25,3 @@ public class BenefitProvisionScheduler {
     provisionBenefitBatchUseCase.handle(command);
   }
 }
-

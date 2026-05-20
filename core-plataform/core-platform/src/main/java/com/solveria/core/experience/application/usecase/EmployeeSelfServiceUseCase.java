@@ -10,9 +10,8 @@ import com.solveria.core.experience.domain.model.Notification;
 import com.solveria.core.experience.domain.model.SelfServiceAction;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
 import com.solveria.core.experience.domain.service.CertificateGenerationService;
-import java.util.UUID;
-
 import com.solveria.core.security.context.SecurityTenantContext;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
     log.info("event=DATA_UPDATE_REQUESTED ");
     UUID tenantIdUUID = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
 
-
     SelfServiceAction action =
         SelfServiceAction.requestDataUpdate(
             cmd.personId(), cmd.payload(), tenantIdUUID, cmd.createdBy());
@@ -58,7 +56,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
         tenantId);
 
     RequestCertificateCommand cmd =
-        new RequestCertificateCommand(personId, certificateType,  createdBy);
+        new RequestCertificateCommand(personId, certificateType, createdBy);
 
     // W14: Generar certificado con hash SHA-256 y QR Zero-Trust
     String pdfContent = "CERT_PLACEHOLDER_" + personId + "_" + certificateType;
@@ -98,8 +96,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
 
     selfServiceActionPO.save(action);
 
-    log.info(
-        "event=DATA_UPDATE_CANCELLED actionId={} personId={}", actionId, personId);
+    log.info("event=DATA_UPDATE_CANCELLED actionId={} personId={}", actionId, personId);
   }
 
   @Override
@@ -115,8 +112,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
             .findById(notificationId)
             .orElseThrow(
                 () ->
-                    new IllegalArgumentException(
-                        "Notification no encontrada: " + notificationId));
+                    new IllegalArgumentException("Notification no encontrada: " + notificationId));
 
     // Valida que requiere acknowledgement, no está ya firmada, y es el destinatario
     notification.acknowledge(personId);
@@ -139,8 +135,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
         cmd.personId(),
         cmd.leaveType(),
         cmd.startDate(),
-        cmd.endDate()
-        );
+        cmd.endDate());
 
     SelfServiceAction action =
         SelfServiceAction.requestLeave(
@@ -148,7 +143,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
             cmd.leaveType(),
             cmd.startDate(),
             cmd.endDate(),
-           tenantIdUUID,
+            tenantIdUUID,
             cmd.personId().toString());
 
     selfServiceActionPO.save(action);

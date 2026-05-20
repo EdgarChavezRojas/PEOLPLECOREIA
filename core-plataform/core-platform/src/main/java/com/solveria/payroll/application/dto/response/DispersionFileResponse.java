@@ -11,5 +11,4 @@ public record DispersionFileResponse(
     String status,
     BigDecimal totalAmount,
     Integer recordCount,
-    LocalDateTime generatedAt
-) {}
+    LocalDateTime generatedAt) {}

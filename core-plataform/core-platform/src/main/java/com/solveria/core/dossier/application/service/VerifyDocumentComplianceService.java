@@ -4,7 +4,6 @@ import com.solveria.core.dossier.application.command.ComplianceDecision;
 import com.solveria.core.dossier.application.command.VerifyDocumentComplianceCommand;
 import com.solveria.core.dossier.application.port.DocumentRecordRepositoryPort;
 import com.solveria.core.dossier.application.usecase.VerifyDocumentComplianceUseCase;
-
 import com.solveria.core.dossier.domain.event.MandatoryComplianceDocMissingEvent;
 import com.solveria.core.dossier.domain.exception.DocumentNotFoundException;
 import com.solveria.core.dossier.domain.model.DocumentRecord;
@@ -13,21 +12,19 @@ import com.solveria.core.dossier.domain.policy.DocumentCompliancePolicy;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
-import org.springframework.stereotype.Service;
-
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class VerifyDocumentComplianceService implements VerifyDocumentComplianceUseCase {
 
   private final DocumentRecordRepositoryPort documentRecordRepository;
   private final EventOutboxPort eventOutboxPort;
-
 
   public VerifyDocumentComplianceService(
       DocumentRecordRepositoryPort documentRecordRepository, EventOutboxPort eventOutboxPort) {
@@ -120,7 +117,8 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
   }
 
   private void publishMissingDocEvent(VerifyDocumentComplianceCommand command) {
-    UUID aggregateId = command.relationshipId() != null ? command.relationshipId() : UUID.randomUUID();
+    UUID aggregateId =
+        command.relationshipId() != null ? command.relationshipId() : UUID.randomUUID();
 
     // Instanciamos el nuevo evento
     MandatoryComplianceDocMissingEvent event = MandatoryComplianceDocMissingEvent.now(aggregateId);
@@ -128,8 +126,6 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
     // Publicamos a través del puerto
     eventOutboxPort.publish(List.of(event));
   }
-
-
 
   private String computeSha256(byte[] input) {
     try {

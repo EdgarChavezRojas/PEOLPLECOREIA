@@ -38,4 +38,3 @@ public class TerminateRelationshipUseCase {
     log.info("event=CORE_WORKFORCE_RELATIONSHIP_TERMINATE_SUCCESS targetId={}", relationshipId);
   }
 }
-

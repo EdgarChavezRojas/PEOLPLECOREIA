@@ -25,16 +25,15 @@ public interface DocumentRecordMapper {
       return null;
     }
     return new DocumentRecord(
-            jpa.getDocId(),
-            jpa.getRelationshipId(),
-            jpa.getDocCategory(),
-            jpa.getDocType(),
-            Boolean.TRUE.equals(jpa.getCritical()),
-            toDomain(jpa.getValidationStatus()),
-            toDomain(jpa.getMetadata()),
-            jpa.getTenantId(),
-            Boolean.TRUE.equals(jpa.getExpirationWarningSent())
-    );
+        jpa.getDocId(),
+        jpa.getRelationshipId(),
+        jpa.getDocCategory(),
+        jpa.getDocType(),
+        Boolean.TRUE.equals(jpa.getCritical()),
+        toDomain(jpa.getValidationStatus()),
+        toDomain(jpa.getMetadata()),
+        jpa.getTenantId(),
+        Boolean.TRUE.equals(jpa.getExpirationWarningSent()));
   }
 
   default ValidationStatus toDomain(ValidationStatusEmbeddable embeddable) {

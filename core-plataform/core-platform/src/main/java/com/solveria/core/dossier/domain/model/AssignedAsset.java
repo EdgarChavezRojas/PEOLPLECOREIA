@@ -9,7 +9,6 @@ import com.solveria.core.dossier.domain.exception.InvalidAssetStateException;
 import com.solveria.core.dossier.domain.model.vo.AssetDescriptor;
 import com.solveria.core.dossier.domain.model.vo.AssetStatus;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,11 +23,17 @@ public class AssignedAsset extends DomainRoot {
   private AssetDescriptor descriptor;
   private UUID tenantId;
 
-  public AssignedAsset() {
-  }
+  public AssignedAsset() {}
 
-  public AssignedAsset(UUID assignmentId, UUID workerId, String assetTag, AssetStatus status,
-                       LocalDateTime assignedAt, LocalDateTime returnedAt, AssetDescriptor descriptor, UUID tenantId) {
+  public AssignedAsset(
+      UUID assignmentId,
+      UUID workerId,
+      String assetTag,
+      AssetStatus status,
+      LocalDateTime assignedAt,
+      LocalDateTime returnedAt,
+      AssetDescriptor descriptor,
+      UUID tenantId) {
     this.assignmentId = assignmentId;
     this.workerId = workerId;
     this.assetTag = assetTag;
@@ -40,11 +45,11 @@ public class AssignedAsset extends DomainRoot {
   }
 
   public static AssignedAsset assign(
-          UUID workerId,
-          String assetTag,
-          AssetDescriptor descriptor,
-          LocalDateTime assignedAt,
-          UUID tenantId) {
+      UUID workerId,
+      String assetTag,
+      AssetDescriptor descriptor,
+      LocalDateTime assignedAt,
+      UUID tenantId) {
     if (workerId == null) {
       throw new IllegalArgumentException("workerId es requerido");
     }
@@ -58,7 +63,8 @@ public class AssignedAsset extends DomainRoot {
       throw new IllegalArgumentException("tenantId es requerido");
     }
 
-    AssignedAsset asset = new AssignedAsset(
+    AssignedAsset asset =
+        new AssignedAsset(
             UUID.randomUUID(),
             workerId,
             assetTag,
@@ -66,8 +72,7 @@ public class AssignedAsset extends DomainRoot {
             assignedAt != null ? assignedAt : LocalDateTime.now(),
             null,
             descriptor,
-            tenantId
-    );
+            tenantId);
 
     asset.registerEvent(AssetLoanedToWorkerEvent.now(asset.getAssignmentId(), asset.getWorkerId()));
     return asset;

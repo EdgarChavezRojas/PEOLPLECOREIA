@@ -17,28 +17,51 @@ public class AcademicProfile {
 
   public AcademicProfile() {}
 
-  public AcademicProfile(UUID academicId, UUID relationshipId, AcademicRank currentRank, Integer teachingLoad) {
+  public AcademicProfile(
+      UUID academicId, UUID relationshipId, AcademicRank currentRank, Integer teachingLoad) {
     this.academicId = academicId;
     this.relationshipId = relationshipId;
     this.currentRank = currentRank;
     this.teachingLoad = teachingLoad;
   }
 
-  public UUID getAcademicId() { return academicId; }
-  public void setAcademicId(UUID academicId) { this.academicId = academicId; }
+  public UUID getAcademicId() {
+    return academicId;
+  }
 
-  public UUID getRelationshipId() { return relationshipId; }
-  public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+  public void setAcademicId(UUID academicId) {
+    this.academicId = academicId;
+  }
 
-  public AcademicRank getCurrentRank() { return currentRank; }
-  public void setCurrentRank(AcademicRank currentRank) { this.currentRank = currentRank; }
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
 
-  public Integer getTeachingLoad() { return teachingLoad; }
-  public void setTeachingLoad(Integer teachingLoad) { this.teachingLoad = teachingLoad; }
+  public void setRelationshipId(UUID relationshipId) {
+    this.relationshipId = relationshipId;
+  }
 
-  public static AcademicProfile create(UUID relationshipId, AcademicRank initialRank, Integer teachingLoad) {
+  public AcademicRank getCurrentRank() {
+    return currentRank;
+  }
+
+  public void setCurrentRank(AcademicRank currentRank) {
+    this.currentRank = currentRank;
+  }
+
+  public Integer getTeachingLoad() {
+    return teachingLoad;
+  }
+
+  public void setTeachingLoad(Integer teachingLoad) {
+    this.teachingLoad = teachingLoad;
+  }
+
+  public static AcademicProfile create(
+      UUID relationshipId, AcademicRank initialRank, Integer teachingLoad) {
     if (relationshipId == null || initialRank == null || teachingLoad == null) {
-      throw new IllegalArgumentException("relationshipId, initialRank y teachingLoad son requeridos");
+      throw new IllegalArgumentException(
+          "relationshipId, initialRank y teachingLoad son requeridos");
     }
     if (teachingLoad <= 0) {
       throw new IllegalArgumentException("teachingLoad debe ser mayor a 0");

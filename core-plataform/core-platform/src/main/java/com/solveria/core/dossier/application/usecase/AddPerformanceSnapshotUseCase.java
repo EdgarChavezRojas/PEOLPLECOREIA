@@ -7,4 +7,3 @@ public interface AddPerformanceSnapshotUseCase {
 
   TalentInventory handle(AddPerformanceSnapshotCommand command);
 }
-

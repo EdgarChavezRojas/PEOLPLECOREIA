@@ -1,4 +1,5 @@
-// Ruta: core-plataform/core-platform/src/test/java/com/solveria/core/dossier/domain/DossierEventListenerIntegrationTest.java
+// Ruta:
+// core-plataform/core-platform/src/test/java/com/solveria/core/dossier/domain/DossierEventListenerIntegrationTest.java
 package com.solveria.core.dossier.domain;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,25 +32,25 @@ class DossierEventListenerIntegrationTest {
 
   @MockitoBean private ArchiveContractUseCase archiveContractUseCase;
 
-  @MockitoBean
-  private ReturnAssetUseCase returnAssetUseCase;
+  @MockitoBean private ReturnAssetUseCase returnAssetUseCase;
 
-  @MockitoBean
-  private RecordDisciplinaryActionUseCase recordDisciplinaryActionUseCase;
+  @MockitoBean private RecordDisciplinaryActionUseCase recordDisciplinaryActionUseCase;
 
-  @MockitoBean
-  private AcknowledgeMemorandumUseCase acknowledgeMemorandumUseCase;
+  @MockitoBean private AcknowledgeMemorandumUseCase acknowledgeMemorandumUseCase;
 
-  // 3. Y no olvides el repositorio que añadimos manualmente para corregir el "Bug A" de los activos:
-  @MockitoBean
-  private AssignedAssetRepositoryPort assignedAssetRepositoryPort;
+  // 3. Y no olvides el repositorio que añadimos manualmente para corregir el "Bug A" de los
+  // activos:
+  @MockitoBean private AssignedAssetRepositoryPort assignedAssetRepositoryPort;
+
   @Test
-  @DisplayName("Debe consumir PersonMasterCreatedEvent y delegar en CreateDocumentRequirementsUseCase")
+  @DisplayName(
+      "Debe consumir PersonMasterCreatedEvent y delegar en CreateDocumentRequirementsUseCase")
   void shouldHandlePersonMasterCreatedEvent() {
     UUID personId = UUID.randomUUID();
     UUID tenantId = UUID.randomUUID();
 
-    PersonMasterCreatedEvent event = new PersonMasterCreatedEvent(personId, tenantId, Instant.now());
+    PersonMasterCreatedEvent event =
+        new PersonMasterCreatedEvent(personId, tenantId, Instant.now());
 
     // Este test valida que el listener no depende de contexto HTTP y es resiliente al Outbox.
     eventPublisher.publishEvent(event);
@@ -74,7 +75,8 @@ class DossierEventListenerIntegrationTest {
     // Este test valida que el listener no depende de contexto HTTP y es resiliente al Outbox.
     eventPublisher.publishEvent(event);
 
-    ArgumentCaptor<ArchiveContractCommand> captor = ArgumentCaptor.forClass(ArchiveContractCommand.class);
+    ArgumentCaptor<ArchiveContractCommand> captor =
+        ArgumentCaptor.forClass(ArchiveContractCommand.class);
     verify(archiveContractUseCase, times(1)).handle(captor.capture());
 
     ArchiveContractCommand command = captor.getValue();
@@ -84,4 +86,3 @@ class DossierEventListenerIntegrationTest {
     assertEquals(tenantId, command.tenantId());
   }
 }
-

@@ -6,10 +6,10 @@ package com.solveria.payroll.domain.model.vo;
  * <p>Dominio puro — sin dependencias de framework.
  */
 public enum PayrollType {
-    MONTHLY,
-    HOURLY,
-    DOCENTE,
-    REINTEGRO,
-    AGUINALDO,
-    PRIMA
+  MONTHLY,
+  HOURLY,
+  DOCENTE,
+  REINTEGRO,
+  AGUINALDO,
+  PRIMA
 }

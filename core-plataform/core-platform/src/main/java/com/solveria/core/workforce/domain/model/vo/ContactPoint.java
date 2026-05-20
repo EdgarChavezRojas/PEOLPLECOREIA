@@ -2,6 +2,7 @@ package com.solveria.core.workforce.domain.model.vo;
 
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 /*
  * Value Object: ContactPoint
@@ -12,7 +13,6 @@ import java.io.Serializable;
  * <p>Invariantes: - Email debe tener formato válido si está presente - Teléfono debe ser formato
  * válido (opcional) - Dirección es de libre formato (opcional)
  */
-import java.util.Objects;
 
 @Embeddable
 public class ContactPoint implements Serializable {
@@ -32,14 +32,29 @@ public class ContactPoint implements Serializable {
     this.address = address;
   }
 
-  public String getEmail() { return email; }
-  public void setEmail(String email) { this.email = email; }
+  public String getEmail() {
+    return email;
+  }
 
-  public String getPhone() { return phone; }
-  public void setPhone(String phone) { this.phone = phone; }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-  public String getAddress() { return address; }
-  public void setAddress(String address) { this.address = address; }
+  public String getPhone() {
+    return phone;
+  }
+
+  public void setPhone(String phone) {
+    this.phone = phone;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
+  public void setAddress(String address) {
+    this.address = address;
+  }
 
   public static ContactPoint create(String email, String phone, String address) {
     if (email != null && !email.matches(EMAIL_PATTERN)) {
@@ -68,9 +83,9 @@ public class ContactPoint implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ContactPoint that = (ContactPoint) o;
-    return Objects.equals(email, that.email) &&
-            Objects.equals(phone, that.phone) &&
-            Objects.equals(address, that.address);
+    return Objects.equals(email, that.email)
+        && Objects.equals(phone, that.phone)
+        && Objects.equals(address, that.address);
   }
 
   @Override

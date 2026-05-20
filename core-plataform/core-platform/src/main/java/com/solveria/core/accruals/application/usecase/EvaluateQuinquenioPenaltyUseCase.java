@@ -7,4 +7,3 @@ public interface EvaluateQuinquenioPenaltyUseCase {
 
   QuinquenioProvision handle(EvaluateQuinquenioPenaltyCommand command);
 }
-

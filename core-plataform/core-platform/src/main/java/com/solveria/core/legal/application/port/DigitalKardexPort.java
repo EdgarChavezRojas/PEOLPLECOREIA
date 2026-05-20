@@ -7,4 +7,3 @@ public interface DigitalKardexPort {
 
   String storeEvidence(UUID contractId, UUID tenantId, byte[] fileContent, Instant generatedAt);
 }
-

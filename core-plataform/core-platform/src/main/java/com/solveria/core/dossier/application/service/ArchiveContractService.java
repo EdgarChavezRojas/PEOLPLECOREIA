@@ -1,4 +1,5 @@
-// Ruta: core-plataform/core-platform/src/main/java/com/solveria/core/dossier/application/service/ArchiveContractService.java
+// Ruta:
+// core-plataform/core-platform/src/main/java/com/solveria/core/dossier/application/service/ArchiveContractService.java
 package com.solveria.core.dossier.application.service;
 
 import com.solveria.core.dossier.application.command.ArchiveContractCommand;
@@ -8,7 +9,6 @@ import com.solveria.core.dossier.domain.exception.DossierErrorCode;
 import com.solveria.core.dossier.domain.model.DocumentRecord;
 import com.solveria.core.dossier.domain.model.vo.DocumentCategory;
 import com.solveria.core.dossier.domain.model.vo.DocumentMetadata;
-import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -49,9 +49,13 @@ public class ArchiveContractService implements ArchiveContractUseCase {
 
     DocumentRecord record =
         DocumentRecord.record(
-            command.workerId(), DocumentCategory.LEGAL, reference, true, metadata, command.tenantId());
+            command.workerId(),
+            DocumentCategory.LEGAL,
+            reference,
+            true,
+            metadata,
+            command.tenantId());
 
     return documentRecordRepository.save(record);
   }
 }
-

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SharedOutboxRepository extends JpaRepository<SharedOutboxMessageJpaEntity, UUID> {
 
-    List<SharedOutboxMessageJpaEntity> findTop50ByStateOrderByCreatedAtAsc(OutboxState state);
-}
+  List<SharedOutboxMessageJpaEntity> findTop50ByStateOrderByCreatedAtAsc(OutboxState state);
 
+  boolean existsByTypeAndAggregateId(String type, UUID aggregateId);
+}

@@ -6,4 +6,3 @@ public class EvidenceHashingFailedException extends RuntimeException {
     super(cause);
   }
 }
-

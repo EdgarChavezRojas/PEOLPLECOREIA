@@ -38,4 +38,3 @@ public class MoveOrgUnitUseCase {
     log.info("event=CORE_WORKFORCE_ORGUNIT_MOVE_SUCCESS targetId={}", unitId);
   }
 }
-

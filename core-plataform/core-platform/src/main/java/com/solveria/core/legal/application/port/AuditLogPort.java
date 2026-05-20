@@ -6,8 +6,7 @@ import java.util.UUID;
 
 public interface AuditLogPort {
 
-  void registerEvidenceGenerated(
-      UUID contractId, Instant generatedAt, String hash);
+  void registerEvidenceGenerated(UUID contractId, Instant generatedAt, String hash);
 
   void registerLegalThresholdUpdate(
       UUID policyRuleId,
@@ -17,4 +16,3 @@ public interface AuditLogPort {
       String userId,
       Instant occurredAt);
 }
-

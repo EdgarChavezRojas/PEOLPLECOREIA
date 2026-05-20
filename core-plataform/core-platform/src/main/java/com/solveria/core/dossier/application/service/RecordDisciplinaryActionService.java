@@ -73,5 +73,3 @@ public class RecordDisciplinaryActionService implements RecordDisciplinaryAction
     return documentRecordRepository.save(record);
   }
 }
-
-

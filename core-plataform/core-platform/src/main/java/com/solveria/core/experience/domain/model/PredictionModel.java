@@ -5,7 +5,6 @@ import com.solveria.core.experience.domain.event.TacitaReconduccionRiskEvent;
 import com.solveria.core.experience.domain.model.vo.ModelType;
 import com.solveria.core.experience.domain.model.vo.RiskAlert;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,7 +21,6 @@ public class PredictionModel extends DomainRoot {
   private Instant lastExecution;
   private UUID tenantId;
   private List<RiskAlert> alerts;
-
 
   private PredictionModel() {
     this.alerts = new ArrayList<>();
@@ -167,8 +165,6 @@ public class PredictionModel extends DomainRoot {
     m.alerts = alerts != null ? new ArrayList<>(alerts) : new ArrayList<>();
     return m;
   }
-
-
 
   public UUID getModelId() {
     return modelId;

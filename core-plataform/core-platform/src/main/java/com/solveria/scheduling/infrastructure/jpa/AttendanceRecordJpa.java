@@ -13,51 +13,86 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "sch_attendance_record")
 public class AttendanceRecordJpa extends BaseEntity {
 
-    @Column(name = "record_id", updatable = false, columnDefinition = "UUID")
-    private UUID recordId;
+  @Column(name = "record_id", updatable = false, columnDefinition = "UUID")
+  private UUID recordId;
 
-    @Column(name = "relationship_id", nullable = false)
-    private UUID relationshipId;
+  @Column(name = "relationship_id", nullable = false)
+  private UUID relationshipId;
 
-    @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;
+  @Column(name = "work_date", nullable = false)
+  private LocalDate workDate;
 
-    @Column(name = "is_closed", nullable = false)
-    private boolean isClosed;
+  @Column(name = "is_closed", nullable = false)
+  private boolean isClosed;
 
-    @Column(name = "status", nullable = false)
-    private String status;
+  @Column(name = "status", nullable = false)
+  private String status;
 
-    @OneToMany(mappedBy = "attendanceRecord", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TimeEntryJpa> entries = new ArrayList<>();
+  @OneToMany(mappedBy = "attendanceRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<TimeEntrySchedulingJpa> entries = new ArrayList<>();
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "deviations", columnDefinition = "jsonb")
-    private String deviations;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "deviations", columnDefinition = "jsonb")
+  private String deviations;
 
-    public UUID getRecordId() { return recordId; }
-    public void setRecordId(UUID recordId) { this.recordId = recordId; }
+  public UUID getRecordId() {
+    return recordId;
+  }
 
-    public UUID getRelationshipId() { return relationshipId; }
-    public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+  public void setRecordId(UUID recordId) {
+    this.recordId = recordId;
+  }
 
-    public LocalDate getWorkDate() { return workDate; }
-    public void setWorkDate(LocalDate workDate) { this.workDate = workDate; }
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
 
-    public boolean isClosed() { return isClosed; }
-    public void setClosed(boolean closed) { isClosed = closed; }
+  public void setRelationshipId(UUID relationshipId) {
+    this.relationshipId = relationshipId;
+  }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+  public LocalDate getWorkDate() {
+    return workDate;
+  }
 
-    public List<TimeEntryJpa> getEntries() { return entries; }
-    public void setEntries(List<TimeEntryJpa> entries) { this.entries = entries; }
+  public void setWorkDate(LocalDate workDate) {
+    this.workDate = workDate;
+  }
 
-    public String getDeviations() { return deviations; }
-    public void setDeviations(String deviations) { this.deviations = deviations; }
+  public boolean isClosed() {
+    return isClosed;
+  }
 
-    public void addEntry(TimeEntryJpa entry) {
-        entries.add(entry);
-        entry.setAttendanceRecord(this);
-    }
+  public void setClosed(boolean closed) {
+    isClosed = closed;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public List<TimeEntrySchedulingJpa> getEntries() {
+    return entries;
+  }
+
+  public void setEntries(List<TimeEntrySchedulingJpa> entries) {
+    this.entries = entries;
+  }
+
+  public String getDeviations() {
+    return deviations;
+  }
+
+  public void setDeviations(String deviations) {
+    this.deviations = deviations;
+  }
+
+  public void addEntry(TimeEntrySchedulingJpa entry) {
+    entries.add(entry);
+    entry.setAttendanceRecord(this);
+  }
 }

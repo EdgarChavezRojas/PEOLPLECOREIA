@@ -37,4 +37,3 @@ public class RelocateOrgUnitUseCase {
     log.info("event=CORE_WORKFORCE_ORGUNIT_RELOCATE_SUCCESS targetId={}", unitId);
   }
 }
-

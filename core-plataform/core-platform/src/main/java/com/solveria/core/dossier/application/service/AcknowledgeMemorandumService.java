@@ -47,12 +47,11 @@ public class AcknowledgeMemorandumService implements AcknowledgeMemorandumUseCas
         throw new IllegalArgumentException(DossierErrorCode.MEMORANDUM_ACK_CONTENT_REQUIRED.name());
       }
       if (command.signatureFileName() == null || command.signatureFileName().isBlank()) {
-        throw new IllegalArgumentException(DossierErrorCode.MEMORANDUM_ACK_FILE_NAME_REQUIRED.name());
+        throw new IllegalArgumentException(
+            DossierErrorCode.MEMORANDUM_ACK_FILE_NAME_REQUIRED.name());
       }
       digitalSignaturePort.signAndGenerateQr(
-          command.signatureContent(),
-          command.signatureFileName(),
-          command.signatureExpiryDate());
+          command.signatureContent(), command.signatureFileName(), command.signatureExpiryDate());
       record.acknowledgeMemorandum(true, command.reviewerId(), acknowledgedAt, null);
     } else {
       record.acknowledgeMemorandum(
@@ -65,5 +64,3 @@ public class AcknowledgeMemorandumService implements AcknowledgeMemorandumUseCas
     return documentRecordRepository.save(record);
   }
 }
-
-

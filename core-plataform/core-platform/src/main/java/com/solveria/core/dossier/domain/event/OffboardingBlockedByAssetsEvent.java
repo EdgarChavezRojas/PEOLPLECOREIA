@@ -6,16 +6,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Emitido cuando el offboarding se bloquea por activos sin devolver.
- * Trigger: RelationshipTerminationInitiated.
- * El proceso de liquidación (Finiquito) no puede avanzar a "Aprobado"
- * si existen activos marcados como "En Custodia".
+ * Emitido cuando el offboarding se bloquea por activos sin devolver. Trigger:
+ * RelationshipTerminationInitiated. El proceso de liquidación (Finiquito) no puede avanzar a
+ * "Aprobado" si existen activos marcados como "En Custodia".
  */
 public record OffboardingBlockedByAssetsEvent(
-    UUID personId,
-    List<UUID> unreturnedAssetIds,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID personId, List<UUID> unreturnedAssetIds, Instant occurredAt) implements DomainEvent {
 
   public OffboardingBlockedByAssetsEvent {
     if (personId == null) {
@@ -34,4 +30,4 @@ public record OffboardingBlockedByAssetsEvent(
     return new OffboardingBlockedByAssetsEvent(personId, unreturnedAssetIds, Instant.now());
   }
 }
-//revisar porque evento se genera dentro de usecase
+// revisar porque evento se genera dentro de usecase

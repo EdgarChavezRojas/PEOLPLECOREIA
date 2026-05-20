@@ -6,4 +6,3 @@ import java.util.UUID;
 
 public record PersonCreatedEvent(UUID personId, String globalId, Instant occurredAt)
     implements DomainEvent {}
-

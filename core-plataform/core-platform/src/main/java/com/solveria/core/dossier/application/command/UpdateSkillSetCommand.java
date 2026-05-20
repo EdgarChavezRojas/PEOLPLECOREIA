@@ -9,4 +9,3 @@ public record UpdateSkillSetCommand(
     ProficiencyLevel proficiency,
     String location,
     UUID tenantId) {}
-

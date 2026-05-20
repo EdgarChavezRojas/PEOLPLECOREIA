@@ -8,9 +8,10 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PayrollClosureMapper {
-    @Mapping(target = "id", ignore = true) // Ignores the Long id from BaseEntity
-    @Mapping(target = "payrollClosureId", source = "id")
-    PayrollClosureJpa toJpa(PayrollClosure domain);
-    @Mapping(target = "id", source = "payrollClosureId")
-    PayrollClosure toDomain(PayrollClosureJpa jpa);
+  @Mapping(target = "id", ignore = true) // Ignores the Long id from BaseEntity
+  @Mapping(target = "payrollClosureId", source = "id")
+  PayrollClosureJpa toJpa(PayrollClosure domain);
+
+  @Mapping(target = "id", source = "payrollClosureId")
+  PayrollClosure toDomain(PayrollClosureJpa jpa);
 }

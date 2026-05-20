@@ -6,8 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Evento (Async): Importa facturas (SIAT) e impacta Sueldo Neto en la planilla.
- * Trigger: TaxFormValidated.
+ * Evento (Async): Importa facturas (SIAT) e impacta Sueldo Neto en la planilla. Trigger:
+ * TaxFormValidated.
  */
 public record RcIvaForm110ImportedEvent(
     UUID formId,

@@ -17,4 +17,3 @@ public record MemorandumIssuedEvent(UUID relationshipId, Instant occurredAt)
     return new MemorandumIssuedEvent(relationshipId, Instant.now());
   }
 }
-

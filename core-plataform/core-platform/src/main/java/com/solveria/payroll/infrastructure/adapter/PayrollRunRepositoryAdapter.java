@@ -5,31 +5,31 @@ import com.solveria.payroll.domain.model.ar.PayrollRun;
 import com.solveria.payroll.infrastructure.jpa.PayrollRunJpa;
 import com.solveria.payroll.infrastructure.mapper.PayrollRunMapper;
 import com.solveria.payroll.infrastructure.repository.PayrollRunSpringRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 public class PayrollRunRepositoryAdapter implements PayrollRunRepositoryPort {
 
-    private final PayrollRunSpringRepository repository;
-    private final PayrollRunMapper mapper;
+  private final PayrollRunSpringRepository repository;
+  private final PayrollRunMapper mapper;
 
-    public PayrollRunRepositoryAdapter(PayrollRunSpringRepository repository, PayrollRunMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public PayrollRunRepositoryAdapter(
+      PayrollRunSpringRepository repository, PayrollRunMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public PayrollRun save(PayrollRun payrollRun) {
-        PayrollRunJpa jpa = mapper.toJpa(payrollRun);
-        PayrollRunJpa saved = repository.save(jpa);
-        return mapper.toDomain(saved);
-    }
+  @Override
+  public PayrollRun save(PayrollRun payrollRun) {
+    PayrollRunJpa jpa = mapper.toJpa(payrollRun);
+    PayrollRunJpa saved = repository.save(jpa);
+    return mapper.toDomain(saved);
+  }
 
-    @Override
-    public Optional<PayrollRun> findById(UUID id) {
-        return repository.findById(id).map(mapper::toDomain);
-    }
+  @Override
+  public Optional<PayrollRun> findById(UUID id) {
+    return repository.findById(id).map(mapper::toDomain);
+  }
 }

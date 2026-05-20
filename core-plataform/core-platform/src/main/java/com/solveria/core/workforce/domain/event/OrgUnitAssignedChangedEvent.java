@@ -6,4 +6,3 @@ import java.util.UUID;
 
 public record OrgUnitAssignedChangedEvent(UUID unitId, UUID newParentId, Instant occurredAt)
     implements DomainEvent {}
-

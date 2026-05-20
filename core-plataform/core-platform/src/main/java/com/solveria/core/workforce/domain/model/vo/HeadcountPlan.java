@@ -3,6 +3,7 @@ package com.solveria.core.workforce.domain.model.vo;
 import jakarta.persistence.Embeddable;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Value Object: HeadcountPlan
@@ -11,13 +12,10 @@ import java.io.Serializable;
  *
  * <p>Invariante: No se puede exceder el límite de slots.
  */
-import java.util.Objects;
-
 @Embeddable
 public class HeadcountPlan implements Serializable {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   private Integer maxSlots;
   private Integer currentSlots;
@@ -29,11 +27,21 @@ public class HeadcountPlan implements Serializable {
     this.currentSlots = currentSlots;
   }
 
-  public Integer getMaxSlots() { return maxSlots; }
-  public void setMaxSlots(Integer maxSlots) { this.maxSlots = maxSlots; }
+  public Integer getMaxSlots() {
+    return maxSlots;
+  }
 
-  public Integer getCurrentSlots() { return currentSlots; }
-  public void setCurrentSlots(Integer currentSlots) { this.currentSlots = currentSlots; }
+  public void setMaxSlots(Integer maxSlots) {
+    this.maxSlots = maxSlots;
+  }
+
+  public Integer getCurrentSlots() {
+    return currentSlots;
+  }
+
+  public void setCurrentSlots(Integer currentSlots) {
+    this.currentSlots = currentSlots;
+  }
 
   public static HeadcountPlan create(Integer maxSlots) {
     if (maxSlots == null || maxSlots <= 0) {
@@ -49,8 +57,8 @@ public class HeadcountPlan implements Serializable {
   public void occupy() {
     if (!hasVacancy()) {
       throw new IllegalStateException(
-              "No hay plazas vacantes. Control de Plazas (Headcount): "
-                      + "Impide asignar personal a una posición sin plaza vacante autorizada presupuestariamente.");
+          "No hay plazas vacantes. Control de Plazas (Headcount): "
+              + "Impide asignar personal a una posición sin plaza vacante autorizada presupuestariamente.");
     }
     currentSlots++;
   }
@@ -70,8 +78,8 @@ public class HeadcountPlan implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     HeadcountPlan that = (HeadcountPlan) o;
-    return Objects.equals(maxSlots, that.maxSlots) &&
-            Objects.equals(currentSlots, that.currentSlots);
+    return Objects.equals(maxSlots, that.maxSlots)
+        && Objects.equals(currentSlots, that.currentSlots);
   }
 
   @Override

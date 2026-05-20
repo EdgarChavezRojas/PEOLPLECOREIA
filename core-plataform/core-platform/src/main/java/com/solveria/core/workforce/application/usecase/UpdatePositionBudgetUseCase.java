@@ -31,4 +31,3 @@ public class UpdatePositionBudgetUseCase {
     log.info("event=CORE_WORKFORCE_POSITION_BUDGET_UPDATE_SUCCESS targetId={}", positionId);
   }
 }
-

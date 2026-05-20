@@ -11,8 +11,7 @@ public class HolidayCalendar {
   private HolidayScope scope;
   private UUID tenantId;
 
-  public HolidayCalendar() {
-  }
+  public HolidayCalendar() {}
 
   public HolidayCalendar(UUID holidayId, LocalDate holidayDate, HolidayScope scope, UUID tenantId) {
     this.holidayId = holidayId;
@@ -31,12 +30,7 @@ public class HolidayCalendar {
     if (tenantId == null) {
       throw new IllegalArgumentException("tenantId is required");
     }
-    return new HolidayCalendar(
-            UUID.randomUUID(),
-            holidayDate,
-            scope,
-            tenantId
-    );
+    return new HolidayCalendar(UUID.randomUUID(), holidayDate, scope, tenantId);
   }
 
   public boolean appliesTo(LocalDate date) {
@@ -47,8 +41,19 @@ public class HolidayCalendar {
   }
 
   // Getters
-  public UUID getHolidayId() { return holidayId; }
-  public LocalDate getHolidayDate() { return holidayDate; }
-  public HolidayScope getScope() { return scope; }
-  public UUID getTenantId() { return tenantId; }
+  public UUID getHolidayId() {
+    return holidayId;
+  }
+
+  public LocalDate getHolidayDate() {
+    return holidayDate;
+  }
+
+  public HolidayScope getScope() {
+    return scope;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
 }

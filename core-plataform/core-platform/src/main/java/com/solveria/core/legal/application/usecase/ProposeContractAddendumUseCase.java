@@ -6,17 +6,15 @@ import com.solveria.core.legal.application.dto.ProposeContractAddendumRequest;
 import com.solveria.core.legal.application.dto.SalaryTermsDto;
 import com.solveria.core.legal.application.port.ContractRepositoryPort;
 import com.solveria.core.legal.application.port.PolicyRuleRepositoryPort;
-import com.solveria.core.legal.domain.model.Contract;
-import com.solveria.core.legal.domain.model.ContractAddendum;
-import com.solveria.core.legal.domain.model.PolicyRule;
 import com.solveria.core.legal.domain.exception.ContractNotFoundException;
 import com.solveria.core.legal.domain.exception.LegalThresholdNotFoundException;
 import com.solveria.core.legal.domain.exception.PolicyRuleNotFoundException;
-import com.solveria.core.legal.domain.exception.TenantMismatchException;
+import com.solveria.core.legal.domain.model.Contract;
+import com.solveria.core.legal.domain.model.ContractAddendum;
+import com.solveria.core.legal.domain.model.PolicyRule;
 import com.solveria.core.legal.domain.model.vo.ComplianceSnapshot;
 import com.solveria.core.legal.domain.model.vo.LegalThreshold;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
-import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.security.context.SecurityUserContext;
 import java.math.BigDecimal;
 import java.util.Comparator;
@@ -34,13 +32,13 @@ public class ProposeContractAddendumUseCase {
 
   private final ContractRepositoryPort contractRepositoryPort;
   private final PolicyRuleRepositoryPort policyRuleRepositoryPort;
-  //en un futuro sera implementado con una clase application properties
-  @Value("${legal.policies.smn.id}")
-  private String smnPolicyId;
+
+  // en un futuro sera implementado con una clase application properties, revisar que es esto urgentemente
+  //@Value("${legal.policies.smn.id}")
+  private final String smnPolicyId = "00000000-0000-0000-0000-000000000000";
 
   @Transactional
   public ContractAddendumResponse execute(ProposeContractAddendumRequest request) {
-
 
     Contract contract =
         contractRepositoryPort

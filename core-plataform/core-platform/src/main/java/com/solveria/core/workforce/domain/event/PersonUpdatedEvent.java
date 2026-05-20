@@ -5,10 +5,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record PersonUpdatedEvent(UUID personId, UUID tenantId, Instant occurredAt)
-	implements DomainEvent {
+    implements DomainEvent {
 
   public PersonUpdatedEvent(UUID personId, UUID tenantId) {
-	this(personId, tenantId, Instant.now());
+    this(personId, tenantId, Instant.now());
   }
 }
-

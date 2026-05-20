@@ -29,7 +29,7 @@ public class HealthProviderRepositoryAdapter implements HealthProviderRepository
 
   @Override
   public Optional<HealthProvider> findById(UUID providerId) {
-    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return healthProviderRepository
         .findByProviderIdAndTenantId(providerId, currentTenantId)
         .map(healthProviderMapper::toDomain);

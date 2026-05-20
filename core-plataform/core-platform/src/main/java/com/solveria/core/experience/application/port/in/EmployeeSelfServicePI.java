@@ -17,7 +17,9 @@ public interface EmployeeSelfServicePI {
   /** W14: Solicitar certificado digital con hash SHA-256 y QR Zero-Trust. */
   UUID requestCertificate(UUID personId, String certificateType, UUID tenantId, String createdBy);
 
-  /** Cancelar una solicitud ESS pendiente de revisión. Solo el solicitante original puede cancelar. */
+  /**
+   * Cancelar una solicitud ESS pendiente de revisión. Solo el solicitante original puede cancelar.
+   */
   void cancelDataUpdate(UUID actionId, UUID personId, UUID tenantId);
 
   /** W12: Acuse de recibo formal de memorando/notificación. */

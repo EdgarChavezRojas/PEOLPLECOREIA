@@ -12,4 +12,3 @@ public class TenantMismatchException extends DomainException {
         null);
   }
 }
-

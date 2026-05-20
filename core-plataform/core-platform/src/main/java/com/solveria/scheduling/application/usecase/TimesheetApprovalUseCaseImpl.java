@@ -15,33 +15,31 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TimesheetApprovalUseCaseImpl implements TimesheetApprovalUseCase {
 
-    private final AttendanceRecordRepositoryPort attendanceRecordRepositoryPort;
-    private final SchedulingEventOutboxPort eventOutboxPort;
+  private final AttendanceRecordRepositoryPort attendanceRecordRepositoryPort;
+  private final SchedulingEventOutboxPort eventOutboxPort;
 
-    @Override
-    @Transactional
-    public void runDailyReconciliation() {
-        List<AttendanceRecord> openRecords = attendanceRecordRepositoryPort.findOpenRecords();
+  @Override
+  @Transactional
+  public void runDailyReconciliation() {
+    List<AttendanceRecord> openRecords = attendanceRecordRepositoryPort.findOpenRecords();
 
-        for (AttendanceRecord record : openRecords) {
-            try {
-                // Aquí se integraría con TimeTrackingValidationService para calcular desviaciones reales.
-                // Como ejemplo, si tiene un número par de entradas sin desviaciones pendientes, se cierra.
-                
-                record.closeRecord();
-                attendanceRecordRepositoryPort.save(record);
+    for (AttendanceRecord record : openRecords) {
+      try {
+        // Aquí se integraría con TimeTrackingValidationService para calcular desviaciones reales.
+        // Como ejemplo, si tiene un número par de entradas sin desviaciones pendientes, se cierra.
 
-                // Emite evento para Payroll (BC 05)
-                eventOutboxPort.publish(new AttendanceReadyForPayrollEvent(
-                    record.getRecordId(), 
-                    record.getRelationshipId(), 
-                    Instant.now()
-                ));
-            } catch (Exception e) {
-                // Si la validación falla (ej. entradas impares y sin desviación aprobada), 
-                // se mantiene abierto o se marca como PENDING_REVIEW.
-                // Log e.getMessage()
-            }
-        }
+        record.closeRecord();
+        attendanceRecordRepositoryPort.save(record);
+
+        // Emite evento para Payroll (BC 05)
+        eventOutboxPort.publish(
+            new AttendanceReadyForPayrollEvent(
+                record.getRecordId(), record.getRelationshipId(), Instant.now()));
+      } catch (Exception e) {
+        // Si la validación falla (ej. entradas impares y sin desviación aprobada),
+        // se mantiene abierto o se marca como PENDING_REVIEW.
+        // Log e.getMessage()
+      }
     }
+  }
 }

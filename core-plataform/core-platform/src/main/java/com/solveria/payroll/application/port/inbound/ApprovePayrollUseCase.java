@@ -4,5 +4,5 @@ import com.solveria.payroll.application.dto.request.ApprovePayrollRequest;
 import java.util.UUID;
 
 public interface ApprovePayrollUseCase {
-    void execute(UUID runId, ApprovePayrollRequest request, String tenantId);
+  void execute(UUID runId, ApprovePayrollRequest request, UUID tenantId);
 }

@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Evento (Sync): Genera borrador del Finiquito con promedio últimos 90 días.
- * Trigger: LiquidationProcessCompleted.
+ * Evento (Sync): Genera borrador del Finiquito con promedio últimos 90 días. Trigger:
+ * LiquidationProcessCompleted.
  */
 public record LiquidationCalculatedEvent(
     UUID relationshipId,
@@ -43,4 +43,3 @@ public record LiquidationCalculatedEvent(
         Instant.now());
   }
 }
-

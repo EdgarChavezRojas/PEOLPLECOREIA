@@ -35,8 +35,6 @@ public class UpdateEmployeeAcademicProfileUseCase {
 
     relationshipRepositoryPort.save(relationship);
 
-    log.info(
-        "event=CORE_WORKFORCE_ACADEMIC_RANK_UPDATE_SUCCESS targetId={}", relationshipId);
+    log.info("event=CORE_WORKFORCE_ACADEMIC_RANK_UPDATE_SUCCESS targetId={}", relationshipId);
   }
 }
-

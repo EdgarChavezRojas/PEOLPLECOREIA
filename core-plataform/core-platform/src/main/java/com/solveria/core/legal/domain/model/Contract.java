@@ -20,7 +20,7 @@ import com.solveria.core.legal.domain.model.vo.ContractStatus;
 import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.domain.model.vo.EmploymentCondition;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
-
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -28,9 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 
 public class Contract extends DomainRoot {
 
@@ -50,29 +47,39 @@ public class Contract extends DomainRoot {
   public UUID getContractId() {
     return contractId;
   }
+
   public UUID getRelationshipId() {
     return relationshipId;
   }
+
   public ContractType getContractType() {
     return contractType;
   }
+
   public EmploymentCondition getEmploymentCond() {
     return employmentCond;
   }
+
   public ContractStatus getStatus() {
     return status;
   }
+
   public UUID getProjectId() {
     return projectId;
   }
+
   public UUID getTenantId() {
-    return tenantId;}
+    return tenantId;
+  }
+
   public String getCreatedBy() {
     return createdBy;
   }
+
   public List<ContractAddendum> getAddendums() {
     return addendums;
   }
+
   public boolean isTacitaReconduccionAlertSent() {
     return tacitaReconduccionAlertSent;
   }
@@ -98,7 +105,6 @@ public class Contract extends DomainRoot {
     this.createdBy = Objects.requireNonNull(createdBy, "createdBy");
     this.addendums = new ArrayList<>(Objects.requireNonNullElseGet(addendums, List::of));
     this.tacitaReconduccionAlertSent = tacitaReconduccionAlertSent;
-    
   }
 
   public static Contract draft(
@@ -135,8 +141,7 @@ public class Contract extends DomainRoot {
       UUID tenantId,
       String createdBy,
       List<ContractAddendum> addendums,
-      boolean tacitaReconduccionAlertSent
-      ) {
+      boolean tacitaReconduccionAlertSent) {
     return new Contract(
         contractId,
         relationshipId,
@@ -151,7 +156,7 @@ public class Contract extends DomainRoot {
   }
 
   public void approve(String createdBy, String approvedBy) {
-    
+
     validateSegregationOfDuties(createdBy, approvedBy);
     if (status != ContractStatus.DRAFT) {
       throw new InvalidContractStatusException(status, ContractStatus.DRAFT);
@@ -168,7 +173,7 @@ public class Contract extends DomainRoot {
       ComplianceSnapshot snapshot,
       String createdBy,
       BigDecimal salaryFloor) {
-    
+
     if (ContractType.PLAZO_FIJO.equals(contractType)) {
       validateRenewalLimit(addendums.size());
     }
@@ -189,40 +194,37 @@ public class Contract extends DomainRoot {
   }
 
   public void approveAddendum(UUID addendumId, String createdBy, String approvedBy) {
-    
+
     validateSegregationOfDuties(createdBy, approvedBy);
     ContractAddendum addendum = findAddendum(addendumId);
     addendum.approve(approvedBy);
-    registerEvent(
-        new AddendumSalaryAdjustmentApprovedEvent(contractId, addendumId, Instant.now()));
+    registerEvent(new AddendumSalaryAdjustmentApprovedEvent(contractId, addendumId, Instant.now()));
   }
 
   public void terminate(String createdBy, String approvedBy) {
-    
+
     validateSegregationOfDuties(createdBy, approvedBy);
     status = ContractStatus.TERMINATED;
     registerEvent(new ContractTerminatedEvent(contractId, Instant.now()));
   }
 
   public void markTacitaReconduccionRisk() {
-    
+
     registerEvent(new ContractTacitaReconduccionRiskEvent(contractId, Instant.now()));
   }
 
   public void markTacitaReconduccionAlertSent() {
-    
+
     this.tacitaReconduccionAlertSent = true;
   }
 
   public void validateRenewalLimit(int renewalCount) {
-    
+
     if (renewalCount >= MAX_RENEWALS) {
       registerEvent(new MaxRenewalsReachedEvent(contractId, renewalCount, Instant.now()));
       throw new MaxRenewalsReachedException(renewalCount, MAX_RENEWALS);
     }
   }
-
-
 
   private ContractAddendum findAddendum(UUID addendumId) {
     return addendums.stream()
@@ -230,8 +232,6 @@ public class Contract extends DomainRoot {
         .findFirst()
         .orElseThrow(() -> new AddendumNotFoundException(addendumId));
   }
-
-  
 
   private void validateSegregationOfDuties(String creator, String approver) {
     if (Objects.equals(creator, approver)) {
@@ -266,5 +266,4 @@ public class Contract extends DomainRoot {
     LocalDate resolvedNewTo = newTo != null ? newTo : LocalDate.MAX;
     return !newFrom.isAfter(resolvedExistingTo) && !resolvedNewTo.isBefore(existingFrom);
   }
-
 }

@@ -6,9 +6,9 @@ import com.solveria.core.dossier.application.usecase.AssignAssetUseCase;
 import com.solveria.core.dossier.domain.model.AssignedAsset;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 @Service
 public class AssignAssetService implements AssignAssetUseCase {
 

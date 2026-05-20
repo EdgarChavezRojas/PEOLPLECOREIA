@@ -11,17 +11,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class TimeAndBearingsIntegrationConsumer {
 
-    private static final Logger log = LoggerFactory.getLogger(TimeAndBearingsIntegrationConsumer.class);
+  private static final Logger log =
+      LoggerFactory.getLogger(TimeAndBearingsIntegrationConsumer.class);
 
-    @Async
-    @EventListener
-    public void on(DomainEvent event) {
-        if (event instanceof BiometricEnrollmentRevokedEvent revokedEvent) {
-            log.info("Integracion: enrolamiento biometrico revocado ledgerId={} tenantId={}",
-                    revokedEvent.getClass().getSimpleName(), revokedEvent.tenantId());
-        } else {
-            log.debug("Integracion: evento recibido tipo={}", event.getClass().getSimpleName());
-        }
+  @Async
+  @EventListener
+  public void on(DomainEvent event) {
+    if (event instanceof BiometricEnrollmentRevokedEvent revokedEvent) {
+      log.info(
+          "Integracion: enrolamiento biometrico revocado ledgerId={} tenantId={}",
+          revokedEvent.getClass().getSimpleName(),
+          revokedEvent.tenantId());
+    } else {
+      log.debug("Integracion: evento recibido tipo={}", event.getClass().getSimpleName());
     }
+  }
 }
-

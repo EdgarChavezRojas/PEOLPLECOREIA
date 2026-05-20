@@ -9,7 +9,7 @@ public interface SocialSecurityAccountRepositoryPort {
 
   Optional<SocialSecurityAccount> findById(UUID ssaId);
 
-  Optional<SocialSecurityAccount> findByPersonId(UUID personId, String tenantId);
+  Optional<SocialSecurityAccount> findByPersonId(UUID personId, UUID tenantId);
 
   void save(SocialSecurityAccount account);
 }

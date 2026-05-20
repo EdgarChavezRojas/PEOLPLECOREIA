@@ -143,4 +143,3 @@ public final class LiquidationCalculationService {
     return IndemnizableTrimSnapshot.build(monthlyBase, monthlyOthers);
   }
 }
-

@@ -40,11 +40,8 @@ public class UpdateSkillSetService implements UpdateSkillSetUseCase {
             .findByRelationshipId(command.relationshipId())
             .orElseThrow(() -> new TalentInventoryNotFoundException(command.relationshipId()));
 
-    SkillSet skillSet =
-        new SkillSet(UUID.randomUUID(), command.skillName(), command.proficiency());
+    SkillSet skillSet = new SkillSet(UUID.randomUUID(), command.skillName(), command.proficiency());
     inventory.addSkillSet(skillSet);
     return talentInventoryRepository.save(inventory);
   }
 }
-
-

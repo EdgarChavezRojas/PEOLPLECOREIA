@@ -5,10 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record LeaveRequestManagerRejectedEvent(
-    UUID balanceId,
-    UUID transactionId,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID balanceId, UUID transactionId, Instant occurredAt) implements DomainEvent {
 
   public LeaveRequestManagerRejectedEvent {
     if (balanceId == null) {
@@ -26,4 +23,3 @@ public record LeaveRequestManagerRejectedEvent(
     return new LeaveRequestManagerRejectedEvent(balanceId, transactionId, Instant.now());
   }
 }
-

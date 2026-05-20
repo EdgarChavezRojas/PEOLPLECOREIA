@@ -42,15 +42,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
  * Test de integración para {@link FinancialCoreEventListener}.
  *
  * <p>Valida que cada evento cross-BC publicado mediante {@link ApplicationEventPublisher} sea
- * recibido correctamente por el listener y delegado al Caso de Uso correspondiente, utilizando
- * los puertos ACL para resolver datos cross-BC. También verifica que las excepciones sean
- * capturadas y logueadas sin romper el hilo.
+ * recibido correctamente por el listener y delegado al Caso de Uso correspondiente, utilizando los
+ * puertos ACL para resolver datos cross-BC. También verifica que las excepciones sean capturadas y
+ * logueadas sin romper el hilo.
  */
 @SpringBootTest(
-    classes = {
-      FinancialCoreEventListener.class,
-      FinancialCoreEventListenerTest.TestConfig.class
-    })
+    classes = {FinancialCoreEventListener.class, FinancialCoreEventListenerTest.TestConfig.class})
 class FinancialCoreEventListenerTest {
 
   @TestConfiguration
@@ -109,8 +106,7 @@ class FinancialCoreEventListenerTest {
       eventPublisher.publishEvent(event);
 
       // Assert
-      verify(orgUnitFinancialDataPort, times(1))
-          .buildImputeAnalyticCommand(unitId, newParentId);
+      verify(orgUnitFinancialDataPort, times(1)).buildImputeAnalyticCommand(unitId, newParentId);
       verify(imputeAnalyticTerritorialUseCase, times(1)).execute(expectedCommand);
     }
 
@@ -156,8 +152,7 @@ class FinancialCoreEventListenerTest {
           .thenReturn(sourceId);
       when(contractFinancialDataPort.getRequiredBudgetForContract(contractId))
           .thenReturn(requiredAmount);
-      when(contractFinancialDataPort.getApproverForContract(contractId))
-          .thenReturn(approver);
+      when(contractFinancialDataPort.getApproverForContract(contractId)).thenReturn(approver);
 
       ContractDraftedEvent event =
           new ContractDraftedEvent(contractId, relationshipId, Instant.now());
@@ -216,8 +211,7 @@ class FinancialCoreEventListenerTest {
       when(contractFinancialDataPort.getAllocationAmountForContract(contractId))
           .thenReturn(allocationAmount);
 
-      ContractApprovedEvent event =
-          new ContractApprovedEvent(contractId, tenantId, Instant.now());
+      ContractApprovedEvent event = new ContractApprovedEvent(contractId, tenantId, Instant.now());
 
       // Act
       eventPublisher.publishEvent(event);
@@ -225,8 +219,7 @@ class FinancialCoreEventListenerTest {
       // Assert
       verify(contractFinancialDataPort, times(1)).getFundingSourceIdForContract(contractId);
       verify(contractFinancialDataPort, times(1)).getAllocationAmountForContract(contractId);
-      verify(validateFundingSourceUseCase, times(1))
-          .allocateBudget(sourceId, allocationAmount);
+      verify(validateFundingSourceUseCase, times(1)).allocateBudget(sourceId, allocationAmount);
     }
 
     @Test
@@ -245,8 +238,7 @@ class FinancialCoreEventListenerTest {
           .when(validateFundingSourceUseCase)
           .allocateBudget(any(UUID.class), any(BigDecimal.class));
 
-      ContractApprovedEvent event =
-          new ContractApprovedEvent(contractId, tenantId, Instant.now());
+      ContractApprovedEvent event = new ContractApprovedEvent(contractId, tenantId, Instant.now());
 
       // Act & Assert
       assertDoesNotThrow(() -> eventPublisher.publishEvent(event));
@@ -279,19 +271,12 @@ class FinancialCoreEventListenerTest {
               LocalDate.of(2026, 5, 16),
               LocalDate.of(2024, 1, 15),
               List.of(
-                  new BigDecimal("8000.00"),
-                  new BigDecimal("8200.00"),
-                  new BigDecimal("8100.00")),
+                  new BigDecimal("8000.00"), new BigDecimal("8200.00"), new BigDecimal("8100.00")),
               List.of(
-                  new BigDecimal("7500.00"),
-                  new BigDecimal("7700.00"),
-                  new BigDecimal("7600.00")),
-              List.of(
-                  new BigDecimal("500.00"),
-                  new BigDecimal("500.00"),
-                  new BigDecimal("500.00")),
+                  new BigDecimal("7500.00"), new BigDecimal("7700.00"), new BigDecimal("7600.00")),
+              List.of(new BigDecimal("500.00"), new BigDecimal("500.00"), new BigDecimal("500.00")),
               12,
-                  UUID.randomUUID(),
+              UUID.randomUUID(),
               "approver-user-002");
 
       when(contractFinancialDataPort.buildLiquidationCommand(contractId))
@@ -299,8 +284,7 @@ class FinancialCoreEventListenerTest {
       when(processLiquidationUseCase.execute(expectedCommand))
           .thenReturn(new BigDecimal("45000.00"));
 
-      ContractTerminatedEvent event =
-          new ContractTerminatedEvent(contractId, Instant.now());
+      ContractTerminatedEvent event = new ContractTerminatedEvent(contractId, Instant.now());
 
       // Act
       eventPublisher.publishEvent(event);
@@ -319,8 +303,7 @@ class FinancialCoreEventListenerTest {
       when(contractFinancialDataPort.buildLiquidationCommand(contractId))
           .thenThrow(new RuntimeException("Contrato no encontrado para liquidación"));
 
-      ContractTerminatedEvent event =
-          new ContractTerminatedEvent(contractId, Instant.now());
+      ContractTerminatedEvent event = new ContractTerminatedEvent(contractId, Instant.now());
 
       // Act & Assert
       assertDoesNotThrow(() -> eventPublisher.publishEvent(event));
@@ -348,21 +331,15 @@ class FinancialCoreEventListenerTest {
 
       List<BigDecimal> salaryBase =
           List.of(
-              new BigDecimal("9800.00"),
-              new BigDecimal("10000.00"),
-              new BigDecimal("10200.00"));
+              new BigDecimal("9800.00"), new BigDecimal("10000.00"), new BigDecimal("10200.00"));
       List<BigDecimal> salaryOthers =
-          List.of(
-              new BigDecimal("200.00"),
-              new BigDecimal("300.00"),
-              new BigDecimal("250.00"));
+          List.of(new BigDecimal("200.00"), new BigDecimal("300.00"), new BigDecimal("250.00"));
       int continuousMonths = 62;
 
       when(quinquenioSalaryDataPort.getContinuousMonths(personId)).thenReturn(continuousMonths);
       when(quinquenioSalaryDataPort.getLastThreeMonthsBase(personId)).thenReturn(salaryBase);
       when(quinquenioSalaryDataPort.getLastThreeMonthsOthers(personId)).thenReturn(salaryOthers);
-      when(processQuinquenioPaymentUseCase.execute(
-              any(UUID.class), anyInt(), anyList(), anyList()))
+      when(processQuinquenioPaymentUseCase.execute(any(UUID.class), anyInt(), anyList(), anyList()))
           .thenReturn(quinquenioAmount);
 
       QuinquenioRequestedEvent event =
@@ -419,7 +396,7 @@ class FinancialCoreEventListenerTest {
       // Arrange
       UUID actionId = UUID.randomUUID();
       UUID personId = UUID.randomUUID();
-      UUID tenantId =  UUID.randomUUID();
+      UUID tenantId = UUID.randomUUID();
       String payload =
           """
           {
@@ -438,11 +415,7 @@ class FinancialCoreEventListenerTest {
       // Assert
       verify(syncBankAccountUseCase, times(1))
           .syncBankAccount(
-              eq(personId),
-              eq("1234567890"),
-              eq("BNB"),
-              eq(tenantId),
-              eq(actionId.toString()));
+              eq(personId), eq("1234567890"), eq("BNB"), eq(tenantId), eq(actionId.toString()));
     }
 
     @Test
@@ -455,7 +428,7 @@ class FinancialCoreEventListenerTest {
               UUID.randomUUID(),
               "DATA_UPDATE",
               "{}",
-                  UUID.randomUUID(),
+              UUID.randomUUID(),
               Instant.now());
 
       // Act
@@ -463,7 +436,7 @@ class FinancialCoreEventListenerTest {
 
       // Assert
       verify(syncBankAccountUseCase, never())
-          .syncBankAccount(any(), anyString(), anyString(),  UUID.randomUUID(), anyString());
+          .syncBankAccount(any(), anyString(), anyString(), UUID.randomUUID(), anyString());
     }
 
     @Test
@@ -483,7 +456,7 @@ class FinancialCoreEventListenerTest {
       assertDoesNotThrow(() -> eventPublisher.publishEvent(event));
 
       verify(syncBankAccountUseCase, never())
-          .syncBankAccount(any(), anyString(), anyString(),  UUID.randomUUID(), anyString());
+          .syncBankAccount(any(), anyString(), anyString(), UUID.randomUUID(), anyString());
     }
 
     @Test
@@ -504,7 +477,7 @@ class FinancialCoreEventListenerTest {
               UUID.randomUUID(),
               "BANK_ACCOUNT_UPDATE",
               payload,
-                  UUID.randomUUID(),
+              UUID.randomUUID(),
               Instant.now());
 
       // Act
@@ -512,7 +485,7 @@ class FinancialCoreEventListenerTest {
 
       // Assert
       verify(syncBankAccountUseCase, never())
-          .syncBankAccount(any(), anyString(), anyString(),  UUID.randomUUID(), anyString());
+          .syncBankAccount(any(), anyString(), anyString(), UUID.randomUUID(), anyString());
     }
 
     @Test
@@ -531,16 +504,11 @@ class FinancialCoreEventListenerTest {
 
       DataChangeRequestedEvent event =
           new DataChangeRequestedEvent(
-              actionId,
-              personId,
-              "BANK_ACCOUNT_UPDATE",
-              payload,
-                  UUID.randomUUID(),
-              Instant.now());
+              actionId, personId, "BANK_ACCOUNT_UPDATE", payload, UUID.randomUUID(), Instant.now());
 
       doThrow(new RuntimeException("Error de sincronización bancaria"))
           .when(syncBankAccountUseCase)
-          .syncBankAccount(any(), anyString(), anyString(),  UUID.randomUUID(), anyString());
+          .syncBankAccount(any(), anyString(), anyString(), UUID.randomUUID(), anyString());
 
       // Act & Assert
       assertDoesNotThrow(() -> eventPublisher.publishEvent(event));
@@ -550,7 +518,7 @@ class FinancialCoreEventListenerTest {
               eq(personId),
               eq("9876543210"),
               eq("BCP"),
-              eq( UUID.randomUUID()),
+              eq(UUID.randomUUID()),
               eq(actionId.toString()));
     }
 
@@ -570,12 +538,7 @@ class FinancialCoreEventListenerTest {
 
       DataChangeRequestedEvent event =
           new DataChangeRequestedEvent(
-              actionId,
-              personId,
-              "bank_account_change",
-              payload,
-                  UUID.randomUUID(),
-              Instant.now());
+              actionId, personId, "bank_account_change", payload, UUID.randomUUID(), Instant.now());
 
       // Act
       eventPublisher.publishEvent(event);
@@ -586,7 +549,7 @@ class FinancialCoreEventListenerTest {
               eq(personId),
               eq("1111111111"),
               eq("BISA"),
-              eq( UUID.randomUUID()),
+              eq(UUID.randomUUID()),
               eq(actionId.toString()));
     }
   }

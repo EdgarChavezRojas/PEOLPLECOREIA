@@ -21,7 +21,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,22 +37,21 @@ public class GenerateContractEvidenceUseCase {
   private final EventOutboxPort eventOutboxPort;
   private final Clock clock;
 
-
-
   @Transactional
   public ContractEvidenceResponse execute(GenerateContractEvidenceRequest request) {
 
-
     Contract contract =
-            contractRepositoryPort
-                    .findById(request.contractId())
-                    .orElseThrow(() -> new ContractNotFoundException(request.contractId()));
+        contractRepositoryPort
+            .findById(request.contractId())
+            .orElseThrow(() -> new ContractNotFoundException(request.contractId()));
 
     EvidenceData evidenceData = resolveEvidenceData(contract);
     Instant generatedAt = Instant.now(clock);
 
-    // CAMBIO 1: Solo extraemos el contenido crudo (bytes), la capa de aplicación ya no sabe de "SHA-256"
-    byte[] fileContent = buildRawEvidenceContent(
+    // CAMBIO 1: Solo extraemos el contenido crudo (bytes), la capa de aplicación ya no sabe de
+    // "SHA-256"
+    byte[] fileContent =
+        buildRawEvidenceContent(
             contract.getContractId(),
             evidenceData.salaryTerms,
             evidenceData.startDate,
@@ -61,17 +59,20 @@ public class GenerateContractEvidenceUseCase {
             generatedAt);
 
     // CAMBIO 2: Pasamos los bytes al puerto y este nos DEVUELVE el hash oficial del Kardex
-    String hash = digitalKardexPort.storeEvidence(contract.getContractId(), request.tenantId(), fileContent, generatedAt);
+    String hash =
+        digitalKardexPort.storeEvidence(
+            contract.getContractId(), request.tenantId(), fileContent, generatedAt);
 
-    auditLogPort.registerEvidenceGenerated(
-            contract.getContractId(), generatedAt, hash);
-    eventOutboxPort.publish(List.of(new EvidenceGeneratedEvent(
-            contract.getContractId(), request.tenantId(), hash, generatedAt)));
+    auditLogPort.registerEvidenceGenerated(contract.getContractId(), generatedAt, hash);
+    eventOutboxPort.publish(
+        List.of(
+            new EvidenceGeneratedEvent(
+                contract.getContractId(), request.tenantId(), hash, generatedAt)));
 
     log.info(
-            "event=LEGAL_CONTRACT_EVIDENCE_SUCCESS contractId={} tenantId={}",
-            contract.getContractId(),
-            request.tenantId());
+        "event=LEGAL_CONTRACT_EVIDENCE_SUCCESS contractId={} tenantId={}",
+        contract.getContractId(),
+        request.tenantId());
 
     return new ContractEvidenceResponse(contract.getContractId(), hash, generatedAt);
   }
@@ -79,9 +80,9 @@ public class GenerateContractEvidenceUseCase {
   private EvidenceData resolveEvidenceData(Contract contract) {
     // ... se mantiene exactamente igual ...
     Optional<ContractAddendum> latestApproved =
-            contract.getAddendums().stream()
-                    .filter(addendum -> addendum.getStatus() == AddendumStatus.APPROVED)
-                    .max(Comparator.comparing(ContractAddendum::getEffectiveFrom));
+        contract.getAddendums().stream()
+            .filter(addendum -> addendum.getStatus() == AddendumStatus.APPROVED)
+            .max(Comparator.comparing(ContractAddendum::getEffectiveFrom));
 
     if (latestApproved.isEmpty()) {
       throw new EvidenceDataMissingException(contract.getContractId());
@@ -95,26 +96,27 @@ public class GenerateContractEvidenceUseCase {
     return new EvidenceData(addendum.getSalaryTerms(), addendum.getEffectiveFrom());
   }
 
-  // CAMBIO 3: Reemplazamos buildSha256Hash por este método simple que solo devuelve el payload en bytes
+  // CAMBIO 3: Reemplazamos buildSha256Hash por este método simple que solo devuelve el payload en
+  // bytes
   private byte[] buildRawEvidenceContent(
-          java.util.UUID contractId,
-          SalaryTerms salaryTerms,
-          LocalDate startDate,
-          UUID tenantId,
-          Instant generatedAt) {
+      java.util.UUID contractId,
+      SalaryTerms salaryTerms,
+      LocalDate startDate,
+      UUID tenantId,
+      Instant generatedAt) {
 
     // String.join es la mejor práctica en Java para unir elementos con un delimitador específico.
-    String payload = String.join("|",
+    String payload =
+        String.join(
+            "|",
             contractId.toString(),
             salaryTerms.basicSalary().toString(),
             startDate.toString(),
             tenantId.toString(),
-            generatedAt.toString()
-    );
+            generatedAt.toString());
 
     return payload.getBytes(StandardCharsets.UTF_8);
   }
 
   private record EvidenceData(SalaryTerms salaryTerms, LocalDate startDate) {}
 }
-

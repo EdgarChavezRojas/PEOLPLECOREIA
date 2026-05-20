@@ -3,9 +3,8 @@ package com.solveria.core.financial.application.usecase;
 import com.solveria.core.financial.application.command.SyncBankAccountCommand;
 import com.solveria.core.financial.application.port.DispersionPort;
 import com.solveria.core.financial.domain.event.BankAccountSyncedEvent;
-import java.util.UUID;
-
 import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,8 +32,6 @@ public class SyncBankAccountUseCase implements DispersionPort {
 
     BankAccountSyncedEvent event =
         new BankAccountSyncedEvent(cmd.personId(), cmd.bankAccountNumber(), cmd.bankCode());
-
-
 
     log.info("event=BANK_ACCOUNT_SYNCED personId={}", personId);
   }

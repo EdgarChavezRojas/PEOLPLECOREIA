@@ -7,11 +7,10 @@ import com.solveria.core.experience.infrastructure.mapper.SelfServiceActionMappe
 import com.solveria.core.experience.infrastructure.repository.SelfServiceActionRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -34,19 +33,19 @@ public class SelfServiceActionRepositoryAdapter implements SelfServiceActionPO {
   public void save(SelfServiceAction action) {
     List<DomainEvent> events = action.pullDomainEvents();
     SelfServiceActionJpa jpa = mapper.toJpa(action);
-     repository.save(jpa);
+    repository.save(jpa);
     eventOutboxPort.publish(events);
   }
 
   @Override
   public Optional<SelfServiceAction> findById(UUID actionId) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return repository.findByActionIdAndTenantId(actionId, tenantId).map(mapper::toDomain);
   }
 
   @Override
   public List<SelfServiceAction> findByPersonId(UUID personId) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return repository.findByPersonIdAndTenantId(personId, tenantId).stream()
         .map(mapper::toDomain)
         .toList();

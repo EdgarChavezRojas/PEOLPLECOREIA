@@ -6,6 +6,6 @@ package com.solveria.payroll.domain.model.vo;
  * <p>Dominio puro — sin dependencias de framework.
  */
 public enum PeriodStatus {
-    OPEN,
-    CLOSED
+  OPEN,
+  CLOSED
 }

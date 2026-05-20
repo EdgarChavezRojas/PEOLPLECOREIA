@@ -17,4 +17,3 @@ public record AssetReturnedEvent(UUID assignmentId, UUID workerId, Instant occur
     return new AssetReturnedEvent(assignmentId, workerId, Instant.now());
   }
 }
-

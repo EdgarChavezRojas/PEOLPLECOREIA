@@ -20,7 +20,13 @@ public class OrgHierarchy {
 
   public OrgHierarchy() {}
 
-  public OrgHierarchy(UUID hierarchyId, UUID parentUnitId, UUID childUnitId, String hierarchyType, LocalDate effectiveDate, LocalDate endDate) {
+  public OrgHierarchy(
+      UUID hierarchyId,
+      UUID parentUnitId,
+      UUID childUnitId,
+      String hierarchyType,
+      LocalDate effectiveDate,
+      LocalDate endDate) {
     this.hierarchyId = hierarchyId;
     this.parentUnitId = parentUnitId;
     this.childUnitId = childUnitId;
@@ -29,25 +35,56 @@ public class OrgHierarchy {
     this.endDate = endDate;
   }
 
-  public UUID getHierarchyId() { return hierarchyId; }
-  public void setHierarchyId(UUID hierarchyId) { this.hierarchyId = hierarchyId; }
+  public UUID getHierarchyId() {
+    return hierarchyId;
+  }
 
-  public UUID getParentUnitId() { return parentUnitId; }
-  public void setParentUnitId(UUID parentUnitId) { this.parentUnitId = parentUnitId; }
+  public void setHierarchyId(UUID hierarchyId) {
+    this.hierarchyId = hierarchyId;
+  }
 
-  public UUID getChildUnitId() { return childUnitId; }
-  public void setChildUnitId(UUID childUnitId) { this.childUnitId = childUnitId; }
+  public UUID getParentUnitId() {
+    return parentUnitId;
+  }
 
-  public String getHierarchyType() { return hierarchyType; }
-  public void setHierarchyType(String hierarchyType) { this.hierarchyType = hierarchyType; }
+  public void setParentUnitId(UUID parentUnitId) {
+    this.parentUnitId = parentUnitId;
+  }
 
-  public LocalDate getEffectiveDate() { return effectiveDate; }
-  public void setEffectiveDate(LocalDate effectiveDate) { this.effectiveDate = effectiveDate; }
+  public UUID getChildUnitId() {
+    return childUnitId;
+  }
 
-  public LocalDate getEndDate() { return endDate; }
-  public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+  public void setChildUnitId(UUID childUnitId) {
+    this.childUnitId = childUnitId;
+  }
 
-  public static OrgHierarchy create(UUID parentUnitId, UUID childUnitId, String hierarchyType, LocalDate effectiveDate) {
+  public String getHierarchyType() {
+    return hierarchyType;
+  }
+
+  public void setHierarchyType(String hierarchyType) {
+    this.hierarchyType = hierarchyType;
+  }
+
+  public LocalDate getEffectiveDate() {
+    return effectiveDate;
+  }
+
+  public void setEffectiveDate(LocalDate effectiveDate) {
+    this.effectiveDate = effectiveDate;
+  }
+
+  public LocalDate getEndDate() {
+    return endDate;
+  }
+
+  public void setEndDate(LocalDate endDate) {
+    this.endDate = endDate;
+  }
+
+  public static OrgHierarchy create(
+      UUID parentUnitId, UUID childUnitId, String hierarchyType, LocalDate effectiveDate) {
     if (parentUnitId == null || childUnitId == null) {
       throw new IllegalArgumentException("parentUnitId y childUnitId son requeridos");
     }
@@ -55,12 +92,11 @@ public class OrgHierarchy {
       throw new IllegalArgumentException("Una unidad no puede ser su propio padre");
     }
     return new OrgHierarchy(
-            UUID.randomUUID(),
-            parentUnitId,
-            childUnitId,
-            hierarchyType,
-            effectiveDate != null ? effectiveDate : LocalDate.now(),
-            null
-    );
+        UUID.randomUUID(),
+        parentUnitId,
+        childUnitId,
+        hierarchyType,
+        effectiveDate != null ? effectiveDate : LocalDate.now(),
+        null);
   }
 }

@@ -1,8 +1,8 @@
 package com.solveria.core.financial.domain.model.vo;
 
 /**
- * Excepción de dominio: El proveedor de cotización UFV (Banco Central de Bolivia)
- * no está disponible o no respondió dentro del timeout establecido (5 segundos).
+ * Excepción de dominio: El proveedor de cotización UFV (Banco Central de Bolivia) no está
+ * disponible o no respondió dentro del timeout establecido (5 segundos).
  *
  * <p>Clase pura sin anotaciones de infraestructura.
  */

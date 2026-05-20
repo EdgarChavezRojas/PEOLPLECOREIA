@@ -7,11 +7,10 @@ import com.solveria.core.financial.domain.model.vo.IndemnizableTrimSnapshot;
 import com.solveria.core.financial.domain.model.vo.TerminationType;
 import com.solveria.core.financial.domain.service.BolivianTaxCalculationService;
 import com.solveria.core.financial.domain.service.LiquidationCalculationService;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -107,12 +106,13 @@ public class ProcessLiquidationUseCase {
             includesDesahucio,
             trimSnapshot);
 
-//    eventOutboxPort.publish(
-//        "Liquidation",
-//        cmd.relationshipId(),
-//        "LIQUIDATION_CALCULATED",
-//        serializeLiquidationPayload(
-//            cmd, totalLiquidation, indemnizacion, aguinaldoProporcional, vacaciones, desahucio));
+    //    eventOutboxPort.publish(
+    //        "Liquidation",
+    //        cmd.relationshipId(),
+    //        "LIQUIDATION_CALCULATED",
+    //        serializeLiquidationPayload(
+    //            cmd, totalLiquidation, indemnizacion, aguinaldoProporcional, vacaciones,
+    // desahucio));
 
     // --- Paso 6: Verificar mora (cronómetro T+16 días) ---
     checkOverdueAndApplyPenalty(
@@ -137,17 +137,17 @@ public class ProcessLiquidationUseCase {
       FiniquitoPaymentOverdueEvent overdueEvent =
           new FiniquitoPaymentOverdueEvent(relationshipId, personId, totalLiquidation, multa);
 
-//      eventOutboxPort.publish(
-//          "Liquidation",
-//          relationshipId,
-//          "FINIQUITO_PAYMENT_OVERDUE",
-//          "{\"relationshipId\":\""
-//              + relationshipId
-//              + "\",\"totalPendiente\":"
-//              + totalLiquidation
-//              + ",\"multa30pct\":"
-//              + multa
-//              + "}");
+      //      eventOutboxPort.publish(
+      //          "Liquidation",
+      //          relationshipId,
+      //          "FINIQUITO_PAYMENT_OVERDUE",
+      //          "{\"relationshipId\":\""
+      //              + relationshipId
+      //              + "\",\"totalPendiente\":"
+      //              + totalLiquidation
+      //              + ",\"multa30pct\":"
+      //              + multa
+      //              + "}");
     }
   }
 

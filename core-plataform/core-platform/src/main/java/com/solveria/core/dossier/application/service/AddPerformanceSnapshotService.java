@@ -46,5 +46,3 @@ public class AddPerformanceSnapshotService implements AddPerformanceSnapshotUseC
     return talentInventoryRepository.save(inventory);
   }
 }
-
-

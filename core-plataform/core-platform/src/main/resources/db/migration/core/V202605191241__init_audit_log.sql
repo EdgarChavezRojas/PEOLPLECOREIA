@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS audit_log (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  action VARCHAR(255),
+  entity VARCHAR(255),
+  entity_id VARCHAR(255),
+  user_id VARCHAR(100),
+  tenant_id VARCHAR(100),
+  occurred_at TIMESTAMP
+);
+

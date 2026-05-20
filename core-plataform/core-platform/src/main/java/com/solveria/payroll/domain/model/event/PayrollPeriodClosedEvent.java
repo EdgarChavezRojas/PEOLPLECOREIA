@@ -4,9 +4,4 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record PayrollPeriodClosedEvent(
-        UUID runId,
-        String integrityHash,
-        String tenantId,
-        LocalDateTime closedAt
-) {
-}
+    UUID runId, String integrityHash, UUID tenantId, LocalDateTime closedAt) {}

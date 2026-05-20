@@ -22,7 +22,14 @@ public class StatusLog {
 
   public StatusLog() {}
 
-  public StatusLog(UUID logId, UUID relationshipId, RelationshipStatus previousStatus, RelationshipStatus newStatus, String changeReason, LocalDate changedAt, UUID changedBy) {
+  public StatusLog(
+      UUID logId,
+      UUID relationshipId,
+      RelationshipStatus previousStatus,
+      RelationshipStatus newStatus,
+      String changeReason,
+      LocalDate changedAt,
+      UUID changedBy) {
     this.logId = logId;
     this.relationshipId = relationshipId;
     this.previousStatus = previousStatus;
@@ -32,31 +39,79 @@ public class StatusLog {
     this.changedBy = changedBy;
   }
 
-  public UUID getLogId() { return logId; }
-  public void setLogId(UUID logId) { this.logId = logId; }
+  public UUID getLogId() {
+    return logId;
+  }
 
-  public UUID getRelationshipId() { return relationshipId; }
-  public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+  public void setLogId(UUID logId) {
+    this.logId = logId;
+  }
 
-  public RelationshipStatus getPreviousStatus() { return previousStatus; }
-  public void setPreviousStatus(RelationshipStatus previousStatus) { this.previousStatus = previousStatus; }
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
 
-  public RelationshipStatus getNewStatus() { return newStatus; }
-  public void setNewStatus(RelationshipStatus newStatus) { this.newStatus = newStatus; }
+  public void setRelationshipId(UUID relationshipId) {
+    this.relationshipId = relationshipId;
+  }
 
-  public String getChangeReason() { return changeReason; }
-  public void setChangeReason(String changeReason) { this.changeReason = changeReason; }
+  public RelationshipStatus getPreviousStatus() {
+    return previousStatus;
+  }
 
-  public LocalDate getChangedAt() { return changedAt; }
-  public void setChangedAt(LocalDate changedAt) { this.changedAt = changedAt; }
+  public void setPreviousStatus(RelationshipStatus previousStatus) {
+    this.previousStatus = previousStatus;
+  }
 
-  public UUID getChangedBy() { return changedBy; }
-  public void setChangedBy(UUID changedBy) { this.changedBy = changedBy; }
+  public RelationshipStatus getNewStatus() {
+    return newStatus;
+  }
 
-  public static StatusLog create(UUID relationshipId, RelationshipStatus previousStatus, RelationshipStatus newStatus, String changeReason, UUID changedBy) {
+  public void setNewStatus(RelationshipStatus newStatus) {
+    this.newStatus = newStatus;
+  }
+
+  public String getChangeReason() {
+    return changeReason;
+  }
+
+  public void setChangeReason(String changeReason) {
+    this.changeReason = changeReason;
+  }
+
+  public LocalDate getChangedAt() {
+    return changedAt;
+  }
+
+  public void setChangedAt(LocalDate changedAt) {
+    this.changedAt = changedAt;
+  }
+
+  public UUID getChangedBy() {
+    return changedBy;
+  }
+
+  public void setChangedBy(UUID changedBy) {
+    this.changedBy = changedBy;
+  }
+
+  public static StatusLog create(
+      UUID relationshipId,
+      RelationshipStatus previousStatus,
+      RelationshipStatus newStatus,
+      String changeReason,
+      UUID changedBy) {
     if (relationshipId == null || newStatus == null) {
-      throw new IllegalArgumentException("relationshipId, previousStatus y newStatus son requeridos");
+      throw new IllegalArgumentException(
+          "relationshipId, previousStatus y newStatus son requeridos");
     }
-    return new StatusLog(UUID.randomUUID(), relationshipId, previousStatus, newStatus, changeReason, LocalDate.now(), changedBy);
+    return new StatusLog(
+        UUID.randomUUID(),
+        relationshipId,
+        previousStatus,
+        newStatus,
+        changeReason,
+        LocalDate.now(),
+        changedBy);
   }
 }

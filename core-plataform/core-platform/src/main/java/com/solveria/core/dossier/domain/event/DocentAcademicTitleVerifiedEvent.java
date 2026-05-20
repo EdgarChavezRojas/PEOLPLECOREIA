@@ -5,16 +5,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Emitido al validar un título académico docente contra Provisión Nacional.
- * Trigger: EducationPolicyValidation.
- * Habilita posibles ascensos de categoría docente en el motor de Escalafón.
+ * Emitido al validar un título académico docente contra Provisión Nacional. Trigger:
+ * EducationPolicyValidation. Habilita posibles ascensos de categoría docente en el motor de
+ * Escalafón.
  */
 public record DocentAcademicTitleVerifiedEvent(
-    UUID relationshipId,
-    String titleLevel,
-    boolean provNacional,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID relationshipId, String titleLevel, boolean provNacional, Instant occurredAt)
+    implements DomainEvent {
 
   public DocentAcademicTitleVerifiedEvent {
     if (relationshipId == null) {
@@ -30,6 +27,7 @@ public record DocentAcademicTitleVerifiedEvent(
 
   public static DocentAcademicTitleVerifiedEvent now(
       UUID relationshipId, String titleLevel, boolean provNacional) {
-    return new DocentAcademicTitleVerifiedEvent(relationshipId, titleLevel, provNacional, Instant.now());
+    return new DocentAcademicTitleVerifiedEvent(
+        relationshipId, titleLevel, provNacional, Instant.now());
   }
 }

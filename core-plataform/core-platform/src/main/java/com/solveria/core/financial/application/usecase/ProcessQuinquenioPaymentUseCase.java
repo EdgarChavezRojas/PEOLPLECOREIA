@@ -2,13 +2,12 @@ package com.solveria.core.financial.application.usecase;
 
 import com.solveria.core.financial.domain.event.QuinquenioRequestedEvent;
 import com.solveria.core.financial.domain.model.vo.IndemnizableTrimSnapshot;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,13 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Use Case: Procesar Pago de Quinquenio (standalone, sin desvinculación).
  *
- * <p>Flujo:
- * 1. Recibe personId y datos salariales de los últimos 3 meses.
- * 2. Valida elegibilidad: el empleado debe tener >= 60 meses continuos de antigüedad.
- * 3. Calcula base: Promedio Total Ganado de últimos 3 meses (P15, via IndemnizableTrimSnapshot).
- * 4. Cálculo total: Promedio × 5.
- * 5. Invariante: NO aplica deducciones de ley (exento de RC-IVA y Gestora).
- * 6. Dispara evento QuinquenioRequestedEvent con cronómetro de 30 días para pago.
+ * <p>Flujo: 1. Recibe personId y datos salariales de los últimos 3 meses. 2. Valida elegibilidad:
+ * el empleado debe tener >= 60 meses continuos de antigüedad. 3. Calcula base: Promedio Total
+ * Ganado de últimos 3 meses (P15, via IndemnizableTrimSnapshot). 4. Cálculo total: Promedio × 5. 5.
+ * Invariante: NO aplica deducciones de ley (exento de RC-IVA y Gestora). 6. Dispara evento
+ * QuinquenioRequestedEvent con cronómetro de 30 días para pago.
  */
 @Slf4j
 @Service
@@ -84,9 +81,7 @@ public class ProcessQuinquenioPaymentUseCase extends DomainRoot {
 
     // --- Paso 4: Cálculo total = Promedio × 5 ---
     BigDecimal quinquenioAmount =
-        averageSalary
-            .multiply(QUINQUENIO_MULTIPLIER)
-            .setScale(2, RoundingMode.HALF_UP);
+        averageSalary.multiply(QUINQUENIO_MULTIPLIER).setScale(2, RoundingMode.HALF_UP);
 
     log.info(
         "event=QUINQUENIO_CALCULATED personId={} amount={} multiplier={}",

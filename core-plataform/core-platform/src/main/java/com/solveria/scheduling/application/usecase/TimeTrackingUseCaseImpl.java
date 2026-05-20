@@ -17,23 +17,29 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TimeTrackingUseCaseImpl implements TimeTrackingUseCase {
 
-    private final AttendanceRecordRepositoryPort attendanceRecordRepositoryPort;
+  private final AttendanceRecordRepositoryPort attendanceRecordRepositoryPort;
 
-    @Override
-    @Transactional
-    public void registerPunch(UUID relationshipId, LocalDateTime punchTime, PunchType punchType, String deviceId, GeoValidation geoValidation) {
-        // Validación Geocerca
-        if (geoValidation != null && Boolean.FALSE.equals(geoValidation.isWithinFence())) {
-            throw new DomainRuleViolationException("La marcación está fuera de la geocerca permitida.");
-        }
+  @Override
+  @Transactional
+  public void registerPunch(
+      UUID relationshipId,
+      LocalDateTime punchTime,
+      PunchType punchType,
+      String deviceId,
+      GeoValidation geoValidation) {
+    // Validación Geocerca
+    if (geoValidation != null && Boolean.FALSE.equals(geoValidation.isWithinFence())) {
+      throw new DomainRuleViolationException("La marcación está fuera de la geocerca permitida.");
+    }
 
-        AttendanceRecord record = attendanceRecordRepositoryPort
+    AttendanceRecord record =
+        attendanceRecordRepositoryPort
             .findByRelationshipIdAndDate(relationshipId, punchTime.toLocalDate())
             .orElseGet(() -> new AttendanceRecord(relationshipId, punchTime.toLocalDate()));
 
-        TimeEntry entry = new TimeEntry(punchTime, punchType, deviceId, "SYSTEM", geoValidation);
-        record.addEntry(entry);
+    TimeEntry entry = new TimeEntry(punchTime, punchType, deviceId, "SYSTEM", geoValidation);
+    record.addEntry(entry);
 
-        attendanceRecordRepositoryPort.save(record);
-    }
+    attendanceRecordRepositoryPort.save(record);
+  }
 }

@@ -5,16 +5,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Emitido al cargar un documento al Digital Kardex.
- * Trigger: UploadToDigitalKardex.
- * Contiene el hash SHA-256 para garantizar inalterabilidad ante auditorías.
+ * Emitido al cargar un documento al Digital Kardex. Trigger: UploadToDigitalKardex. Contiene el
+ * hash SHA-256 para garantizar inalterabilidad ante auditorías.
  */
 public record DocumentRecordedEvent(
-    UUID documentId,
-    UUID personId,
-    String sha256Hash,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID documentId, UUID personId, String sha256Hash, Instant occurredAt) implements DomainEvent {
 
   public DocumentRecordedEvent {
     if (documentId == null) {

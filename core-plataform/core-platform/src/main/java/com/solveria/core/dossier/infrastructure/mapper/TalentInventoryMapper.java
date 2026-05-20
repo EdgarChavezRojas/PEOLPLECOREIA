@@ -32,26 +32,25 @@ public interface TalentInventoryMapper {
       return null;
     }
     List<PerformanceSnapshot> snapshots =
-            jpa.getPerformanceSnapshots() == null
-                    ? List.of()
-                    : jpa.getPerformanceSnapshots().stream().map(this::toDomain).toList();
+        jpa.getPerformanceSnapshots() == null
+            ? List.of()
+            : jpa.getPerformanceSnapshots().stream().map(this::toDomain).toList();
     List<SkillSet> skills =
-            jpa.getSkillSets() == null
-                    ? List.of()
-                    : jpa.getSkillSets().stream().map(this::toDomain).toList();
+        jpa.getSkillSets() == null
+            ? List.of()
+            : jpa.getSkillSets().stream().map(this::toDomain).toList();
     List<TrainingHistory> trainings =
-            jpa.getTrainingHistory() == null
-                    ? List.of()
-                    : jpa.getTrainingHistory().stream().map(this::toDomain).toList();
+        jpa.getTrainingHistory() == null
+            ? List.of()
+            : jpa.getTrainingHistory().stream().map(this::toDomain).toList();
 
     return new TalentInventory(
-            jpa.getInventoryId(),
-            jpa.getRelationshipId(),
-            jpa.getTenantId(),
-            snapshots,
-            skills,
-            trainings
-    );
+        jpa.getInventoryId(),
+        jpa.getRelationshipId(),
+        jpa.getTenantId(),
+        snapshots,
+        skills,
+        trainings);
   }
 
   default PerformanceSnapshot toDomain(PerformanceSnapshotJpa jpa) {

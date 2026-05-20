@@ -6,11 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record QuinquenioCalculationFinalizedEvent(
-    UUID provisionId,
-    UUID relationshipId,
-    BigDecimal averageLast90Days,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID provisionId, UUID relationshipId, BigDecimal averageLast90Days, Instant occurredAt)
+    implements DomainEvent {
 
   public QuinquenioCalculationFinalizedEvent {
     if (provisionId == null) {
@@ -33,4 +30,3 @@ public record QuinquenioCalculationFinalizedEvent(
         provisionId, relationshipId, averageLast90Days, Instant.now());
   }
 }
-

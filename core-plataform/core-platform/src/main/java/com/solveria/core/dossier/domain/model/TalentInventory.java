@@ -2,7 +2,6 @@ package com.solveria.core.dossier.domain.model;
 
 import com.solveria.core.dossier.domain.event.DocentAcademicTitleVerifiedEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -16,13 +15,15 @@ public class TalentInventory extends DomainRoot {
   private List<SkillSet> skillSets;
   private List<TrainingHistory> trainingHistory;
 
-  public TalentInventory() {
-  }
+  public TalentInventory() {}
 
-  public TalentInventory(UUID inventoryId, UUID relationshipId, UUID tenantId,
-                         List<PerformanceSnapshot> performanceSnapshots,
-                         List<SkillSet> skillSets,
-                         List<TrainingHistory> trainingHistory) {
+  public TalentInventory(
+      UUID inventoryId,
+      UUID relationshipId,
+      UUID tenantId,
+      List<PerformanceSnapshot> performanceSnapshots,
+      List<SkillSet> skillSets,
+      List<TrainingHistory> trainingHistory) {
     this.inventoryId = inventoryId;
     this.relationshipId = relationshipId;
     this.tenantId = tenantId;
@@ -39,13 +40,12 @@ public class TalentInventory extends DomainRoot {
       throw new IllegalArgumentException("tenantId es requerido");
     }
     return new TalentInventory(
-            UUID.randomUUID(),
-            relationshipId,
-            tenantId,
-            new ArrayList<>(),
-            new ArrayList<>(),
-            new ArrayList<>()
-    );
+        UUID.randomUUID(),
+        relationshipId,
+        tenantId,
+        new ArrayList<>(),
+        new ArrayList<>(),
+        new ArrayList<>());
   }
 
   public void addPerformanceSnapshot(PerformanceSnapshot snapshot) {

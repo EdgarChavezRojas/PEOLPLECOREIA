@@ -14,19 +14,18 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SchedulePlanRepositoryAdapter implements SchedulePlanRepositoryPort {
 
-    private final SchedulePlanJpaRepository schedulePlanJpaRepository;
-    private final SchedulePlanMapper schedulePlanMapper;
+  private final SchedulePlanJpaRepository schedulePlanJpaRepository;
+  private final SchedulePlanMapper schedulePlanMapper;
 
-    @Override
-    public SchedulePlan save(SchedulePlan plan) {
-        SchedulePlanJpa jpa = schedulePlanMapper.toJpa(plan);
-        SchedulePlanJpa saved = schedulePlanJpaRepository.save(jpa);
-        return schedulePlanMapper.toDomain(saved);
-    }
+  @Override
+  public SchedulePlan save(SchedulePlan plan) {
+    SchedulePlanJpa jpa = schedulePlanMapper.toJpa(plan);
+    SchedulePlanJpa saved = schedulePlanJpaRepository.save(jpa);
+    return schedulePlanMapper.toDomain(saved);
+  }
 
-    @Override
-    public Optional<SchedulePlan> findById(UUID planId) {
-        return schedulePlanJpaRepository.findByPlanId(planId)
-            .map(schedulePlanMapper::toDomain);
-    }
+  @Override
+  public Optional<SchedulePlan> findById(UUID planId) {
+    return schedulePlanJpaRepository.findByPlanId(planId).map(schedulePlanMapper::toDomain);
+  }
 }

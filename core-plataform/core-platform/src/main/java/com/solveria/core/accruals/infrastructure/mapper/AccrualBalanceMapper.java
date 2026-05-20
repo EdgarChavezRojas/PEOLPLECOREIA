@@ -1,13 +1,13 @@
 package com.solveria.core.accruals.infrastructure.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.model.LeaveTransaction;
 import com.solveria.core.accruals.domain.model.vo.SeniorityMilestone;
 import com.solveria.core.accruals.infrastructure.jpa.AccrualBalanceJpa;
 import com.solveria.core.accruals.infrastructure.jpa.LeaveTransactionJpa;
 import com.solveria.core.accruals.infrastructure.jpa.SeniorityMilestoneJpa;
+import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -18,6 +18,7 @@ import org.mapstruct.MappingTarget;
 public interface AccrualBalanceMapper {
 
   AccrualBalanceJpa toJpa(AccrualBalance balance);
+
   @Mapping(target = "balance", ignore = true)
   @Mapping(target = "balanceId", ignore = true)
   LeaveTransactionJpa toJpa(LeaveTransaction transaction);
@@ -29,28 +30,27 @@ public interface AccrualBalanceMapper {
       return null;
     }
     List<LeaveTransaction> transactions =
-            jpa.getLeaveTransactions() == null
-                    ? List.of()
-                    : jpa.getLeaveTransactions().stream().map(this::toDomain).toList();
+        jpa.getLeaveTransactions() == null
+            ? List.of()
+            : jpa.getLeaveTransactions().stream().map(this::toDomain).toList();
     List<SeniorityMilestone> milestones =
-            jpa.getSeniorityMilestones() == null
-                    ? List.of()
-                    : jpa.getSeniorityMilestones().stream().map(this::toDomain).toList();
+        jpa.getSeniorityMilestones() == null
+            ? List.of()
+            : jpa.getSeniorityMilestones().stream().map(this::toDomain).toList();
 
     return new AccrualBalance(
-            jpa.getBalanceId(),
-            jpa.getRelationshipId(),
-            jpa.getBalanceType(),
-            jpa.getUnit(),
-            jpa.getCurrentBalance(),
-            jpa.getInitialBalance(),
-            jpa.getDaysAccruedYtd(),
-            jpa.getDaysTakenYtd(),
-            jpa.getLastAccrualDate(),
-            jpa.getTenantId(),
-            transactions,
-            milestones
-    );
+        jpa.getBalanceId(),
+        jpa.getRelationshipId(),
+        jpa.getBalanceType(),
+        jpa.getUnit(),
+        jpa.getCurrentBalance(),
+        jpa.getInitialBalance(),
+        jpa.getDaysAccruedYtd(),
+        jpa.getDaysTakenYtd(),
+        jpa.getLastAccrualDate(),
+        jpa.getTenantId(),
+        transactions,
+        milestones);
   }
 
   default LeaveTransaction toDomain(LeaveTransactionJpa jpa) {
@@ -58,13 +58,12 @@ public interface AccrualBalanceMapper {
       return null;
     }
     return new LeaveTransaction(
-            jpa.getTransactionId(),
-            jpa.getBalanceId(),
-            jpa.getStartDate(),
-            jpa.getEndDate(),
-            jpa.getDaysRequested(),
-            jpa.getStatus()
-    );
+        jpa.getTransactionId(),
+        jpa.getBalanceId(),
+        jpa.getStartDate(),
+        jpa.getEndDate(),
+        jpa.getDaysRequested(),
+        jpa.getStatus());
   }
 
   default SeniorityMilestone toDomain(SeniorityMilestoneJpa jpa) {

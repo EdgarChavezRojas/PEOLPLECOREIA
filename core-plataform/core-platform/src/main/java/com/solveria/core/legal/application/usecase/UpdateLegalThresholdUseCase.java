@@ -6,20 +6,16 @@ import com.solveria.core.legal.application.port.PolicyRuleRepositoryPort;
 import com.solveria.core.legal.domain.event.LegalThresholdUpdatedEvent;
 import com.solveria.core.legal.domain.exception.LegalThresholdNotFoundException;
 import com.solveria.core.legal.domain.exception.PolicyRuleNotFoundException;
-import com.solveria.core.legal.domain.exception.TenantMismatchException;
 import com.solveria.core.legal.domain.exception.ThresholdNotIncreasedException;
 import com.solveria.core.legal.domain.model.PolicyRule;
 import com.solveria.core.legal.domain.model.vo.LegalThreshold;
-import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
-
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +33,6 @@ public class UpdateLegalThresholdUseCase {
 
   @Transactional
   public void execute(UpdateLegalThresholdRequest request) {
-
 
     PolicyRule policyRule =
         policyRuleRepositoryPort
@@ -68,7 +63,10 @@ public class UpdateLegalThresholdUseCase {
         request.newValue(),
         request.userId(),
         occurredAt);
-    eventOutboxPort.publish(List.of(new LegalThresholdUpdatedEvent(policyRule.getPolicyId(), request.ruleName(), request.newValue(), occurredAt)));
+    eventOutboxPort.publish(
+        List.of(
+            new LegalThresholdUpdatedEvent(
+                policyRule.getPolicyId(), request.ruleName(), request.newValue(), occurredAt)));
     log.info(
         "event=LEGAL_POLICY_THRESHOLD_UPDATE_SUCCESS ruleName={} tenantId={}",
         policyRule.getPolicyName(),

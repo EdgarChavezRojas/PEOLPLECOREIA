@@ -6,11 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record VacationBalanceThresholdLowEvent(
-    UUID balanceId,
-    BigDecimal requestedDays,
-    BigDecimal currentBalance,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID balanceId, BigDecimal requestedDays, BigDecimal currentBalance, Instant occurredAt)
+    implements DomainEvent {
 
   public VacationBalanceThresholdLowEvent {
     if (balanceId == null) {
@@ -33,4 +30,3 @@ public record VacationBalanceThresholdLowEvent(
         balanceId, requestedDays, currentBalance, Instant.now());
   }
 }
-

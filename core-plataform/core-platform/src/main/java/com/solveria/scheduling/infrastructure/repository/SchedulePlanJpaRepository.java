@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SchedulePlanJpaRepository extends JpaRepository<SchedulePlanJpa, Long> {
 
-    Optional<SchedulePlanJpa> findByPlanId(UUID planId);
+  Optional<SchedulePlanJpa> findByPlanId(UUID planId);
 }

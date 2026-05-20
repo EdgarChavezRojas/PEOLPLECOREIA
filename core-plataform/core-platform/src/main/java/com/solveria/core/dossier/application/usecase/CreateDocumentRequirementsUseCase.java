@@ -1,4 +1,5 @@
-// Ruta: core-plataform/core-platform/src/main/java/com/solveria/core/dossier/application/usecase/CreateDocumentRequirementsUseCase.java
+// Ruta:
+// core-plataform/core-platform/src/main/java/com/solveria/core/dossier/application/usecase/CreateDocumentRequirementsUseCase.java
 package com.solveria.core.dossier.application.usecase;
 
 import com.solveria.core.dossier.application.command.CreateDocumentRequirementsCommand;
@@ -9,4 +10,3 @@ public interface CreateDocumentRequirementsUseCase {
 
   List<DocumentRecord> handle(CreateDocumentRequirementsCommand command);
 }
-

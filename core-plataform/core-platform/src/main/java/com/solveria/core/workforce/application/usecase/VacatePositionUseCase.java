@@ -29,4 +29,3 @@ public class VacatePositionUseCase {
     log.info("event=CORE_WORKFORCE_POSITION_VACATE_SUCCESS targetId={}", positionId);
   }
 }
-

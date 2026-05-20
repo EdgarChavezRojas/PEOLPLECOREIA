@@ -7,14 +7,9 @@ import com.solveria.core.experience.domain.event.DataChangeRequestedEvent;
 import com.solveria.core.experience.domain.event.LeaveRequestedViaEssEvent;
 import com.solveria.core.experience.domain.model.vo.ActionType;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -44,8 +39,6 @@ public class SelfServiceAction extends DomainRoot {
 
   /** Payload de certificado generado (solo para CERTIFICATE_REQUEST). */
   private CertificatePayload certificatePayload;
-
-
 
   /** Constructor privado: factory methods obligatorias. */
   private SelfServiceAction() {}
@@ -129,15 +122,15 @@ public class SelfServiceAction extends DomainRoot {
   }
 
   /**
-   * Solicitud de ausencia/permiso vía ESS. Crea la acción como LEAVE_REQUEST
-   * con flujo de aprobación PENDING_REVIEW y emite LeaveRequestedViaEssEvent.
+   * Solicitud de ausencia/permiso vía ESS. Crea la acción como LEAVE_REQUEST con flujo de
+   * aprobación PENDING_REVIEW y emite LeaveRequestedViaEssEvent.
    *
-   * @param personId    ID del empleado solicitante
-   * @param leaveType   Tipo de ausencia (VACACION, PERMISO, etc.)
-   * @param startDate   Fecha inicio de la ausencia
-   * @param endDate     Fecha fin de la ausencia
-   * @param tenantId    Tenant del empleado
-   * @param createdBy   ID del usuario que crea la solicitud
+   * @param personId ID del empleado solicitante
+   * @param leaveType Tipo de ausencia (VACACION, PERMISO, etc.)
+   * @param startDate Fecha inicio de la ausencia
+   * @param endDate Fecha fin de la ausencia
+   * @param tenantId Tenant del empleado
+   * @param createdBy ID del usuario que crea la solicitud
    */
   public static SelfServiceAction requestLeave(
       UUID personId,
@@ -162,9 +155,13 @@ public class SelfServiceAction extends DomainRoot {
     action.personId = personId;
     action.actionType = ActionType.LEAVE_REQUEST;
     action.payload =
-        "{\"leaveType\":\"" + leaveType
-            + "\",\"startDate\":\"" + startDate
-            + "\",\"endDate\":\"" + endDate + "\"}";
+        "{\"leaveType\":\""
+            + leaveType
+            + "\",\"startDate\":\""
+            + startDate
+            + "\",\"endDate\":\""
+            + endDate
+            + "\"}";
     action.tenantId = tenantId;
     action.createdBy = createdBy;
     action.createdAt = Instant.now();
@@ -227,11 +224,11 @@ public class SelfServiceAction extends DomainRoot {
   }
 
   /**
-   * Cancela una solicitud ESS pendiente de revisión. Solo el autor original
-   * puede cancelar su propia solicitud.
+   * Cancela una solicitud ESS pendiente de revisión. Solo el autor original puede cancelar su
+   * propia solicitud.
    *
-   * <p>Invariante: Solo acciones en estado PENDING_REVIEW pueden cancelarse.
-   * Invariante: Solo el solicitante original (personId) puede cancelar.
+   * <p>Invariante: Solo acciones en estado PENDING_REVIEW pueden cancelarse. Invariante: Solo el
+   * solicitante original (personId) puede cancelar.
    *
    * @param requestingPersonId ID del empleado que solicita la cancelación
    */
@@ -245,8 +242,7 @@ public class SelfServiceAction extends DomainRoot {
     }
     this.approvalWorkflow.cancel(requestingPersonId.toString());
 
-    this.registerEvent(
-        new DataChangeCancelledEvent(this.actionId, this.personId, this.tenantId));
+    this.registerEvent(new DataChangeCancelledEvent(this.actionId, this.personId, this.tenantId));
   }
 
   // ─── Rehydration (from persistence) ────────────────────────────
@@ -279,8 +275,6 @@ public class SelfServiceAction extends DomainRoot {
   }
 
   // ─── Event Handling ────────────────────────────────────────────
-
-
 
   // ─── Getters (pure domain, no Lombok) ──────────────────────────
 

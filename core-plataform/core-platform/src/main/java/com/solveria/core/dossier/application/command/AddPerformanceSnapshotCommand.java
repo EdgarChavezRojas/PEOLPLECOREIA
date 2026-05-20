@@ -4,9 +4,4 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public record AddPerformanceSnapshotCommand(
-    UUID relationshipId,
-    String evalPeriod,
-    BigDecimal score,
-    String location,
-    UUID tenantId) {}
-
+    UUID relationshipId, String evalPeriod, BigDecimal score, String location, UUID tenantId) {}

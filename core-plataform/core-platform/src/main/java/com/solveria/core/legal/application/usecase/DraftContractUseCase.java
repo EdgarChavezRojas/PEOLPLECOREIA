@@ -26,11 +26,13 @@ public class DraftContractUseCase {
     String tenantStr = SecurityTenantContext.getCurrentTenantId();
     UUID tenantId = UUID.fromString(tenantStr);
 
-    //revisar porque puede generar fallo
+    // revisar porque puede generar fallo
     UUID contractId = request.contractId() != null ? request.contractId() : UUID.randomUUID();
     String createdBy = SecurityUserContext.getUserIdentifier();
-    EmploymentCondition empCond = request.employmentCond() != null ?
-            EmploymentCondition.valueOf(request.employmentCond().name()) : null;
+    EmploymentCondition empCond =
+        request.employmentCond() != null
+            ? EmploymentCondition.valueOf(request.employmentCond().name())
+            : null;
     Contract contract =
         Contract.draft(
             contractId,

@@ -10,4 +10,3 @@ public class PolicyRuleNotFoundException extends DomainException {
     super("LEGAL_POLICY_RULE_NOT_FOUND", Map.of("policyId", policyId), null);
   }
 }
-

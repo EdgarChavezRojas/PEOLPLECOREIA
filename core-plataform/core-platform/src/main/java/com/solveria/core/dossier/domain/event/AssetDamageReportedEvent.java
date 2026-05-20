@@ -17,4 +17,3 @@ public record AssetDamageReportedEvent(UUID assignmentId, UUID workerId, Instant
     return new AssetDamageReportedEvent(assignmentId, workerId, Instant.now());
   }
 }
-

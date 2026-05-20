@@ -6,5 +6,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface TimeTrackingUseCase {
-    void registerPunch(UUID relationshipId, LocalDateTime punchTime, PunchType punchType, String deviceId, GeoValidation geoValidation);
+  void registerPunch(
+      UUID relationshipId,
+      LocalDateTime punchTime,
+      PunchType punchType,
+      String deviceId,
+      GeoValidation geoValidation);
 }

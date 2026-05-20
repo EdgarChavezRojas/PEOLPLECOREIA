@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SchedulePlanRepositoryPort {
-    SchedulePlan save(SchedulePlan plan);
-    Optional<SchedulePlan> findById(UUID planId);
+  SchedulePlan save(SchedulePlan plan);
+
+  Optional<SchedulePlan> findById(UUID planId);
 }

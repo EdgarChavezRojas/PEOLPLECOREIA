@@ -7,13 +7,11 @@ import com.solveria.core.dossier.infrastructure.jpa.DocumentRecordJpa;
 import com.solveria.core.dossier.infrastructure.mapper.DocumentRecordMapper;
 import com.solveria.core.dossier.infrastructure.repository.DocumentRecordRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -47,6 +45,7 @@ public class DocumentRecordRepositoryAdapter implements DocumentRecordRepository
         .findByDocIdAndTenantId(docId, UUID.fromString(tenantId))
         .map(documentRecordMapper::toDomain);
   }
+
   /*  ARQUITECTURA MULTI-TENANT:
    * NO utilizar SecurityTenantContext.getCurrentTenantId() en este método.
    * Este puerto es consumido principalmente por procesos Batch en segundo plano (@Scheduled)

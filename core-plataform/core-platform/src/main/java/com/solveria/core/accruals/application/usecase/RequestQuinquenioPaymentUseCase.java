@@ -7,4 +7,3 @@ public interface RequestQuinquenioPaymentUseCase {
 
   QuinquenioProvision handle(RequestQuinquenioPaymentCommand command);
 }
-

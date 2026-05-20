@@ -7,11 +7,10 @@ import com.solveria.core.accruals.infrastructure.mapper.AccrualBalanceMapper;
 import com.solveria.core.accruals.infrastructure.repository.AccrualBalanceRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,9 +46,7 @@ public class AccrualBalanceRepositoryAdapter implements AccrualBalanceRepository
 
   @Override
   public List<AccrualBalance> findAll() {
-    return accrualBalanceRepository.findAll().stream()
-        .map(accrualBalanceMapper::toDomain)
-        .toList();
+    return accrualBalanceRepository.findAll().stream().map(accrualBalanceMapper::toDomain).toList();
   }
 
   @Override

@@ -23,10 +23,8 @@ public class RequestQuinquenioPaymentService implements RequestQuinquenioPayment
     QuinquenioProvision provision =
         benefitsRepository
             .findQuinquenioByRelationshipId(command.relationshipId())
-            .orElseThrow(
-                () -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
+            .orElseThrow(() -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
     provision.requestPayment(command.requestDate());
     return benefitsRepository.saveQuinquenio(provision);
   }
 }
-

@@ -40,7 +40,7 @@ public class UpdatePersonUseCase {
         maritalStatus,
         professionTitle,
         person.getGlobalId(),
-            tenantId);
+        tenantId);
 
     if (contacts != null && !contacts.isEmpty() && contacts.getFirst() != null) {
       person.updateContactPoint(contacts.getFirst(), tenantId);
@@ -51,4 +51,3 @@ public class UpdatePersonUseCase {
     log.info("event=CORE_WORKFORCE_PERSON_UPDATE_SUCCESS targetId={}", personId);
   }
 }
-

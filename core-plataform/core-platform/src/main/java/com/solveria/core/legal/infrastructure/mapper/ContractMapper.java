@@ -20,8 +20,6 @@ import com.solveria.core.legal.infrastructure.jpa.SalaryTermsEmbeddable;
 import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -31,6 +29,7 @@ import org.mapstruct.MappingTarget;
 public interface ContractMapper {
 
   ContractJpa toJpa(Contract contract);
+
   @Mapping(target = "contract", ignore = true)
   @Mapping(target = "complianceSnapshot", ignore = true)
   ContractAddendumJpa toAddendumJpa(ContractAddendum addendum);
@@ -116,7 +115,7 @@ public interface ContractMapper {
             "contractId", contract.getContractId(),
             "relationshipId", contract.getRelationshipId(),
             "tenantId", contract.getTenantId(),
-            "status", contract.getStatus() != null ? contract.getStatus().name() : null ,
+            "status", contract.getStatus() != null ? contract.getStatus().name() : null,
             "eventType", resolveEventType(event));
 
     try {

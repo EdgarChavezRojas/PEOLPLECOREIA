@@ -7,8 +7,8 @@ import java.time.LocalDate;
 /**
  * Secondary Port: Obtención de cotización UFV del Banco Central de Bolivia.
  *
- * <p>El adaptador debe implementar timeout estricto de 5 segundos.
- * Si el proveedor no responde, lanza {@link UfvProviderUnavailableException}.
+ * <p>El adaptador debe implementar timeout estricto de 5 segundos. Si el proveedor no responde,
+ * lanza {@link UfvProviderUnavailableException}.
  */
 public interface UfvQuotationPort {
 

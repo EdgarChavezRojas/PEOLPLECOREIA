@@ -8,9 +8,11 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PayrollPeriodMapper {
-    @Mapping(target = "cutoffDate", source = "cutoffDate.date")
-    PayrollPeriodJpa toJpa(PayrollPeriod domain);
+  @Mapping(target = "cutoffDate", source = "cutoffDate.date")
+  PayrollPeriodJpa toJpa(PayrollPeriod domain);
 
-    @Mapping(target = "cutoffDate", expression = "java(new com.solveria.payroll.domain.model.vo.CutoffDate(jpa.getCutoffDate()))")
-    PayrollPeriod toDomain(PayrollPeriodJpa jpa);
+  @Mapping(
+      target = "cutoffDate",
+      expression = "java(new com.solveria.payroll.domain.model.vo.CutoffDate(jpa.getCutoffDate()))")
+  PayrollPeriod toDomain(PayrollPeriodJpa jpa);
 }

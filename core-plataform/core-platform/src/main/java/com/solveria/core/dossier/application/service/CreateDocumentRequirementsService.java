@@ -1,4 +1,5 @@
-// Ruta: core-plataform/core-platform/src/main/java/com/solveria/core/dossier/application/service/CreateDocumentRequirementsService.java
+// Ruta:
+// core-plataform/core-platform/src/main/java/com/solveria/core/dossier/application/service/CreateDocumentRequirementsService.java
 package com.solveria.core.dossier.application.service;
 
 import com.solveria.core.dossier.application.command.CreateDocumentRequirementsCommand;
@@ -40,9 +41,16 @@ public class CreateDocumentRequirementsService implements CreateDocumentRequirem
 
     List<DocumentRecord> baseRequirements =
         List.of(
-            createPending(command.workerId(), DocumentCategory.HEALTH, DOC_TYPE_HEALTH_CARD, command.tenantId()),
             createPending(
-                command.workerId(), DocumentCategory.ACADEMIC, DOC_TYPE_ACADEMIC_TITLE, command.tenantId()));
+                command.workerId(),
+                DocumentCategory.HEALTH,
+                DOC_TYPE_HEALTH_CARD,
+                command.tenantId()),
+            createPending(
+                command.workerId(),
+                DocumentCategory.ACADEMIC,
+                DOC_TYPE_ACADEMIC_TITLE,
+                command.tenantId()));
 
     List<DocumentRecord> saved = new ArrayList<>();
     for (DocumentRecord record : baseRequirements) {
@@ -59,4 +67,3 @@ public class CreateDocumentRequirementsService implements CreateDocumentRequirem
     return DocumentRecord.record(workerId, category, docType, false, metadata, tenantId);
   }
 }
-

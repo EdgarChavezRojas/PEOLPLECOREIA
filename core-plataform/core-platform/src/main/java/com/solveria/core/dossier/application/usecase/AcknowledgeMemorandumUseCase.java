@@ -7,4 +7,3 @@ public interface AcknowledgeMemorandumUseCase {
 
   DocumentRecord handle(AcknowledgeMemorandumCommand command);
 }
-

@@ -6,4 +6,3 @@ import java.util.UUID;
 
 public record RelationshipReactivatedEvent(UUID relationshipId, Instant occurredAt)
     implements DomainEvent {}
-

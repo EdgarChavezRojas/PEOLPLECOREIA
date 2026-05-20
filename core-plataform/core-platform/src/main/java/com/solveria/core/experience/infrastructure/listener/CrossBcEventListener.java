@@ -16,22 +16,25 @@ import org.springframework.stereotype.Component;
 /**
  * Listener de eventos cross-BC para el Bounded Context Experience (BC 6).
  *
- * <p>Responsabilidad única: recibir eventos de dominio de otros BCs (Accruals, Dossier)
- * y delegar la ejecución al {@link CrossBcEventConsumerUseCase}. PROHIBIDO colocar lógica
- * de negocio, cálculos, hardcode o fabricación de datos en esta clase.
+ * <p>Responsabilidad única: recibir eventos de dominio de otros BCs (Accruals, Dossier) y delegar
+ * la ejecución al {@link CrossBcEventConsumerUseCase}. PROHIBIDO colocar lógica de negocio,
+ * cálculos, hardcode o fabricación de datos en esta clase.
  *
  * <p>Los datos que el evento no transporta se resuelven a través de:
+ *
  * <ul>
- *   <li>{@link RelationshipPersonResolverPort}: resolución de personId a partir de relationshipId (ACL).</li>
- *   <li>{@link SecurityTenantContext}: resolución del tenantId del contexto de seguridad.</li>
- *   <li>Propiedad {@code experience.prediction.default-model-id}: PredictionModel por defecto.</li>
+ *   <li>{@link RelationshipPersonResolverPort}: resolución de personId a partir de relationshipId
+ *       (ACL).
+ *   <li>{@link SecurityTenantContext}: resolución del tenantId del contexto de seguridad.
+ *   <li>Propiedad {@code experience.prediction.default-model-id}: PredictionModel por defecto.
  * </ul>
  *
  * <p>Eventos consumidos:
+ *
  * <ol>
- *   <li>{@link QuinquenioPaymentOverdueEvent} → {@code handleQuinquenioPaymentOverdue}</li>
- *   <li>{@link DocumentValidationRejectedEvent} → {@code handleDocumentValidationRejected}</li>
- *   <li>{@link EligibilitySuspendedByComplianceEvent} → {@code handleEligibilitySuspended}</li>
+ *   <li>{@link QuinquenioPaymentOverdueEvent} → {@code handleQuinquenioPaymentOverdue}
+ *   <li>{@link DocumentValidationRejectedEvent} → {@code handleDocumentValidationRejected}
+ *   <li>{@link EligibilitySuspendedByComplianceEvent} → {@code handleEligibilitySuspended}
  * </ol>
  */
 @Slf4j
@@ -47,12 +50,12 @@ public class CrossBcEventListener {
 
   // ── Configuración ───────────────────────────────────────────────────────
   /**
-   * ID del PredictionModel por defecto. Se inyecta desde la propiedad
-   * {@code experience.prediction.default-model-id} de application.yml.
-   * Usado cuando el evento no transporta un modelId explícito.
+   * ID del PredictionModel por defecto. Se inyecta desde la propiedad {@code
+   * experience.prediction.default-model-id} . Usado cuando el evento no transporta un modelId
+   * explícito.
    */
-  @Value("${experience.prediction.default-model-id}")
-  private UUID defaultPredictionModelId;
+  //revisar urgente porque usa defaultPredictionModelId
+  private final UUID defaultPredictionModelId = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. QuinquenioPaymentOverdueEvent → handleQuinquenioPaymentOverdue
@@ -62,11 +65,12 @@ public class CrossBcEventListener {
    * Reacciona al vencimiento de pago de quinquenio (Accruals BC).
    *
    * <p>Mapping:
+   *
    * <ul>
-   *   <li>{@code modelId} → {@link #defaultPredictionModelId} (estático, vía property)</li>
-   *   <li>{@code personId} → {@code event.personId()}</li>
-   *   <li>{@code amount} → {@code event.penaltyAmount()}</li>
-   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback</li>
+   *   <li>{@code modelId} → {@link #defaultPredictionModelId} (estático, vía property)
+   *   <li>{@code personId} → {@code event.personId()}
+   *   <li>{@code amount} → {@code event.penaltyAmount()}
+   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback
    * </ul>
    */
   @EventListener
@@ -80,10 +84,7 @@ public class CrossBcEventListener {
       String tenantId = resolveTenantId();
 
       crossBcEventConsumerUseCase.handleQuinquenioPaymentOverdue(
-          defaultPredictionModelId,
-          event.personId(),
-          event.penaltyAmount(),
-          tenantId);
+          defaultPredictionModelId, event.personId(), event.penaltyAmount(), tenantId);
 
       log.info(
           "event=EXP_QUINQUENIO_OVERDUE_PROCESSED personId={} modelId={}",
@@ -106,11 +107,12 @@ public class CrossBcEventListener {
    * Reacciona al rechazo de validación de documento (Dossier BC).
    *
    * <p>Mapping:
+   *
    * <ul>
-   *   <li>{@code personId} → resuelto desde {@code event.relationshipId()} vía ACL port</li>
-   *   <li>{@code documentType} → {@code "Documento ID: " + event.docId()}</li>
-   *   <li>{@code reason} → {@code event.reason()}</li>
-   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback</li>
+   *   <li>{@code personId} → resuelto desde {@code event.relationshipId()} vía ACL port
+   *   <li>{@code documentType} → {@code "Documento ID: " + event.docId()}
+   *   <li>{@code reason} → {@code event.reason()}
+   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback
    * </ul>
    */
   @EventListener
@@ -126,10 +128,7 @@ public class CrossBcEventListener {
       String tenantId = resolveTenantId();
 
       crossBcEventConsumerUseCase.handleDocumentValidationRejected(
-          personId,
-          documentType,
-          event.reason(),
-              UUID.fromString(tenantId));
+          personId, documentType, event.reason(), UUID.fromString(tenantId));
 
       log.info(
           "event=EXP_DOC_VALIDATION_REJECTED_PROCESSED docId={} personId={}",
@@ -152,18 +151,17 @@ public class CrossBcEventListener {
    * Reacciona a la suspensión de elegibilidad por compliance (Dossier BC).
    *
    * <p>Mapping:
+   *
    * <ul>
-   *   <li>{@code modelId} → {@link #defaultPredictionModelId} (estático/default)</li>
-   *   <li>{@code personId} → resuelto desde {@code event.relationshipId()} vía ACL port</li>
-   *   <li>{@code reason} → {@code "Documento crítico expirado"} (constante de negocio)</li>
-   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback</li>
+   *   <li>{@code modelId} → {@link #defaultPredictionModelId} (estático/default)
+   *   <li>{@code personId} → resuelto desde {@code event.relationshipId()} vía ACL port
+   *   <li>{@code reason} → {@code "Documento crítico expirado"} (constante de negocio)
+   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback
    * </ul>
    */
   @EventListener
   public void handle(EligibilitySuspendedByComplianceEvent event) {
-    log.info(
-        "event=EXP_ELIGIBILITY_SUSPENDED_RECEIVED relationshipId={}",
-        event.relationshipId());
+    log.info("event=EXP_ELIGIBILITY_SUSPENDED_RECEIVED relationshipId={}", event.relationshipId());
     try {
       UUID personId =
           relationshipPersonResolverPort.resolvePersonIdByRelationship(event.relationshipId());
@@ -173,7 +171,7 @@ public class CrossBcEventListener {
           defaultPredictionModelId,
           personId,
           REASON_CRITICAL_DOCUMENT_EXPIRED,
-              UUID.fromString(tenantId));
+          UUID.fromString(tenantId));
 
       log.info(
           "event=EXP_ELIGIBILITY_SUSPENDED_PROCESSED relationshipId={} personId={} modelId={}",
@@ -196,10 +194,9 @@ public class CrossBcEventListener {
   // ── Métodos auxiliares ──────────────────────────────────────────────────
 
   /**
-   * Resuelve el tenantId del contexto de seguridad actual.
-   * Fallback a {@code "UNKNOWN"} si no hay contexto de tenant establecido
-   * (p.ej. en procesamiento asíncrono de eventos donde el SecurityContext
-   * puede no estar propagado).
+   * Resuelve el tenantId del contexto de seguridad actual. Fallback a {@code "UNKNOWN"} si no hay
+   * contexto de tenant establecido (p.ej. en procesamiento asíncrono de eventos donde el
+   * SecurityContext puede no estar propagado).
    */
   private String resolveTenantId() {
     String tenantId = SecurityTenantContext.getCurrentTenantId();

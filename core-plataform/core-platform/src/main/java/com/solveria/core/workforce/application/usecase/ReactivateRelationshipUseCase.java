@@ -30,12 +30,10 @@ public class ReactivateRelationshipUseCase {
     RelationshipStatus previousStatus = relationship.getCurrentStatus();
     relationship.reactivate();
     relationship.addStatusLog(
-        StatusLog.create(
-            relationshipId, previousStatus, RelationshipStatus.ACTIVE, null, null));
+        StatusLog.create(relationshipId, previousStatus, RelationshipStatus.ACTIVE, null, null));
 
     relationshipRepositoryPort.save(relationship);
 
     log.info("event=CORE_WORKFORCE_RELATIONSHIP_REACTIVATE_SUCCESS targetId={}", relationshipId);
   }
 }
-

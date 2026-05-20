@@ -1,8 +1,8 @@
 package com.solveria.core.workforce.application.usecase;
 
-import com.solveria.core.workforce.application.port.PersonRepositoryPort;
 import com.solveria.core.workforce.application.dto.CreatePersonRequest;
 import com.solveria.core.workforce.application.dto.PersonResponse;
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
 import com.solveria.core.workforce.domain.exception.PersonAlreadyExistsException;
 import com.solveria.core.workforce.domain.model.Person;
 import com.solveria.core.workforce.domain.model.vo.ContactPoint;
@@ -32,8 +32,10 @@ public class CreatePersonUseCase {
         ContactPoint.create(request.getEmail(), request.getPhone(), request.getAddress());
 
     Gender gender = Gender.valueOf(request.getGender().toUpperCase());
-    MaritalStatus maritalStatus = request.getMaritalStatus() != null ?
-            MaritalStatus.valueOf(request.getMaritalStatus().toUpperCase()) : null;
+    MaritalStatus maritalStatus =
+        request.getMaritalStatus() != null
+            ? MaritalStatus.valueOf(request.getMaritalStatus().toUpperCase())
+            : null;
     Person person =
         Person.create(
             request.getFirstName(),

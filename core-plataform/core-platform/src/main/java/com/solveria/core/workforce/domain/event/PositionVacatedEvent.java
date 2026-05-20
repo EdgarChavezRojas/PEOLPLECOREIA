@@ -6,4 +6,3 @@ import java.util.UUID;
 
 public record PositionVacatedEvent(UUID positionId, UUID unitId, Instant occurredAt)
     implements DomainEvent {}
-

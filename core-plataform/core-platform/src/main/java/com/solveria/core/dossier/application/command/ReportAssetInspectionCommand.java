@@ -9,4 +9,3 @@ public record ReportAssetInspectionCommand(
     boolean minorDamageReported,
     String location,
     UUID tenantId) {}
-

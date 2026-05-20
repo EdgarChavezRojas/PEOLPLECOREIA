@@ -17,6 +17,7 @@ public class ResolveDeduplicationUseCase {
   private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
 
   private final PersonRepositoryPort personRepositoryPort;
+
   @Transactional
   public void execute(UUID principalId, UUID duplicateId) {
     Person principal =
@@ -37,4 +38,3 @@ public class ResolveDeduplicationUseCase {
     log.info("event=CORE_WORKFORCE_PERSON_DEDUPLICATION_RESOLVE_SUCCESS targetId={}", principalId);
   }
 }
-

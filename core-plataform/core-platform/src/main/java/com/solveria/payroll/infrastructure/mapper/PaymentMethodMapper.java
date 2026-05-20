@@ -8,10 +8,10 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PaymentMethodMapper {
-    
-    @Mapping(target = "isDefault", source = "default")
-    PaymentMethodJpa toJpa(PaymentMethod domain);
-    
-    @Mapping(target = "isDefault", source = "isDefault")
-    PaymentMethod toDomain(PaymentMethodJpa jpa);
+
+  @Mapping(target = "isDefault", source = "default")
+  PaymentMethodJpa toJpa(PaymentMethod domain);
+
+  @Mapping(target = "isDefault", source = "isDefault")
+  PaymentMethod toDomain(PaymentMethodJpa jpa);
 }

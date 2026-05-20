@@ -35,7 +35,21 @@ public class Person extends DomainRoot {
 
   public Person() {}
 
-  public Person(UUID personId, String firstName, String lastName, LocalDate birthDate, Gender gender, MaritalStatus maritalStatus, String professionTitle, String globalId, ContactPoint contactPoint, List<PartyIdentifier> identifiers, boolean active, String mergedIntoGlobalId, LocalDate createdAt, LocalDate updatedAt) {
+  public Person(
+      UUID personId,
+      String firstName,
+      String lastName,
+      LocalDate birthDate,
+      Gender gender,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      String globalId,
+      ContactPoint contactPoint,
+      List<PartyIdentifier> identifiers,
+      boolean active,
+      String mergedIntoGlobalId,
+      LocalDate createdAt,
+      LocalDate updatedAt) {
     this.personId = personId;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -53,51 +67,160 @@ public class Person extends DomainRoot {
   }
 
   // Getters y Setters
-  public UUID getPersonId() { return personId; }
-  public void setPersonId(UUID personId) { this.personId = personId; }
-  // ... (Todos los demás getters y setters omitidos por brevedad, pero en un entorno real los añadirías de la misma forma) ...
-  public String getFirstName() { return firstName; }
-  public void setFirstName(String firstName) { this.firstName = firstName; }
-  public String getLastName() { return lastName; }
-  public void setLastName(String lastName) { this.lastName = lastName; }
-  public LocalDate getBirthDate() { return birthDate; }
-  public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
-  public Gender getGender() { return gender; }
-  public void setGender(Gender gender) { this.gender = gender; }
-  public MaritalStatus getMaritalStatus() { return maritalStatus; }
-  public void setMaritalStatus(MaritalStatus maritalStatus) { this.maritalStatus = maritalStatus; }
-  public String getProfessionTitle() { return professionTitle; }
-  public void setProfessionTitle(String professionTitle) { this.professionTitle = professionTitle; }
-  public String getGlobalId() { return globalId; }
-  public void setGlobalId(String globalId) { this.globalId = globalId; }
-  public ContactPoint getContactPoint() { return contactPoint; }
-  public void setContactPoint(ContactPoint contactPoint) { this.contactPoint = contactPoint; }
-  public List<PartyIdentifier> getIdentifiers() { return identifiers; }
-  public void setIdentifiers(List<PartyIdentifier> identifiers) { this.identifiers = identifiers != null ? identifiers : new ArrayList<>(); }
-  public boolean isActive() { return active; }
-  public void setActive(boolean active) { this.active = active; }
-  public String getMergedIntoGlobalId() { return mergedIntoGlobalId; }
-  public void setMergedIntoGlobalId(String mergedIntoGlobalId) { this.mergedIntoGlobalId = mergedIntoGlobalId; }
-  public LocalDate getCreatedAt() { return createdAt; }
-  public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
-  public LocalDate getUpdatedAt() { return updatedAt; }
-  public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
+  public UUID getPersonId() {
+    return personId;
+  }
 
-  public static Person create(String firstName, String lastName, LocalDate birthDate, Gender gender, MaritalStatus maritalStatus, String professionTitle, String globalId, ContactPoint contactPoint) {
+  public void setPersonId(UUID personId) {
+    this.personId = personId;
+  }
+
+  // ... (Todos los demás getters y setters omitidos por brevedad, pero en un entorno real los
+  // añadirías de la misma forma) ...
+  public String getFirstName() {
+    return firstName;
+  }
+
+  public void setFirstName(String firstName) {
+    this.firstName = firstName;
+  }
+
+  public String getLastName() {
+    return lastName;
+  }
+
+  public void setLastName(String lastName) {
+    this.lastName = lastName;
+  }
+
+  public LocalDate getBirthDate() {
+    return birthDate;
+  }
+
+  public void setBirthDate(LocalDate birthDate) {
+    this.birthDate = birthDate;
+  }
+
+  public Gender getGender() {
+    return gender;
+  }
+
+  public void setGender(Gender gender) {
+    this.gender = gender;
+  }
+
+  public MaritalStatus getMaritalStatus() {
+    return maritalStatus;
+  }
+
+  public void setMaritalStatus(MaritalStatus maritalStatus) {
+    this.maritalStatus = maritalStatus;
+  }
+
+  public String getProfessionTitle() {
+    return professionTitle;
+  }
+
+  public void setProfessionTitle(String professionTitle) {
+    this.professionTitle = professionTitle;
+  }
+
+  public String getGlobalId() {
+    return globalId;
+  }
+
+  public void setGlobalId(String globalId) {
+    this.globalId = globalId;
+  }
+
+  public ContactPoint getContactPoint() {
+    return contactPoint;
+  }
+
+  public void setContactPoint(ContactPoint contactPoint) {
+    this.contactPoint = contactPoint;
+  }
+
+  public List<PartyIdentifier> getIdentifiers() {
+    return identifiers;
+  }
+
+  public void setIdentifiers(List<PartyIdentifier> identifiers) {
+    this.identifiers = identifiers != null ? identifiers : new ArrayList<>();
+  }
+
+  public boolean isActive() {
+    return active;
+  }
+
+  public void setActive(boolean active) {
+    this.active = active;
+  }
+
+  public String getMergedIntoGlobalId() {
+    return mergedIntoGlobalId;
+  }
+
+  public void setMergedIntoGlobalId(String mergedIntoGlobalId) {
+    this.mergedIntoGlobalId = mergedIntoGlobalId;
+  }
+
+  public LocalDate getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDate createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public LocalDate getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(LocalDate updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+
+  public static Person create(
+      String firstName,
+      String lastName,
+      LocalDate birthDate,
+      Gender gender,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      String globalId,
+      ContactPoint contactPoint) {
     Period age = Period.between(birthDate, LocalDate.now());
     if (age.getYears() < MINIMUM_AGE) {
       throw new IllegalArgumentException("La persona debe tener minimo " + MINIMUM_AGE + " anos");
     }
-    if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank() || globalId == null || globalId.isBlank()) {
+    if (firstName == null
+        || firstName.isBlank()
+        || lastName == null
+        || lastName.isBlank()
+        || globalId == null
+        || globalId.isBlank()) {
       throw new IllegalArgumentException("firstName, lastName y globalId son requeridos");
     }
 
-    Person person = new Person(
-            UUID.randomUUID(), firstName, lastName, birthDate, gender, maritalStatus,
-            professionTitle, globalId, contactPoint != null ? contactPoint : new ContactPoint(),
-            new ArrayList<>(), true, null, LocalDate.now(), LocalDate.now()
-    );
-    person.registerEvent(new PersonCreatedEvent(person.getPersonId(), person.getGlobalId(), Instant.now()));
+    Person person =
+        new Person(
+            UUID.randomUUID(),
+            firstName,
+            lastName,
+            birthDate,
+            gender,
+            maritalStatus,
+            professionTitle,
+            globalId,
+            contactPoint != null ? contactPoint : new ContactPoint(),
+            new ArrayList<>(),
+            true,
+            null,
+            LocalDate.now(),
+            LocalDate.now());
+    person.registerEvent(
+        new PersonCreatedEvent(person.getPersonId(), person.getGlobalId(), Instant.now()));
     return person;
   }
 
@@ -105,24 +228,40 @@ public class Person extends DomainRoot {
     if (identifier == null) {
       throw new IllegalArgumentException("identifier no puede ser nulo");
     }
-    boolean exists = identifiers.stream().anyMatch(id -> id.getIdNumber().equals(identifier.getIdNumber()));
+    boolean exists =
+        identifiers.stream().anyMatch(id -> id.getIdNumber().equals(identifier.getIdNumber()));
     if (exists) {
-      throw new IllegalArgumentException("El identificador " + identifier.getIdNumber() + " ya esta vinculado a esta persona");
+      throw new IllegalArgumentException(
+          "El identificador " + identifier.getIdNumber() + " ya esta vinculado a esta persona");
     }
     identifiers.add(identifier);
     this.updatedAt = LocalDate.now();
     registerEvent(new PersonUpdatedEvent(personId, tenantId));
   }
 
-  // Métodos de negocio restantes (updateContactPoint, updateMasterData, etc.) se mantienen iguales...
+  // Métodos de negocio restantes (updateContactPoint, updateMasterData, etc.) se mantienen
+  // iguales...
   public void updateContactPoint(ContactPoint newContactPoint, UUID tenantId) {
     this.contactPoint = newContactPoint;
     this.updatedAt = LocalDate.now();
     registerEvent(new PersonUpdatedEvent(personId, tenantId));
   }
 
-  public void updateMasterData(String firstName, String lastName, LocalDate birthDate, Gender gender, MaritalStatus maritalStatus, String professionTitle, String globalId, UUID tenantId) {
-    if (firstName == null || firstName.isBlank() || lastName == null || lastName.isBlank() || globalId == null || globalId.isBlank()) {
+  public void updateMasterData(
+      String firstName,
+      String lastName,
+      LocalDate birthDate,
+      Gender gender,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      String globalId,
+      UUID tenantId) {
+    if (firstName == null
+        || firstName.isBlank()
+        || lastName == null
+        || lastName.isBlank()
+        || globalId == null
+        || globalId.isBlank()) {
       throw new IllegalArgumentException("firstName, lastName y globalId son requeridos");
     }
     this.firstName = firstName;

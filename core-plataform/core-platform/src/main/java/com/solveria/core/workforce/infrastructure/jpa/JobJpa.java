@@ -41,6 +41,8 @@ public class JobJpa {
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
 
+  @Column(name = "tenant_id", nullable = false)
+  private UUID tenantId;
   @Override
   public final boolean equals(Object o) {
     if (this == o) return true;

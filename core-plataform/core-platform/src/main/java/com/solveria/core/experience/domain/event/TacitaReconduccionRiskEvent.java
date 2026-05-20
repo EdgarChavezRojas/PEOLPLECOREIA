@@ -9,8 +9,7 @@ import java.util.UUID;
 /**
  * Evento (Async): Alerta de riesgo de tácita reconducción generada por IA (T-90 días). El modelo
  * predictivo detecta contratos a plazo fijo próximos a vencer sin decisión de renovación o
- * terminación.
- * Trigger: AiPredictionModelAlert.
+ * terminación. Trigger: AiPredictionModelAlert.
  */
 public record TacitaReconduccionRiskEvent(
     UUID modelId,

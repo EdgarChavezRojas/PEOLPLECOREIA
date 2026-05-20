@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FundingSourceRepository extends JpaRepository<FundingSourceJpa, Long> {
 
-  Optional<FundingSourceJpa> findBySourceIdAndTenantId(UUID sourceId, String tenantId);
+  Optional<FundingSourceJpa> findBySourceIdAndTenantId(UUID sourceId, UUID tenantId);
 
-  Optional<FundingSourceJpa> findByProjectCodeAndTenantId(String projectCode, String tenantId);
+  Optional<FundingSourceJpa> findByProjectCodeAndTenantId(String projectCode, UUID tenantId);
 }

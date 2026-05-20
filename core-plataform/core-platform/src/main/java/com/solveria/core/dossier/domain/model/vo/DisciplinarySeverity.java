@@ -6,4 +6,3 @@ public enum DisciplinarySeverity {
   MAJOR,
   CRITICAL
 }
-

@@ -11,10 +11,13 @@ public class AuditLog {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Column(name = "action", nullable = false)
   private String action;
 
+  @Column(name = "entity", nullable = false)
   private String entity;
 
+  @Column(name = "entity_id", nullable = false)
   private String entityId;
 
   /** Actor semántico (NO Long) */

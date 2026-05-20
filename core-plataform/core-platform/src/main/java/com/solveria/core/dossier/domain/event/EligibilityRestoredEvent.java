@@ -17,4 +17,3 @@ public record EligibilityRestoredEvent(UUID relationshipId, Instant occurredAt)
     return new EligibilityRestoredEvent(relationshipId, Instant.now());
   }
 }
-

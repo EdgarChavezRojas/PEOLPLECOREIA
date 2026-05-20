@@ -23,8 +23,8 @@ public record IndemnizableTrimSnapshot(
   private static final int TRIM_MONTHS = 3;
 
   /**
-   * Factory: construye el snapshot a partir de las listas de base y otros conceptos de los últimos 3
-   * meses.
+   * Factory: construye el snapshot a partir de las listas de base y otros conceptos de los últimos
+   * 3 meses.
    *
    * @param monthlyBase Lista de sueldo base por mes (últimos 3 meses, ordenados cronológicamente)
    * @param monthlyOthers Lista de otros conceptos por mes (últimos 3 meses, ordenados

@@ -11,11 +11,12 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AttendanceRecordJpaRepository extends JpaRepository<AttendanceRecordJpa, Long> {
-    
-    Optional<AttendanceRecordJpa> findByRelationshipIdAndWorkDate(UUID relationshipId, LocalDate workDate);
 
-    @Query("SELECT a FROM AttendanceRecordJpa a WHERE a.isClosed = false")
-    List<AttendanceRecordJpa> findOpenRecords();
+  Optional<AttendanceRecordJpa> findByRelationshipIdAndWorkDate(
+      UUID relationshipId, LocalDate workDate);
 
-    Optional<AttendanceRecordJpa> findByRecordId(UUID recordId);
+  @Query("SELECT a FROM AttendanceRecordJpa a WHERE a.isClosed = false")
+  List<AttendanceRecordJpa> findOpenRecords();
+
+  Optional<AttendanceRecordJpa> findByRecordId(UUID recordId);
 }

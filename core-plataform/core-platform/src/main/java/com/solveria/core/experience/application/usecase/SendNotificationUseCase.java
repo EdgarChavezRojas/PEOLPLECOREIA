@@ -27,8 +27,7 @@ public class SendNotificationUseCase implements NotificationPI {
         channel,
         subject);
 
-    SendNotificationCommand cmd =
-        new SendNotificationCommand(recipientId, channel, subject, body);
+    SendNotificationCommand cmd = new SendNotificationCommand(recipientId, channel, subject, body);
 
     NotificationChannel ch = NotificationChannel.valueOf(cmd.channel());
     Notification notification =

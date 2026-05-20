@@ -1,13 +1,10 @@
 package com.solveria.core.legal.domain.model;
 
-import com.solveria.core.legal.domain.exception.TenantIsolationViolationException;
 import com.solveria.core.legal.domain.model.vo.LegalThreshold;
-import com.solveria.core.security.context.SecurityTenantContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
 
 public class PolicyRule {
 
@@ -20,18 +17,23 @@ public class PolicyRule {
   public UUID getPolicyId() {
     return policyId;
   }
+
   public String getPolicyName() {
     return policyName;
   }
+
   private String getDescription() {
     return description;
   }
+
   public UUID getTenantId() {
     return tenantId;
   }
+
   public List<LegalThreshold> getThresholds() {
     return new ArrayList<>(thresholds);
   }
+
   public PolicyRule(
       UUID policyId,
       String policyName,
@@ -43,13 +45,10 @@ public class PolicyRule {
     this.description = Objects.requireNonNull(description, "description");
     this.tenantId = Objects.requireNonNull(tenantId, "tenantId");
     this.thresholds = new ArrayList<>(Objects.requireNonNullElseGet(thresholds, List::of));
-
   }
 
   public void addThreshold(LegalThreshold threshold) {
 
     thresholds.add(Objects.requireNonNull(threshold, "threshold"));
   }
-
-
 }

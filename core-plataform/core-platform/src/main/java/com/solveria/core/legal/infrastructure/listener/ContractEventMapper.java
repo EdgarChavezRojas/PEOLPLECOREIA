@@ -7,52 +7,60 @@ import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.ContractAddendum;
 import com.solveria.core.legal.domain.model.vo.ComplianceSnapshot;
 import com.solveria.core.legal.domain.model.vo.SalaryTerms;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.UUID;
 
+import com.solveria.core.legal.infrastructure.jpa.ContractAddendumJpa;
+import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
+import com.solveria.core.legal.infrastructure.mapper.ContractMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
 @Component
+@RequiredArgsConstructor
 public class ContractEventMapper {
-    /**
-     * Construye el request para una nueva adenda basándose en la última adenda vigente del contrato.
-     */
-    public ProposeContractAddendumRequest toProposeAddendumRequest(Contract contract) {
+  /**
+   * Construye el request para una nueva adenda basándose en la última adenda vigente del contrato.
+   */
+  private final ContractMapper contractMapper;
+  public ProposeContractAddendumRequest toProposeAddendumRequest(ContractJpa contract) {
 
-        // Buscamos la última adenda vigente para heredar el salario y políticas actuales
-        ContractAddendum currentAddendum = contract.getAddendums().stream()
-                .max(Comparator.comparing(ContractAddendum::getEffectiveFrom))
-                .orElseThrow(() -> new IllegalStateException("El contrato no tiene adendas base para extraer el salario."));
+    ContractAddendumJpa currentAddendum =
+            contract.getAddendums().stream()
+                    .max(Comparator.comparing(ContractAddendumJpa::getEffectiveFrom))
+                    .orElseThrow(
+                            () ->
+                                    new IllegalStateException(
+                                            "El contrato no tiene adendas base para extraer el salario."));
 
-        return new ProposeContractAddendumRequest(
-                contract.getContractId(),
-                UUID.randomUUID(),
+    SalaryTerms terms = contractMapper.toDomain(currentAddendum.getSalaryTerms());
+    ComplianceSnapshot snapshot = contractMapper.toDomain(currentAddendum.getComplianceSnapshot());
 
-                LocalDate.now(),
-                currentAddendum.getEffectiveTo(), // Mantiene la fecha de fin de la adenda anterior
-                toSalaryTermsDto(currentAddendum.getSalaryTerms()),
-                toComplianceSnapshotDto(currentAddendum.getSnapshot()),
-                contract.getTenantId()
-        );
-    }
+    return new ProposeContractAddendumRequest(
+            contract.getContractId(),
+            UUID.randomUUID(),
+            LocalDate.now(),
+            currentAddendum.getEffectiveTo(),
+            toSalaryTermsDto(terms),
+            toComplianceSnapshotDto(snapshot),
+            contract.getTenantId());
+  }
 
-    private SalaryTermsDto toSalaryTermsDto(SalaryTerms terms) {
-        if (terms == null) return null;
-        return new SalaryTermsDto(
-                terms.basicSalary(), // Asumiendo que es un record o tiene el getter
-                terms.totalEarnedProj(),
-                terms.netSalaryProj(),
-                terms.currency()
-        );
-    }
+  private SalaryTermsDto toSalaryTermsDto(SalaryTerms terms) {
+    if (terms == null) return null;
+    return new SalaryTermsDto(
+        terms.basicSalary(), // Asumiendo que es un record o tiene el getter
+        terms.totalEarnedProj(),
+        terms.netSalaryProj(),
+        terms.currency());
+  }
 
-    private ComplianceSnapshotDto toComplianceSnapshotDto(ComplianceSnapshot snapshot) {
-        if (snapshot == null) return null;
-        return new ComplianceSnapshotDto(
-                snapshot.smnApplied(), // Asumiendo que es un record o tiene el getter
-                snapshot.taxRegime(),
-                snapshot.infocalActive()
-        );
-    }
+  private ComplianceSnapshotDto toComplianceSnapshotDto(ComplianceSnapshot snapshot) {
+    if (snapshot == null) return null;
+    return new ComplianceSnapshotDto(
+        snapshot.smnApplied(), // Asumiendo que es un record o tiene el getter
+        snapshot.taxRegime(),
+        snapshot.infocalActive());
+  }
 }

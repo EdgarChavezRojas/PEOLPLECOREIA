@@ -11,6 +11,9 @@ import java.util.UUID;
 public class HeadcountExceededException extends SolverException {
 
   public HeadcountExceededException(UUID jobId, long maxPositions) {
-    super(String.format("No se pueden crear más plazas. El cargo con ID %s ha alcanzado su límite máximo de %d plazas (Headcount).", jobId, maxPositions));
+    super(
+        String.format(
+            "No se pueden crear más plazas. El cargo con ID %s ha alcanzado su límite máximo de %d plazas (Headcount).",
+            jobId, maxPositions));
   }
 }

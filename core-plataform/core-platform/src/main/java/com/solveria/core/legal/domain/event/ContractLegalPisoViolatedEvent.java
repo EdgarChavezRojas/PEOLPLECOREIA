@@ -6,5 +6,4 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ContractLegalPisoViolatedEvent(
-    UUID contractId, BigDecimal attemptedSalary, Instant occurredAt)
-    implements DomainEvent {}
+    UUID contractId, BigDecimal attemptedSalary, Instant occurredAt) implements DomainEvent {}

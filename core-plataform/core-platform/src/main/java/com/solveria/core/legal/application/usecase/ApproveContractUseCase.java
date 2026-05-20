@@ -26,7 +26,6 @@ public class ApproveContractUseCase {
   public ContractResponse execute(ApproveContractRequest request) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
 
-
     Contract contract =
         contractRepositoryPort
             .findById(request.contractId())

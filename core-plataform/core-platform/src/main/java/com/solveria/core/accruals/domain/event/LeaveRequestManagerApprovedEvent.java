@@ -6,11 +6,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record LeaveRequestManagerApprovedEvent(
-    UUID balanceId,
-    UUID transactionId,
-    BigDecimal daysRequested,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID balanceId, UUID transactionId, BigDecimal daysRequested, Instant occurredAt)
+    implements DomainEvent {
 
   public LeaveRequestManagerApprovedEvent {
     if (balanceId == null) {
@@ -33,4 +30,3 @@ public record LeaveRequestManagerApprovedEvent(
         balanceId, transactionId, daysRequested, Instant.now());
   }
 }
-

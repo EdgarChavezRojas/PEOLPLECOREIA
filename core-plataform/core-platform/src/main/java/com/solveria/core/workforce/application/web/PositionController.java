@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Position", description = "Gestión de cargos y presupuesto de plazas (Headcount)")
 public class PositionController {
 
-    private final CreatePositionUseCase createPositionUseCase;
+  private final CreatePositionUseCase createPositionUseCase;
 
-    @PostMapping
-    @Operation(summary = "Crear posición (Cargo)",
-            description = "Registra una plaza disponible asociada a una unidad organizacional.")
-    public ResponseEntity<PositionResponse> create(@Valid @RequestBody CreatePositionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(createPositionUseCase.execute(request));
-    }
+  @PostMapping
+  @Operation(
+      summary = "Crear posición (Cargo)",
+      description = "Registra una plaza disponible asociada a una unidad organizacional.")
+  public ResponseEntity<PositionResponse> create(
+      @Valid @RequestBody CreatePositionRequest request) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(createPositionUseCase.execute(request));
+  }
 }

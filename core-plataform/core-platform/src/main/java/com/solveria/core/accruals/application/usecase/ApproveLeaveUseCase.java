@@ -7,4 +7,3 @@ public interface ApproveLeaveUseCase {
 
   AccrualBalance handle(ApproveLeaveCommand command);
 }
-

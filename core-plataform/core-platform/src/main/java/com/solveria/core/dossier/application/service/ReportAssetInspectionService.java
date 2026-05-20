@@ -39,5 +39,3 @@ public class ReportAssetInspectionService implements ReportAssetInspectionUseCas
     return assignedAssetRepository.save(asset);
   }
 }
-
-

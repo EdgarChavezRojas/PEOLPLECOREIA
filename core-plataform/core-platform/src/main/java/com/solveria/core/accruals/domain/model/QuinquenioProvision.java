@@ -6,11 +6,10 @@ import com.solveria.core.accruals.domain.event.QuinquenioPaymentOverdueEvent;
 import com.solveria.core.accruals.domain.event.QuinquenioPaymentProcessedEvent;
 import com.solveria.core.accruals.domain.event.QuinquenioRequestedEvent;
 import com.solveria.core.accruals.domain.policy.QuinquenioPolicy;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.domain.DomainRoot;
 
 public class QuinquenioProvision extends DomainRoot {
 
@@ -20,10 +19,14 @@ public class QuinquenioProvision extends DomainRoot {
   private boolean penaltyActive;
   private UUID tenantId;
 
-  public QuinquenioProvision() {
-  }
+  public QuinquenioProvision() {}
 
-  public QuinquenioProvision(UUID provisionId, UUID relationshipId, BigDecimal totalAccumulated, boolean penaltyActive, UUID tenantId) {
+  public QuinquenioProvision(
+      UUID provisionId,
+      UUID relationshipId,
+      BigDecimal totalAccumulated,
+      boolean penaltyActive,
+      UUID tenantId) {
     this.provisionId = provisionId;
     this.relationshipId = relationshipId;
     this.totalAccumulated = totalAccumulated;
@@ -32,7 +35,7 @@ public class QuinquenioProvision extends DomainRoot {
   }
 
   public static QuinquenioProvision open(
-          UUID relationshipId, BigDecimal totalAccumulated, UUID tenantId) {
+      UUID relationshipId, BigDecimal totalAccumulated, UUID tenantId) {
     if (relationshipId == null) {
       throw new IllegalArgumentException("relationshipId is required");
     }
@@ -43,12 +46,7 @@ public class QuinquenioProvision extends DomainRoot {
       throw new IllegalArgumentException("tenantId is required");
     }
     return new QuinquenioProvision(
-            UUID.randomUUID(),
-            relationshipId,
-            totalAccumulated,
-            false,
-            tenantId
-    );
+        UUID.randomUUID(), relationshipId, totalAccumulated, false, tenantId);
   }
 
   public void addMonthlyProvision(BigDecimal amount) {
@@ -59,8 +57,7 @@ public class QuinquenioProvision extends DomainRoot {
   }
 
   public void markEligible() {
-    registerEvent(QuinquenioEligibilityReachedEvent.now(
-            relationshipId, LocalDate.now()));
+    registerEvent(QuinquenioEligibilityReachedEvent.now(relationshipId, LocalDate.now()));
   }
 
   public void requestPayment(LocalDate requestDate) {
@@ -76,15 +73,14 @@ public class QuinquenioProvision extends DomainRoot {
     }
     totalAccumulated = averageLast90Days;
     registerEvent(
-            QuinquenioCalculationFinalizedEvent.now(provisionId, relationshipId, averageLast90Days));
+        QuinquenioCalculationFinalizedEvent.now(provisionId, relationshipId, averageLast90Days));
   }
 
   public void evaluatePenalty(LocalDate requestDate, LocalDate today, LocalDate paymentDate) {
     if (QuinquenioPolicy.isPaymentOverdue(requestDate, today, paymentDate)) {
       penaltyActive = true;
       BigDecimal penalty = totalAccumulated.multiply(QuinquenioPolicy.PENALTY_RATE);
-      registerEvent(QuinquenioPaymentOverdueEvent.now(
-              relationshipId, provisionId, penalty));
+      registerEvent(QuinquenioPaymentOverdueEvent.now(relationshipId, provisionId, penalty));
     }
   }
 
@@ -97,9 +93,23 @@ public class QuinquenioProvision extends DomainRoot {
   }
 
   // Getters
-  public UUID getProvisionId() { return provisionId; }
-  public UUID getRelationshipId() { return relationshipId; }
-  public BigDecimal getTotalAccumulated() { return totalAccumulated; }
-  public boolean isPenaltyActive() { return penaltyActive; }
-  public UUID getTenantId() { return tenantId; }
+  public UUID getProvisionId() {
+    return provisionId;
+  }
+
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
+
+  public BigDecimal getTotalAccumulated() {
+    return totalAccumulated;
+  }
+
+  public boolean isPenaltyActive() {
+    return penaltyActive;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
 }

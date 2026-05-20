@@ -6,9 +6,9 @@ import com.solveria.core.accruals.application.usecase.OpenAccrualBalanceUseCase;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 @Service
 public class OpenAccrualBalanceService implements OpenAccrualBalanceUseCase {
 
@@ -33,4 +33,3 @@ public class OpenAccrualBalanceService implements OpenAccrualBalanceUseCase {
     return accrualBalanceRepository.save(balance);
   }
 }
-

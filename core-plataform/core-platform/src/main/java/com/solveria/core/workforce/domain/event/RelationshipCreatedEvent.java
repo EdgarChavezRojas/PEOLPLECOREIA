@@ -5,6 +5,4 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record RelationshipCreatedEvent(
-    UUID relationshipId, UUID personId, UUID tenantId, Instant occurredAt)
-    implements DomainEvent {}
-
+    UUID relationshipId, UUID personId, UUID tenantId, Instant occurredAt) implements DomainEvent {}

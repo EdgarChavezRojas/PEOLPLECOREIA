@@ -9,11 +9,14 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface DeductionRecordMapper {
 
-    @Mapping(target = "amount", source = "amount.value")
-    @Mapping(target = "isAutomatic", source = "automatic")
-    DeductionRecordJpa toJpa(DeductionRecord domain);
+  @Mapping(target = "amount", source = "amount.value")
+  @Mapping(target = "isAutomatic", source = "automatic")
+  DeductionRecordJpa toJpa(DeductionRecord domain);
 
-    @Mapping(target = "amount", expression = "java(new com.solveria.payroll.domain.model.vo.DeductionAmount(jpa.getAmount()))")
-    @Mapping(target = "isAutomatic", source = "isAutomatic")
-    DeductionRecord toDomain(DeductionRecordJpa jpa);
+  @Mapping(
+      target = "amount",
+      expression =
+          "java(new com.solveria.payroll.domain.model.vo.DeductionAmount(jpa.getAmount()))")
+  @Mapping(target = "isAutomatic", source = "isAutomatic")
+  DeductionRecord toDomain(DeductionRecordJpa jpa);
 }

@@ -6,16 +6,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Emitido cuando el saldo de un beneficio acumulable se actualiza.
- * Trigger: VacationAccrued.
+ * Emitido cuando el saldo de un beneficio acumulable se actualiza. Trigger: VacationAccrued.
  * Refleja el nuevo balance tras el devengamiento de vacaciones u otros beneficios.
  */
 public record AccrualBalanceUpdatedEvent(
-    UUID personId,
-    String benefitType,
-    BigDecimal newBalance,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID personId, String benefitType, BigDecimal newBalance, Instant occurredAt)
+    implements DomainEvent {
 
   public AccrualBalanceUpdatedEvent {
     if (personId == null) {

@@ -291,7 +291,7 @@ INFRASTRUCTURE (14 files):
   experience/infrastructure/listener/CrossBcEventListener.java
 
 CONFIGURATION (2 files):
-  resources/db/migration/V6__experience_schema.sql
+
   resources/experience-config.properties
 
 ================================================================================

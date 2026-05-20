@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,12 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Use Case: Cálculo de Aguinaldo Navideño masivo por Tenant.
  *
- * <p>Flujo:
- * 1. Recibe tenantId y año fiscal.
- * 2. Filtra elegibles: empleados >= 1 mes trabajado, obreros >= 3 meses.
- * 3. Base de cálculo (P15): Promedio Total Ganado de Septiembre, Octubre, Noviembre.
- * 4. Cálculo: Proporcional en duodécimas si meses trabajados < 12, caso contrario 1 sueldo promedio.
- * 5. Invariante Multa (P16): Si LocalDate.now() > 20 Diciembre, multiplicar el pago final por 2.
+ * <p>Flujo: 1. Recibe tenantId y año fiscal. 2. Filtra elegibles: empleados >= 1 mes trabajado,
+ * obreros >= 3 meses. 3. Base de cálculo (P15): Promedio Total Ganado de Septiembre, Octubre,
+ * Noviembre. 4. Cálculo: Proporcional en duodécimas si meses trabajados < 12, caso contrario 1
+ * sueldo promedio. 5. Invariante Multa (P16): Si LocalDate.now() > 20 Diciembre, multiplicar el
+ * pago final por 2.
  */
 @Slf4j
 @Service

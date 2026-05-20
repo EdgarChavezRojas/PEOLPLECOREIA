@@ -13,4 +13,3 @@ public record OpenAccrualBalanceCommand(
     BigDecimal currentBalance,
     LocalDate lastAccrualDate,
     String location) {}
-

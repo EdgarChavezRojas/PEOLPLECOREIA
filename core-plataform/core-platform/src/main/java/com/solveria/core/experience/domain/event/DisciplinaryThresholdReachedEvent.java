@@ -25,6 +25,13 @@ public record DisciplinaryThresholdReachedEvent(
       int periodMonths,
       String recommendation,
       UUID tenantId) {
-    this(modelId, relationshipId, memorandumCount, periodMonths, recommendation, tenantId, Instant.now());
+    this(
+        modelId,
+        relationshipId,
+        memorandumCount,
+        periodMonths,
+        recommendation,
+        tenantId,
+        Instant.now());
   }
 }

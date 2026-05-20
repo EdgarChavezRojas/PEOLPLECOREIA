@@ -13,10 +13,15 @@ public class BenefitAccrual {
   private BigDecimal accruedAmount;
   private UUID tenantId;
 
-  public BenefitAccrual() {
-  }
+  public BenefitAccrual() {}
 
-  public BenefitAccrual(UUID benefitId, UUID relationshipId, BenefitType benefitType, int fiscalYear, BigDecimal accruedAmount, UUID tenantId) {
+  public BenefitAccrual(
+      UUID benefitId,
+      UUID relationshipId,
+      BenefitType benefitType,
+      int fiscalYear,
+      BigDecimal accruedAmount,
+      UUID tenantId) {
     this.benefitId = benefitId;
     this.relationshipId = relationshipId;
     this.benefitType = benefitType;
@@ -26,11 +31,11 @@ public class BenefitAccrual {
   }
 
   public static BenefitAccrual open(
-          UUID relationshipId,
-          BenefitType benefitType,
-          int fiscalYear,
-          BigDecimal accruedAmount,
-          UUID tenantId) {
+      UUID relationshipId,
+      BenefitType benefitType,
+      int fiscalYear,
+      BigDecimal accruedAmount,
+      UUID tenantId) {
     if (relationshipId == null) {
       throw new IllegalArgumentException("relationshipId is required");
     }
@@ -47,13 +52,7 @@ public class BenefitAccrual {
       throw new IllegalArgumentException("tenantId is required");
     }
     return new BenefitAccrual(
-            UUID.randomUUID(),
-            relationshipId,
-            benefitType,
-            fiscalYear,
-            accruedAmount,
-            tenantId
-    );
+        UUID.randomUUID(), relationshipId, benefitType, fiscalYear, accruedAmount, tenantId);
   }
 
   public void addAccrual(BigDecimal amount) {
@@ -64,10 +63,27 @@ public class BenefitAccrual {
   }
 
   // Getters
-  public UUID getBenefitId() { return benefitId; }
-  public UUID getRelationshipId() { return relationshipId; }
-  public BenefitType getBenefitType() { return benefitType; }
-  public int getFiscalYear() { return fiscalYear; }
-  public BigDecimal getAccruedAmount() { return accruedAmount; }
-  public UUID getTenantId() { return tenantId; }
+  public UUID getBenefitId() {
+    return benefitId;
+  }
+
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
+
+  public BenefitType getBenefitType() {
+    return benefitType;
+  }
+
+  public int getFiscalYear() {
+    return fiscalYear;
+  }
+
+  public BigDecimal getAccruedAmount() {
+    return accruedAmount;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
 }

@@ -14,10 +14,7 @@ import org.mapstruct.MappingTarget;
     uses = {PartyIdentifierMapper.class})
 public interface PersonMapper {
 
-
-
   PersonJpa toJpa(Person person);
-
 
   Person toDomain(PersonJpa jpa);
 

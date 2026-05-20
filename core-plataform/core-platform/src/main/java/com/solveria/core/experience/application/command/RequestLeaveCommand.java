@@ -5,7 +5,4 @@ import java.util.UUID;
 
 /** Command: Solicitud de ausencia/permiso vía ESS. */
 public record RequestLeaveCommand(
-    UUID personId,
-    String leaveType,
-    LocalDate startDate,
-    LocalDate endDate) {}
+    UUID personId, String leaveType, LocalDate startDate, LocalDate endDate) {}

@@ -9,4 +9,3 @@ public record EvaluateQuinquenioPenaltyCommand(
     LocalDate paymentDate,
     LocalDate today,
     String location) {}
-

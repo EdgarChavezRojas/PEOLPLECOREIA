@@ -4,7 +4,6 @@ import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -12,79 +11,92 @@ import java.util.UUID;
 @Table(name = "prl_dispersion_file")
 public class BankDispersionFileJpa extends BaseEntity {
 
-    @Column(name = "dispersion_file_id", updatable = false, columnDefinition = "UUID")
-    private UUID dispersionFileId;
+  @Column(name = "dispersion_file_id", updatable = false, columnDefinition = "UUID")
+  private UUID dispersionFileId;
 
-    // Add getters and setters
-    @Column(name = "run_ref")
-    private UUID runRef;
+  // Add getters and setters
+  @Column(name = "run_ref")
+  private UUID runRef;
 
-    @Column(name = "bank_entity_ref")
-    private UUID bankEntityRef;
+  @Column(name = "bank_entity_ref")
+  private UUID bankEntityRef;
 
-    @Column(name = "status")
-    private String status;
+  @Column(name = "status")
+  private String status;
 
-    @Column(name = "total_amount")
-    private BigDecimal totalAmount;
+  @Column(name = "total_amount")
+  private BigDecimal totalAmount;
 
-    @Column(name = "record_count")
-    private Integer recordCount;
+  @Column(name = "record_count")
+  private Integer recordCount;
 
-    @Column(name = "file_hash")
-    private String fileHash;
+  @Column(name = "file_hash")
+  private String fileHash;
 
-    public UUID getDispersionFileId() {
-        return dispersionFileId;
-    }
-    public void setDispersionFileId(UUID dispersionFileId) {
-        this.dispersionFileId = dispersionFileId;
-    }
-    public UUID getRunRef() {
-        return runRef;
-    }
+  @Column(name = "tenant_id")
+  private UUID tenantId;
 
-    public void setRunRef(UUID runRef) {
-        this.runRef = runRef;
-    }
+  public UUID getTenantId() {
+    return tenantId;
+  }
 
-    public UUID getBankEntityRef() {
-        return bankEntityRef;
-    }
+  public void setTenantId(UUID tenantId) {
+    this.tenantId = tenantId;
+  }
 
-    public void setBankEntityRef(UUID bankEntityRef) {
-        this.bankEntityRef = bankEntityRef;
-    }
+  public UUID getDispersionFileId() {
+    return dispersionFileId;
+  }
 
-    public String getStatus() {
-        return status;
-    }
+  public void setDispersionFileId(UUID dispersionFileId) {
+    this.dispersionFileId = dispersionFileId;
+  }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+  public UUID getRunRef() {
+    return runRef;
+  }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
+  public void setRunRef(UUID runRef) {
+    this.runRef = runRef;
+  }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
+  public UUID getBankEntityRef() {
+    return bankEntityRef;
+  }
 
-    public Integer getRecordCount() {
-        return recordCount;
-    }
+  public void setBankEntityRef(UUID bankEntityRef) {
+    this.bankEntityRef = bankEntityRef;
+  }
 
-    public void setRecordCount(Integer recordCount) {
-        this.recordCount = recordCount;
-    }
+  public String getStatus() {
+    return status;
+  }
 
-    public String getFileHash() {
-        return fileHash;
-    }
+  public void setStatus(String status) {
+    this.status = status;
+  }
 
-    public void setFileHash(String fileHash) {
-        this.fileHash = fileHash;
-    }
+  public BigDecimal getTotalAmount() {
+    return totalAmount;
+  }
+
+  public void setTotalAmount(BigDecimal totalAmount) {
+    this.totalAmount = totalAmount;
+  }
+
+  public Integer getRecordCount() {
+    return recordCount;
+  }
+
+  public void setRecordCount(Integer recordCount) {
+    this.recordCount = recordCount;
+  }
+
+  public String getFileHash() {
+    return fileHash;
+  }
+
+  public void setFileHash(String fileHash) {
+    this.fileHash = fileHash;
+  }
 }

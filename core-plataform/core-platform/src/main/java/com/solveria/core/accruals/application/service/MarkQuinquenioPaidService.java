@@ -6,7 +6,9 @@ import com.solveria.core.accruals.application.usecase.MarkQuinquenioPaidUseCase;
 import com.solveria.core.accruals.domain.exception.QuinquenioProvisionNotFoundException;
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import org.springframework.stereotype.Service;
 
+@Service
 public class MarkQuinquenioPaidService implements MarkQuinquenioPaidUseCase {
 
   private final BenefitsRepositoryPort benefitsRepository;
@@ -21,10 +23,8 @@ public class MarkQuinquenioPaidService implements MarkQuinquenioPaidUseCase {
     QuinquenioProvision provision =
         benefitsRepository
             .findQuinquenioByRelationshipId(command.relationshipId())
-            .orElseThrow(
-                () -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
+            .orElseThrow(() -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
     provision.markPaid(command.paymentDate());
     return benefitsRepository.saveQuinquenio(provision);
   }
 }
-

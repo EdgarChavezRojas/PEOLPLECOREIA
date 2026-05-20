@@ -16,7 +16,7 @@ public interface OrgUnitFinancialDataPort {
    * Construye el comando de imputación analítica territorial a partir de los IDs de unidad
    * organizativa. Resuelve internamente el sourceId, personId, fechas de transferencia y período.
    *
-   * @param unitId     ID de la unidad organizativa reasignada
+   * @param unitId ID de la unidad organizativa reasignada
    * @param newParentId ID de la nueva unidad padre
    * @return Comando completo con todos los datos necesarios para el prorrateo mid-month
    */

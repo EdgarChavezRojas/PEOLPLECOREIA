@@ -6,11 +6,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record QuinquenioPaymentProcessedEvent(
-    UUID provisionId,
-    UUID relationshipId,
-    LocalDate paymentDate,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID provisionId, UUID relationshipId, LocalDate paymentDate, Instant occurredAt)
+    implements DomainEvent {
 
   public QuinquenioPaymentProcessedEvent {
     if (provisionId == null) {
@@ -33,4 +30,3 @@ public record QuinquenioPaymentProcessedEvent(
         provisionId, relationshipId, paymentDate, Instant.now());
   }
 }
-

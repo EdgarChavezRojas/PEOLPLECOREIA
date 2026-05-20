@@ -7,9 +7,9 @@ import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundExcepti
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.model.vo.SeniorityMilestone;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 @Service
 public class RegisterSeniorityMilestoneService implements RegisterSeniorityMilestoneUseCase {
 
@@ -32,4 +32,3 @@ public class RegisterSeniorityMilestoneService implements RegisterSeniorityMiles
     return accrualBalanceRepository.save(balance);
   }
 }
-

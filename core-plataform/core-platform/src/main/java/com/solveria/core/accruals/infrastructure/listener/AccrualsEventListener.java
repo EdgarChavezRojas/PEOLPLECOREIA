@@ -47,83 +47,97 @@ public class AccrualsEventListener {
   @Transactional
   public void handle(RelationshipCreatedEvent event) {
 
-      UUID relationshipId = event.relationshipId();
-      List<AccrualBalance> balances = accrualBalanceRepository.findAllByRelationshipId(relationshipId);
-      boolean hasVacationBalance = balances.stream()
-          .anyMatch(balance -> balance.getBalanceType() == AccrualBalanceType.VACATION);
+    UUID relationshipId = event.relationshipId();
+    List<AccrualBalance> balances =
+        accrualBalanceRepository.findAllByRelationshipId(relationshipId);
+    boolean hasVacationBalance =
+        balances.stream()
+            .anyMatch(balance -> balance.getBalanceType() == AccrualBalanceType.VACATION);
 
-      if (!hasVacationBalance) {
-        AccrualBalance balance = AccrualBalance.open(
-            relationshipId,
-            AccrualBalanceType.VACATION,
-            AccrualUnit.DAYS,
-            BigDecimal.ZERO,
-            LocalDate.now(),
-            event.tenantId());
-        accrualBalanceRepository.save(balance);
-      }
-
-      int fiscalYear = LocalDate.now().getYear();
-      for (BenefitType benefitType : BenefitType.values()) {
-        Optional<BenefitAccrual> existing =
-            benefitsRepository.findBenefitAccrual(relationshipId, benefitType, fiscalYear);
-        if (existing.isEmpty()) {
-          BenefitAccrual accrual = BenefitAccrual.open(
+    if (!hasVacationBalance) {
+      AccrualBalance balance =
+          AccrualBalance.open(
               relationshipId,
-              benefitType,
-              fiscalYear,
+              AccrualBalanceType.VACATION,
+              AccrualUnit.DAYS,
               BigDecimal.ZERO,
+              LocalDate.now(),
               event.tenantId());
-          benefitsRepository.saveBenefitAccrual(accrual);
-        }
+      accrualBalanceRepository.save(balance);
+    }
+
+    int fiscalYear = LocalDate.now().getYear();
+    for (BenefitType benefitType : BenefitType.values()) {
+      Optional<BenefitAccrual> existing =
+          benefitsRepository.findBenefitAccrual(relationshipId, benefitType, fiscalYear);
+      if (existing.isEmpty()) {
+        BenefitAccrual accrual =
+            BenefitAccrual.open(
+                relationshipId, benefitType, fiscalYear, BigDecimal.ZERO, event.tenantId());
+        benefitsRepository.saveBenefitAccrual(accrual);
       }
+    }
 
-      benefitsRepository.findQuinquenioByRelationshipId(relationshipId)
-          .orElseGet(() -> benefitsRepository.saveQuinquenio(
-              QuinquenioProvision.open(relationshipId, BigDecimal.ZERO, event.tenantId())));
+    benefitsRepository
+        .findQuinquenioByRelationshipId(relationshipId)
+        .orElseGet(
+            () ->
+                benefitsRepository.saveQuinquenio(
+                    QuinquenioProvision.open(relationshipId, BigDecimal.ZERO, event.tenantId())));
 
-      log.info("event=ACCRUALS_RELATIONSHIP_CREATED relationshipId={} tenantId={}",
-          relationshipId, event.tenantId());
-
+    log.info(
+        "event=ACCRUALS_RELATIONSHIP_CREATED relationshipId={} tenantId={}",
+        relationshipId,
+        event.tenantId());
   }
 
   @EventListener
   @Transactional
   public void handle(RelationshipEndedEvent event) {
 
-      UUID relationshipId = event.relationshipId();
-      List<AccrualBalance> balances = accrualBalanceRepository.findAllByRelationshipId(relationshipId);
-      if (balances.isEmpty()) {
-        log.warn("event=ACCRUALS_RELATIONSHIP_ENDED_BALANCE_NOT_FOUND relationshipId={} tenantId={}",
-            relationshipId, event.tenantId());
-        return;
-      }
+    UUID relationshipId = event.relationshipId();
+    List<AccrualBalance> balances =
+        accrualBalanceRepository.findAllByRelationshipId(relationshipId);
+    if (balances.isEmpty()) {
+      log.warn(
+          "event=ACCRUALS_RELATIONSHIP_ENDED_BALANCE_NOT_FOUND relationshipId={} tenantId={}",
+          relationshipId,
+          event.tenantId());
+      return;
+    }
 
-      UUID tenantId = event.tenantId();
+    UUID tenantId = event.tenantId();
 
-      Optional<Relationship> relationship =
-          relationshipRepository.findByRelationshipIdAndTenantId(relationshipId, tenantId);
-      if (relationship.isEmpty()) {
-        log.warn("event=ACCRUALS_RELATIONSHIP_ENDED_RELATIONSHIP_NOT_FOUND relationshipId={} tenantId={}",
-            relationshipId, event.tenantId());
-        return;
-      }
+    Optional<Relationship> relationship =
+        relationshipRepository.findByRelationshipIdAndTenantId(relationshipId, tenantId);
+    if (relationship.isEmpty()) {
+      log.warn(
+          "event=ACCRUALS_RELATIONSHIP_ENDED_RELATIONSHIP_NOT_FOUND relationshipId={} tenantId={}",
+          relationshipId,
+          event.tenantId());
+      return;
+    }
 
-      for (AccrualBalance balance : balances) {
-        SenioritySpan span = balance.computeSenioritySpan(relationship.get().getHireDate());
-        accrualBalanceRepository.save(balance);
-        log.info("event=ACCRUALS_RELATIONSHIP_ENDED_SPAN_COMPUTED relationshipId={} years={} months={} days={}",
-            relationshipId, span.years(), span.months(), span.days());
-      }
-
+    for (AccrualBalance balance : balances) {
+      SenioritySpan span = balance.computeSenioritySpan(relationship.get().getHireDate());
+      accrualBalanceRepository.save(balance);
+      log.info(
+          "event=ACCRUALS_RELATIONSHIP_ENDED_SPAN_COMPUTED relationshipId={} years={} months={} days={}",
+          relationshipId,
+          span.years(),
+          span.months(),
+          span.days());
+    }
   }
 
   @EventListener
   @Transactional
   public void handle(RelationshipReactivatedEvent event) {
-    List<AccrualBalance> balances = accrualBalanceRepository.findAllByRelationshipId(event.relationshipId());
+    List<AccrualBalance> balances =
+        accrualBalanceRepository.findAllByRelationshipId(event.relationshipId());
     if (balances.isEmpty()) {
-      log.warn("event=ACCRUALS_RELATIONSHIP_REACTIVATED_BALANCE_NOT_FOUND relationshipId={}",
+      log.warn(
+          "event=ACCRUALS_RELATIONSHIP_REACTIVATED_BALANCE_NOT_FOUND relationshipId={}",
           event.relationshipId());
       return;
     }
@@ -135,55 +149,65 @@ public class AccrualsEventListener {
   @Transactional
   public void handle(LeaveRequestedViaEssEvent event) {
 
-      List<Relationship> relationships = relationshipRepository.findByPersonId(event.personId());
-      Optional<Relationship> activeRelationship = relationships.stream()
-          .filter(rel -> rel.getCurrentStatus() == RelationshipStatus.ACTIVE)
-          .findFirst();
+    List<Relationship> relationships = relationshipRepository.findByPersonId(event.personId());
+    Optional<Relationship> activeRelationship =
+        relationships.stream()
+            .filter(rel -> rel.getCurrentStatus() == RelationshipStatus.ACTIVE)
+            .findFirst();
 
-      if (activeRelationship.isEmpty()) {
-        log.warn("event=ACCRUALS_LEAVE_REQUEST_RELATIONSHIP_NOT_FOUND personId={} tenantId={}",
-            event.personId(), event.tenantId());
-        return;
-      }
+    if (activeRelationship.isEmpty()) {
+      log.warn(
+          "event=ACCRUALS_LEAVE_REQUEST_RELATIONSHIP_NOT_FOUND personId={} tenantId={}",
+          event.personId(),
+          event.tenantId());
+      return;
+    }
 
-      UUID relationshipId = activeRelationship.get().getRelationshipId();
-      AccrualBalance balance = accrualBalanceRepository.findAllByRelationshipId(relationshipId)
-          .stream()
-          .filter(bal -> bal.getBalanceType() == AccrualBalanceType.VACATION)
-          .findFirst()
-          .orElse(null);
+    UUID relationshipId = activeRelationship.get().getRelationshipId();
+    AccrualBalance balance =
+        accrualBalanceRepository.findAllByRelationshipId(relationshipId).stream()
+            .filter(bal -> bal.getBalanceType() == AccrualBalanceType.VACATION)
+            .findFirst()
+            .orElse(null);
 
-      if (balance == null) {
-        log.warn("event=ACCRUALS_LEAVE_REQUEST_BALANCE_NOT_FOUND relationshipId={} tenantId={}",
-            relationshipId, event.tenantId());
-        return;
-      }
+    if (balance == null) {
+      log.warn(
+          "event=ACCRUALS_LEAVE_REQUEST_BALANCE_NOT_FOUND relationshipId={} tenantId={}",
+          relationshipId,
+          event.tenantId());
+      return;
+    }
 
-      LocalDate startDate = event.startDate();
-      LocalDate endDate = event.endDate();
-      List<HolidayCalendar> holidays = benefitsRepository.findHolidaysBetween(startDate, endDate);
-      BigDecimal chargeableDays = HolidayPolicy.calculateChargeableDays(startDate, endDate, holidays);
+    LocalDate startDate = event.startDate();
+    LocalDate endDate = event.endDate();
+    List<HolidayCalendar> holidays = benefitsRepository.findHolidaysBetween(startDate, endDate);
+    BigDecimal chargeableDays = HolidayPolicy.calculateChargeableDays(startDate, endDate, holidays);
 
-      balance.requestLeave(startDate, endDate, chargeableDays);
-      accrualBalanceRepository.save(balance);
+    balance.requestLeave(startDate, endDate, chargeableDays);
+    accrualBalanceRepository.save(balance);
 
-      log.info("event=ACCRUALS_LEAVE_REQUESTED_VIA_ESS relationshipId={} personId={}",
-          relationshipId, event.personId());
-
+    log.info(
+        "event=ACCRUALS_LEAVE_REQUESTED_VIA_ESS relationshipId={} personId={}",
+        relationshipId,
+        event.personId());
   }
 
   @EventListener
   @Transactional
   public void handle(AcademicProfileRankUpdatedEvent event) {
-    List<AccrualBalance> balances = accrualBalanceRepository.findAllByRelationshipId(event.relationshipId());
+    List<AccrualBalance> balances =
+        accrualBalanceRepository.findAllByRelationshipId(event.relationshipId());
     if (balances.isEmpty()) {
-      log.warn("event=ACCRUALS_RANK_UPDATED_BALANCE_NOT_FOUND relationshipId={}",
+      log.warn(
+          "event=ACCRUALS_RANK_UPDATED_BALANCE_NOT_FOUND relationshipId={}",
           event.relationshipId());
       return;
     }
     // TODO: Agregar método de updateRank en dominio.
-    log.info("event=ACCRUALS_RANK_UPDATED relationshipId={} newRank={}",
-        event.relationshipId(), event.newRank());
+    log.info(
+        "event=ACCRUALS_RANK_UPDATED relationshipId={} newRank={}",
+        event.relationshipId(),
+        event.newRank());
   }
 
   @EventListener
@@ -195,10 +219,9 @@ public class AccrualsEventListener {
       return;
     }
     cache.updateLegalThreshold(event.ruleName(), event.newValue());
-    log.info("event=ACCRUALS_LEGAL_THRESHOLD_UPDATED ruleName={} newValue={}",
-        event.ruleName(), event.newValue());
+    log.info(
+        "event=ACCRUALS_LEGAL_THRESHOLD_UPDATED ruleName={} newValue={}",
+        event.ruleName(),
+        event.newValue());
   }
-
-
 }
-

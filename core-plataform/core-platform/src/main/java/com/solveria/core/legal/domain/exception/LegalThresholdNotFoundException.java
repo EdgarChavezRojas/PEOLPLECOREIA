@@ -10,4 +10,3 @@ public class LegalThresholdNotFoundException extends DomainException {
     super("LEGAL_POLICY_RULE_NO_THRESHOLD", Map.of("policyId", policyId), null);
   }
 }
-

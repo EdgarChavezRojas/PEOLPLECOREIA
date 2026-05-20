@@ -11,8 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TaxForm110Repository extends JpaRepository<TaxForm110Jpa, Long> {
 
-  Optional<TaxForm110Jpa> findByFormIdAndTenantId(UUID formId, String tenantId);
+  Optional<TaxForm110Jpa> findByFormIdAndTenantId(UUID formId, UUID tenantId);
 
   List<TaxForm110Jpa> findByPersonIdAndPeriodYearAndPeriodMonthAndTenantId(
-      UUID personId, int periodYear, int periodMonth, String tenantId);
+      UUID personId, int periodYear, int periodMonth, UUID tenantId);
 }

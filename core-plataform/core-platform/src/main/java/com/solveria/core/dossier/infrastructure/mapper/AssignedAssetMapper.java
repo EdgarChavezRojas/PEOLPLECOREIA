@@ -21,15 +21,14 @@ public interface AssignedAssetMapper {
       return null;
     }
     return new AssignedAsset(
-            jpa.getAssignmentId(),
-            jpa.getWorkerId(),
-            jpa.getAssetTag(),
-            jpa.getStatus(),
-            jpa.getAssignedAt(),
-            jpa.getReturnedAt(),
-            toDomain(jpa.getDescriptor()),
-            jpa.getTenantId()
-    );
+        jpa.getAssignmentId(),
+        jpa.getWorkerId(),
+        jpa.getAssetTag(),
+        jpa.getStatus(),
+        jpa.getAssignedAt(),
+        jpa.getReturnedAt(),
+        toDomain(jpa.getDescriptor()),
+        jpa.getTenantId());
   }
 
   default AssetDescriptor toDomain(AssetDescriptorEmbeddable embeddable) {

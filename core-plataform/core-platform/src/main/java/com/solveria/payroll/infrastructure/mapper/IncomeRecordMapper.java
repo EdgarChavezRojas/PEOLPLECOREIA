@@ -9,11 +9,13 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IncomeRecordMapper {
 
-    @Mapping(target = "amount", source = "amount.value")
-    @Mapping(target = "isAutomatic", source = "automatic")
-    IncomeRecordJpa toJpa(IncomeRecord domain);
+  @Mapping(target = "amount", source = "amount.value")
+  @Mapping(target = "isAutomatic", source = "automatic")
+  IncomeRecordJpa toJpa(IncomeRecord domain);
 
-    @Mapping(target = "amount", expression = "java(new com.solveria.payroll.domain.model.vo.IncomeAmount(jpa.getAmount()))")
-    @Mapping(target = "isAutomatic", source = "isAutomatic")
-    IncomeRecord toDomain(IncomeRecordJpa jpa);
+  @Mapping(
+      target = "amount",
+      expression = "java(new com.solveria.payroll.domain.model.vo.IncomeAmount(jpa.getAmount()))")
+  @Mapping(target = "isAutomatic", source = "isAutomatic")
+  IncomeRecord toDomain(IncomeRecordJpa jpa);
 }

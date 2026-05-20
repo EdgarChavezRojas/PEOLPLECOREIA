@@ -5,4 +5,3 @@ import java.util.UUID;
 
 public record RegisterSeniorityMilestoneCommand(
     UUID balanceId, int monthsCompleted, SeniorityBaseType baseSmnType, String location) {}
-

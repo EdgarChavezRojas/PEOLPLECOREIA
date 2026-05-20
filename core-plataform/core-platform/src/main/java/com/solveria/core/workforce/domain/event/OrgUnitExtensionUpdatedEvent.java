@@ -7,4 +7,3 @@ import java.util.UUID;
 
 public record OrgUnitExtensionUpdatedEvent(UUID unitId, CostCenter costCenter, Instant occurredAt)
     implements DomainEvent {}
-

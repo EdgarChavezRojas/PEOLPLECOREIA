@@ -7,6 +7,8 @@ import com.solveria.core.security.context.SecurityTenantContext;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,7 @@ public class ScanExpiringContractsUseCase {
 
   @Transactional
   public void execute() {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     LocalDate exactDate = LocalDate.now(clock).plusDays(90);
 
     List<Contract> contracts =
@@ -41,9 +43,6 @@ public class ScanExpiringContractsUseCase {
     }
 
     log.info(
-        "event=LEGAL_CONTRACT_TACITA_SCAN_SUCCESS tenantId={} alertsSent={}",
-        tenantId,
-        alertsSent);
+        "event=LEGAL_CONTRACT_TACITA_SCAN_SUCCESS tenantId={} alertsSent={}", tenantId, alertsSent);
   }
 }
-

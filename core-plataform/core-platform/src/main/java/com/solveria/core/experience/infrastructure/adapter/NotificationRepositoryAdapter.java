@@ -6,12 +6,10 @@ import com.solveria.core.experience.infrastructure.jpa.NotificationJpa;
 import com.solveria.core.experience.infrastructure.mapper.NotificationMapper;
 import com.solveria.core.experience.infrastructure.repository.NotificationRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,8 +30,8 @@ public class NotificationRepositoryAdapter implements NotificationPO {
   public void save(Notification notification) {
 
     NotificationJpa jpa = mapper.toJpa(notification);
-      repository.save(jpa);
-      eventOutboxPort.publish(notification.pullDomainEvents());
+    repository.save(jpa);
+    eventOutboxPort.publish(notification.pullDomainEvents());
   }
 
   @Override
@@ -43,7 +41,7 @@ public class NotificationRepositoryAdapter implements NotificationPO {
 
   @Override
   public List<Notification> findByRecipientId(UUID recipientId) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return repository.findByRecipientIdAndTenantId(recipientId, tenantId).stream()
         .map(mapper::toDomain)
         .toList();

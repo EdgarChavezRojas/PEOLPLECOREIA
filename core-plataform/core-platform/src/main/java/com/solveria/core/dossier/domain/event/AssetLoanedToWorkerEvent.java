@@ -17,4 +17,3 @@ public record AssetLoanedToWorkerEvent(UUID assignmentId, UUID workerId, Instant
     return new AssetLoanedToWorkerEvent(assignmentId, workerId, Instant.now());
   }
 }
-

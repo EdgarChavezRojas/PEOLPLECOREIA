@@ -33,4 +33,3 @@ public class UpdateEmploymentConditionsUseCase {
         "event=CORE_WORKFORCE_EMPLOYMENT_CONDITION_UPDATE_SUCCESS targetId={}", relationshipId);
   }
 }
-

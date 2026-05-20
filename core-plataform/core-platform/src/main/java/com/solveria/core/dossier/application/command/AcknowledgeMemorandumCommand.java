@@ -14,4 +14,3 @@ public record AcknowledgeMemorandumCommand(
     LocalDate signatureExpiryDate,
     String location,
     UUID tenantId) {}
-

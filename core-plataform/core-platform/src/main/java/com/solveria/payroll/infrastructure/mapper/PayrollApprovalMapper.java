@@ -8,9 +8,10 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PayrollApprovalMapper {
-    @Mapping(target = "id", ignore = true) // Ignores the Long id from BaseEntity
-    @Mapping(target = "payrollApprovalId", source = "id")
-    PayrollApprovalJpa toJpa(PayrollApproval domain);
-    @Mapping(target = "id", source = "payrollApprovalId")
-    PayrollApproval toDomain(PayrollApprovalJpa jpa);
+  @Mapping(target = "id", ignore = true) // Ignores the Long id from BaseEntity
+  @Mapping(target = "payrollApprovalId", source = "id")
+  PayrollApprovalJpa toJpa(PayrollApproval domain);
+
+  @Mapping(target = "id", source = "payrollApprovalId")
+  PayrollApproval toDomain(PayrollApprovalJpa jpa);
 }

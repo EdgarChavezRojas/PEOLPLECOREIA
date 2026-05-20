@@ -7,12 +7,10 @@ import com.solveria.core.dossier.infrastructure.jpa.AssignedAssetJpa;
 import com.solveria.core.dossier.infrastructure.mapper.AssignedAssetMapper;
 import com.solveria.core.dossier.infrastructure.repository.AssignedAssetRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -57,5 +55,5 @@ public class AssignedAssetRepositoryAdapter implements AssignedAssetRepositoryPo
   @Override
   public List<UUID> findPendingAssetIds(UUID workerId) {
     return List.of();
-  }//pendiente a revisar para que sirve esta funcionalidad
+  } // pendiente a revisar para que sirve esta funcionalidad
 }

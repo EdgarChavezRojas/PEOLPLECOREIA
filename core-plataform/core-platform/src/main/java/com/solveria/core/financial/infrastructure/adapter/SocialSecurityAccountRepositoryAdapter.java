@@ -29,12 +29,12 @@ public class SocialSecurityAccountRepositoryAdapter implements SocialSecurityAcc
 
   @Override
   public Optional<SocialSecurityAccount> findById(UUID ssaId) {
-    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return ssaRepository.findBySsaIdAndTenantId(ssaId, currentTenantId).map(ssaMapper::toDomain);
   }
 
   @Override
-  public Optional<SocialSecurityAccount> findByPersonId(UUID personId, String tenantId) {
+  public Optional<SocialSecurityAccount> findByPersonId(UUID personId, UUID tenantId) {
     return ssaRepository.findByPersonIdAndTenantId(personId, tenantId).map(ssaMapper::toDomain);
   }
 }

@@ -17,4 +17,3 @@ public record AssetTransferRequiredEvent(UUID assignmentId, UUID workerId, Insta
     return new AssetTransferRequiredEvent(assignmentId, workerId, Instant.now());
   }
 }
-

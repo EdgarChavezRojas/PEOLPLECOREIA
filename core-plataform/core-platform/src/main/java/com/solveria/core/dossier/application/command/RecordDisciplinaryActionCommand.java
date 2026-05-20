@@ -13,4 +13,3 @@ public record RecordDisciplinaryActionCommand(
     LocalDate evidenceExpiryDate,
     String location,
     UUID tenantId) {}
-

@@ -4,9 +4,7 @@ import com.solveria.core.financial.domain.event.CostCenterSplitAdjustedEvent;
 import com.solveria.core.financial.domain.event.FundingSourceProjectExhaustedEvent;
 import com.solveria.core.financial.domain.event.FundingSourceValidatedEvent;
 import com.solveria.core.financial.domain.model.vo.LaborCostSplit;
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,8 +28,6 @@ public class FundingSource extends DomainRoot {
   private final UUID tenantId;
   private final String createdBy;
   private List<LaborCostSplit> costSplits;
-
-
 
   private FundingSource(
       UUID sourceId,
@@ -156,8 +152,6 @@ public class FundingSource extends DomainRoot {
               + ", debe ser 100.00");
     }
   }
-
-
 
   // --- Getters (sin anotaciones) ---
 

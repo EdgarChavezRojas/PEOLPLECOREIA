@@ -62,8 +62,8 @@ public class FinancialCoreEventListener {
   // ──────────────────────────────────────────────────────────────────────────
 
   /**
-   * Reacciona al cambio de asignación de unidad organizativa (Workforce BC). Delega la
-   * construcción del comando al {@link OrgUnitFinancialDataPort} y la ejecución al caso de uso.
+   * Reacciona al cambio de asignación de unidad organizativa (Workforce BC). Delega la construcción
+   * del comando al {@link OrgUnitFinancialDataPort} y la ejecución al caso de uso.
    */
   @EventListener
   @Transactional
@@ -93,9 +93,9 @@ public class FinancialCoreEventListener {
   // ──────────────────────────────────────────────────────────────────────────
 
   /**
-   * Reacciona al borrador de contrato (Legal BC). Realiza la reserva preventiva
-   * (Pre-encumbrance) validando la suficiencia de fondos. Los datos presupuestarios se resuelven
-   * a través del {@link ContractFinancialDataPort}.
+   * Reacciona al borrador de contrato (Legal BC). Realiza la reserva preventiva (Pre-encumbrance)
+   * validando la suficiencia de fondos. Los datos presupuestarios se resuelven a través del {@link
+   * ContractFinancialDataPort}.
    */
   @EventListener
   @Transactional
@@ -172,16 +172,14 @@ public class FinancialCoreEventListener {
   @EventListener
   @Transactional
   public void handle(ContractTerminatedEvent event) {
-    log.info(
-        "event=FINANCIAL_CONTRACT_TERMINATED_RECEIVED contractId={}", event.contractId());
+    log.info("event=FINANCIAL_CONTRACT_TERMINATED_RECEIVED contractId={}", event.contractId());
     try {
       ProcessLiquidationCommand command =
           contractFinancialDataPort.buildLiquidationCommand(event.contractId());
 
       processLiquidationUseCase.execute(command);
 
-      log.info(
-          "event=FINANCIAL_CONTRACT_TERMINATED_PROCESSED contractId={}", event.contractId());
+      log.info("event=FINANCIAL_CONTRACT_TERMINATED_PROCESSED contractId={}", event.contractId());
     } catch (Exception ex) {
       log.warn(
           "event=FINANCIAL_CONTRACT_TERMINATED_FAILED contractId={} error={}",
@@ -196,9 +194,8 @@ public class FinancialCoreEventListener {
   // ──────────────────────────────────────────────────────────────────────────
 
   /**
-   * Reacciona a la solicitud de quinquenio (Accruals/Financial BC). Los datos salariales
-   * detallados y los meses de antigüedad se resuelven a través del
-   * {@link QuinquenioSalaryDataPort}.
+   * Reacciona a la solicitud de quinquenio (Accruals/Financial BC). Los datos salariales detallados
+   * y los meses de antigüedad se resuelven a través del {@link QuinquenioSalaryDataPort}.
    */
   @EventListener
   @Transactional
@@ -218,8 +215,7 @@ public class FinancialCoreEventListener {
       processQuinquenioPaymentUseCase.execute(
           event.personId(), continuousMonths, salaryBase, salaryOthers);
 
-      log.info(
-          "event=FINANCIAL_QUINQUENIO_REQUESTED_PROCESSED personId={}", event.personId());
+      log.info("event=FINANCIAL_QUINQUENIO_REQUESTED_PROCESSED personId={}", event.personId());
     } catch (Exception ex) {
       log.warn(
           "event=FINANCIAL_QUINQUENIO_REQUESTED_FAILED personId={} error={}",
@@ -242,10 +238,7 @@ public class FinancialCoreEventListener {
   @Transactional
   public void handle(DataChangeRequestedEvent event) {
     log.info(
-        event.getClass().getSimpleName(),
-        event.actionId(),
-        event.personId(),
-        event.actionType());
+        event.getClass().getSimpleName(), event.actionId(), event.personId(), event.actionType());
 
     if (!isBankAccountAction(event.actionType())) {
       log.info(

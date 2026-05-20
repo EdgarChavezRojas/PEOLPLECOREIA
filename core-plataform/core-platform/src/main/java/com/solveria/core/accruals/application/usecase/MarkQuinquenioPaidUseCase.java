@@ -7,4 +7,3 @@ public interface MarkQuinquenioPaidUseCase {
 
   QuinquenioProvision handle(MarkQuinquenioPaidCommand command);
 }
-

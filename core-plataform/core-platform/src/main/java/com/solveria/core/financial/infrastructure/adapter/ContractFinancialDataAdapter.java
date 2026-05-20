@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
 /**
  * Adapter: Resuelve datos financieros de contratos consultando los BCs de Legal y Workforce.
  *
- * <p>Implementa el patrón ACL (Anti-Corruption Layer) para que el listener de Financial no
- * dependa directamente de los modelos de dominio de otros BCs.
+ * <p>Implementa el patrón ACL (Anti-Corruption Layer) para que el listener de Financial no dependa
+ * directamente de los modelos de dominio de otros BCs.
  */
 @Slf4j
 @Component
@@ -89,8 +89,7 @@ public class ContractFinancialDataAdapter implements ContractFinancialDataPort {
     UUID projectId = contract.getProjectId();
 
     if (projectId == null) {
-      throw new IllegalStateException(
-          "El contrato " + contractId + " no tiene projectId asociado");
+      throw new IllegalStateException("El contrato " + contractId + " no tiene projectId asociado");
     }
 
     // Buscar FundingSource por projectCode derivado del projectId del contrato
@@ -116,8 +115,7 @@ public class ContractFinancialDataAdapter implements ContractFinancialDataPort {
   private Contract findContractOrThrow(UUID contractId) {
     return contractRepository
         .findById(contractId)
-        .orElseThrow(
-            () -> new IllegalStateException("Contrato no encontrado: " + contractId));
+        .orElseThrow(() -> new IllegalStateException("Contrato no encontrado: " + contractId));
   }
 
   private Relationship findRelationshipByContract(Contract contract) {
@@ -143,15 +141,17 @@ public class ContractFinancialDataAdapter implements ContractFinancialDataPort {
     }
 
     return relationships.stream()
-        .filter(r -> RelationshipStatus.ACTIVE.equals(r.getCurrentStatus())
-            || RelationshipStatus.TERMINATED.equals(r.getCurrentStatus()))
+        .filter(
+            r ->
+                RelationshipStatus.ACTIVE.equals(r.getCurrentStatus())
+                    || RelationshipStatus.TERMINATED.equals(r.getCurrentStatus()))
         .findFirst()
         .orElse(relationships.getFirst());
   }
 
   /**
-   * Resuelve los SalaryTerms vigentes del contrato. Busca en los addendums aprobados más
-   * recientes; si no hay, retorna null.
+   * Resuelve los SalaryTerms vigentes del contrato. Busca en los addendums aprobados más recientes;
+   * si no hay, retorna null.
    */
   private SalaryTerms resolveCurrentSalaryTerms(Contract contract) {
     if (contract.getAddendums() == null || contract.getAddendums().isEmpty()) {
@@ -193,8 +193,8 @@ public class ContractFinancialDataAdapter implements ContractFinancialDataPort {
   }
 
   /**
-   * Mapea el tipo de contrato del BC Legal al TerminationType del BC Financial. Por defecto
-   * asume renuncia voluntaria; en producción esto vendría enriquecido con el motivo real.
+   * Mapea el tipo de contrato del BC Legal al TerminationType del BC Financial. Por defecto asume
+   * renuncia voluntaria; en producción esto vendría enriquecido con el motivo real.
    */
   private TerminationType resolveTerminationType(Contract contract) {
     return switch (contract.getContractType()) {

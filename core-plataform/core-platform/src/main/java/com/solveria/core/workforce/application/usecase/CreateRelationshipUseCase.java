@@ -1,10 +1,10 @@
 package com.solveria.core.workforce.application.usecase;
 
 import com.solveria.core.security.context.SecurityTenantContext;
-import com.solveria.core.workforce.application.port.PersonRepositoryPort;
-import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
 import com.solveria.core.workforce.application.dto.CreateRelationshipRequest;
 import com.solveria.core.workforce.application.dto.RelationshipResponse;
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
 import com.solveria.core.workforce.domain.exception.PersonNotFoundException;
 import com.solveria.core.workforce.domain.model.AcademicProfile;
 import com.solveria.core.workforce.domain.model.Relationship;

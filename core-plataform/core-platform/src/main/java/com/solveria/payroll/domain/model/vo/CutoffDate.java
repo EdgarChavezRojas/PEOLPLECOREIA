@@ -10,24 +10,24 @@ import java.util.Objects;
  */
 public record CutoffDate(LocalDate date) {
 
-    public CutoffDate {
-        Objects.requireNonNull(date, "CutoffDate.date no puede ser nulo");
-    }
+  public CutoffDate {
+    Objects.requireNonNull(date, "CutoffDate.date no puede ser nulo");
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CutoffDate that)) return false;
-        return date.equals(that.date);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof CutoffDate that)) return false;
+    return date.equals(that.date);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(date);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(date);
+  }
 
-    @Override
-    public String toString() {
-        return "CutoffDate{date=" + date + "}";
-    }
+  @Override
+  public String toString() {
+    return "CutoffDate{date=" + date + "}";
+  }
 }

@@ -14,12 +14,11 @@ import com.solveria.core.accruals.infrastructure.repository.HolidayCalendarRepos
 import com.solveria.core.accruals.infrastructure.repository.QuinquenioProvisionRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,9 +72,7 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
 
   @Override
   public List<QuinquenioProvision> findAllQuinquenioProvisions() {
-    return quinquenioProvisionRepository.findAll().stream()
-        .map(benefitsMapper::toDomain)
-        .toList();
+    return quinquenioProvisionRepository.findAll().stream().map(benefitsMapper::toDomain).toList();
   }
 
   @Override
@@ -88,8 +85,7 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   @Transactional
   public List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals) {
     List<BenefitAccrualJpa> saved =
-        benefitAccrualRepository.saveAll(
-            accruals.stream().map(benefitsMapper::toJpa).toList());
+        benefitAccrualRepository.saveAll(accruals.stream().map(benefitsMapper::toJpa).toList());
     return saved.stream().map(benefitsMapper::toDomain).toList();
   }
 
@@ -105,8 +101,6 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
 
   @Override
   public List<BenefitAccrual> findAllBenefitAccruals() {
-    return benefitAccrualRepository.findAll().stream()
-        .map(benefitsMapper::toDomain)
-        .toList();
+    return benefitAccrualRepository.findAll().stream().map(benefitsMapper::toDomain).toList();
   }
 }

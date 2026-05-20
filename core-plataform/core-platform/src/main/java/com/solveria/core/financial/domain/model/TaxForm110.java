@@ -2,7 +2,6 @@ package com.solveria.core.financial.domain.model;
 
 import com.solveria.core.financial.domain.event.RcIvaForm110ImportedEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.YearMonth;
@@ -24,8 +23,6 @@ public class TaxForm110 extends DomainRoot {
   private final YearMonth period;
   private final UUID tenantId;
   private final String createdBy;
-
-
 
   private TaxForm110(
       UUID formId,
@@ -96,8 +93,6 @@ public class TaxForm110 extends DomainRoot {
     this.totalDeclared = newTotalDeclared;
     this.verifiedCredit = newTotalDeclared.multiply(IVA_RATE).setScale(2, RoundingMode.HALF_UP);
   }
-
-
 
   // --- Getters ---
 

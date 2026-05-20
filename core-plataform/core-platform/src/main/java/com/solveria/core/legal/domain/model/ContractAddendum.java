@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.UUID;
 
-
 public class ContractAddendum {
 
   private final UUID addendumId;
@@ -36,33 +35,33 @@ public class ContractAddendum {
     this.createdBy = Objects.requireNonNull(createdBy, "createdBy");
   }
 
-      public UUID getAddendumId() {
-          return addendumId;
-      }
+  public UUID getAddendumId() {
+    return addendumId;
+  }
 
-      public AddendumStatus getStatus() {
-          return status;
-      }
+  public AddendumStatus getStatus() {
+    return status;
+  }
 
-      public LocalDate getEffectiveFrom() {
-          return effectiveFrom;
-      }
+  public LocalDate getEffectiveFrom() {
+    return effectiveFrom;
+  }
 
-      public LocalDate getEffectiveTo() {
-          return effectiveTo;
-      }
+  public LocalDate getEffectiveTo() {
+    return effectiveTo;
+  }
 
-      public SalaryTerms getSalaryTerms() {
-          return salaryTerms;
-      }
+  public SalaryTerms getSalaryTerms() {
+    return salaryTerms;
+  }
 
-      public ComplianceSnapshot getSnapshot() {
-          return snapshot;
-      }
+  public ComplianceSnapshot getSnapshot() {
+    return snapshot;
+  }
 
-      public String getCreatedBy() {
-          return createdBy;
-      }
+  public String getCreatedBy() {
+    return createdBy;
+  }
 
   public void approve(String approvedBy) {
     validateSegregationOfDuties(createdBy, approvedBy);

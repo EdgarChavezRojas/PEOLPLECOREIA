@@ -5,9 +5,9 @@ import java.util.UUID;
 /**
  * Secondary Port (Outbound): Puerto ACL para resolver el personId a partir de un relationshipId.
  *
- * <p>Este puerto abstrae la consulta al BC de Workforce, evitando un
- * acoplamiento directo entre Experience y el modelo de dominio de Workforce.
- * La implementación concreta (adapter) se provee en la capa de infraestructura.
+ * <p>Este puerto abstrae la consulta al BC de Workforce, evitando un acoplamiento directo entre
+ * Experience y el modelo de dominio de Workforce. La implementación concreta (adapter) se provee en
+ * la capa de infraestructura.
  */
 public interface RelationshipPersonResolverPort {
 

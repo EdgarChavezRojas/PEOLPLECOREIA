@@ -14,7 +14,6 @@ import java.util.UUID;
  * <p>Invariantes: - id_type es requerido - id_number es único - issue_date debe ser anterior a
  * expiry_date
  */
-
 public class PartyIdentifier {
 
   private UUID identifierId;
@@ -27,7 +26,14 @@ public class PartyIdentifier {
 
   public PartyIdentifier() {}
 
-  public PartyIdentifier(UUID identifierId, UUID personId, PartyIdentifierType idType, String idNumber, Extension extension, LocalDate issueDate, LocalDate expiryDate) {
+  public PartyIdentifier(
+      UUID identifierId,
+      UUID personId,
+      PartyIdentifierType idType,
+      String idNumber,
+      Extension extension,
+      LocalDate issueDate,
+      LocalDate expiryDate) {
     this.identifierId = identifierId;
     this.personId = personId;
     this.idType = idType;
@@ -37,35 +43,77 @@ public class PartyIdentifier {
     this.expiryDate = expiryDate;
   }
 
-  public UUID getIdentifierId() { return identifierId; }
-  public void setIdentifierId(UUID identifierId) { this.identifierId = identifierId; }
+  public UUID getIdentifierId() {
+    return identifierId;
+  }
 
-  public UUID getPersonId() { return personId; }
-  public void setPersonId(UUID personId) { this.personId = personId; }
+  public void setIdentifierId(UUID identifierId) {
+    this.identifierId = identifierId;
+  }
 
-  public PartyIdentifierType getIdType() { return idType; }
-  public void setIdType(PartyIdentifierType idType) { this.idType = idType; }
+  public UUID getPersonId() {
+    return personId;
+  }
 
-  public String getIdNumber() { return idNumber; }
-  public void setIdNumber(String idNumber) { this.idNumber = idNumber; }
+  public void setPersonId(UUID personId) {
+    this.personId = personId;
+  }
 
-  public Extension getExtension() { return extension; }
-  public void setExtension(Extension extension) { this.extension = extension; }
+  public PartyIdentifierType getIdType() {
+    return idType;
+  }
 
-  public LocalDate getIssueDate() { return issueDate; }
-  public void setIssueDate(LocalDate issueDate) { this.issueDate = issueDate; }
+  public void setIdType(PartyIdentifierType idType) {
+    this.idType = idType;
+  }
 
-  public LocalDate getExpiryDate() { return expiryDate; }
-  public void setExpiryDate(LocalDate expiryDate) { this.expiryDate = expiryDate; }
+  public String getIdNumber() {
+    return idNumber;
+  }
 
-  public static PartyIdentifier create(UUID personId, PartyIdentifierType idType, String idNumber, Extension extension, LocalDate issueDate, LocalDate expiryDate) {
+  public void setIdNumber(String idNumber) {
+    this.idNumber = idNumber;
+  }
+
+  public Extension getExtension() {
+    return extension;
+  }
+
+  public void setExtension(Extension extension) {
+    this.extension = extension;
+  }
+
+  public LocalDate getIssueDate() {
+    return issueDate;
+  }
+
+  public void setIssueDate(LocalDate issueDate) {
+    this.issueDate = issueDate;
+  }
+
+  public LocalDate getExpiryDate() {
+    return expiryDate;
+  }
+
+  public void setExpiryDate(LocalDate expiryDate) {
+    this.expiryDate = expiryDate;
+  }
+
+  public static PartyIdentifier create(
+      UUID personId,
+      PartyIdentifierType idType,
+      String idNumber,
+      Extension extension,
+      LocalDate issueDate,
+      LocalDate expiryDate) {
     if (idType == null || idNumber == null || idNumber.isBlank()) {
       throw new IllegalArgumentException("idType e idNumber son requeridos");
     }
     if (issueDate != null && expiryDate != null && issueDate.isAfter(expiryDate)) {
       throw new IllegalArgumentException("issueDate no puede ser posterior a expiryDate");
     }
-    return new PartyIdentifier(UUID.randomUUID(), personId, idType, idNumber, extension, issueDate, expiryDate);
+    return new PartyIdentifier(
+        UUID.randomUUID(), personId, idType, idNumber, extension, issueDate, expiryDate);
   }
 
   public boolean isExpired() {

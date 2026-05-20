@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface SocialSecurityAccountRepository
     extends JpaRepository<SocialSecurityAccountJpa, Long> {
 
-  Optional<SocialSecurityAccountJpa> findBySsaIdAndTenantId(UUID ssaId, String tenantId);
+  Optional<SocialSecurityAccountJpa> findBySsaIdAndTenantId(UUID ssaId, UUID tenantId);
 
-  Optional<SocialSecurityAccountJpa> findByPersonIdAndTenantId(UUID personId, String tenantId);
+  Optional<SocialSecurityAccountJpa> findByPersonIdAndTenantId(UUID personId, UUID tenantId);
 }

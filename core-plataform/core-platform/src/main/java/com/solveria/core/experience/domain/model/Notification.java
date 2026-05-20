@@ -1,11 +1,9 @@
 package com.solveria.core.experience.domain.model;
 
-
 import com.solveria.core.experience.domain.event.NotificationSentEvent;
 import com.solveria.core.experience.domain.model.vo.NotificationChannel;
 import com.solveria.core.shared.events.MemorandumAcknowledgedEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.time.Instant;
 import java.util.*;
 
@@ -21,11 +19,12 @@ public class Notification extends DomainRoot {
 
   /** Indica si esta notificación es un memorando que requiere acuse de recibo formal. */
   private boolean requiresAcknowledgement;
+
   /** Timestamp del acuse de recibo (firma). */
   private Instant acknowledgedAt;
+
   /** ID de la persona que firmó el acuse. */
   private UUID acknowledgedBy;
-
 
   private Notification() {}
 
@@ -57,9 +56,9 @@ public class Notification extends DomainRoot {
    * Crea una notificación de tipo memorando que requiere acuse de recibo formal (W12).
    *
    * @param recipientId ID del destinatario
-   * @param subject     Asunto del memorando
-   * @param body        Contenido del memorando
-   * @param tenantId    Tenant
+   * @param subject Asunto del memorando
+   * @param body Contenido del memorando
+   * @param tenantId Tenant
    */
   public static Notification sendMemorandum(
       UUID recipientId, String subject, String body, UUID tenantId) {
@@ -90,23 +89,21 @@ public class Notification extends DomainRoot {
   }
 
   /**
-   * W12: Acuse de recibo formal del memorando. Solo memorandos que requieren
-   * acknowledgement pueden ser firmados, y solo por el destinatario.
+   * W12: Acuse de recibo formal del memorando. Solo memorandos que requieren acknowledgement pueden
+   * ser firmados, y solo por el destinatario.
    *
    * @param personId ID de la persona que firma el acuse
    */
   public void acknowledge(UUID personId) {
     if (!this.requiresAcknowledgement) {
-      throw new IllegalStateException(
-          "Esta notificación no requiere acuse de recibo");
+      throw new IllegalStateException("Esta notificación no requiere acuse de recibo");
     }
     if (this.acknowledgedAt != null) {
       throw new IllegalStateException(
           "Este memorando ya fue acusado de recibo el " + this.acknowledgedAt);
     }
     if (!this.recipientId.equals(personId)) {
-      throw new IllegalStateException(
-          "Solo el destinatario puede firmar el acuse de recibo");
+      throw new IllegalStateException("Solo el destinatario puede firmar el acuse de recibo");
     }
     this.acknowledgedAt = Instant.now();
     this.acknowledgedBy = personId;
@@ -145,8 +142,6 @@ public class Notification extends DomainRoot {
     n.acknowledgedBy = acknowledgedBy;
     return n;
   }
-
-
 
   public UUID getNotificationId() {
     return notificationId;

@@ -10,4 +10,3 @@ public class EvidenceDataMissingException extends DomainException {
     super("LEGAL_EVIDENCE_DATA_MISSING", Map.of("contractId", contractId), null);
   }
 }
-

@@ -13,4 +13,3 @@ public class ThresholdNotIncreasedException extends DomainException {
         null);
   }
 }
-

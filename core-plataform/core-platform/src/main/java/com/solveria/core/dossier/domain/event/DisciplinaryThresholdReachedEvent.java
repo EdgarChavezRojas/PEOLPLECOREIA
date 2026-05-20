@@ -17,4 +17,3 @@ public record DisciplinaryThresholdReachedEvent(UUID relationshipId, Instant occ
     return new DisciplinaryThresholdReachedEvent(relationshipId, Instant.now());
   }
 }
-

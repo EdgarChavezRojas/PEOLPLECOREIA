@@ -10,4 +10,3 @@ public record ProvisionBenefitBatchCommand(List<BenefitProvisionItem> items, Str
   public record BenefitProvisionItem(
       UUID employeeId, BenefitType benefitType, int fiscalYear, BigDecimal amount) {}
 }
-

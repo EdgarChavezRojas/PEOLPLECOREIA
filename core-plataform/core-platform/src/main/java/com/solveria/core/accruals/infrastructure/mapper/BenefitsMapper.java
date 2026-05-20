@@ -1,13 +1,13 @@
 package com.solveria.core.accruals.infrastructure.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.accruals.domain.model.BenefitAccrual;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;
 import com.solveria.core.accruals.infrastructure.jpa.BenefitAccrualJpa;
 import com.solveria.core.accruals.infrastructure.jpa.HolidayCalendarJpa;
 import com.solveria.core.accruals.infrastructure.jpa.QuinquenioProvisionJpa;
+import com.solveria.core.shared.events.DomainEvent;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
@@ -24,11 +24,7 @@ public interface BenefitsMapper {
       return null;
     }
     return new HolidayCalendar(
-            jpa.getHolidayId(),
-            jpa.getHolidayDate(),
-            jpa.getScope(),
-            jpa.getTenantId()
-    );
+        jpa.getHolidayId(), jpa.getHolidayDate(), jpa.getScope(), jpa.getTenantId());
   }
 
   default QuinquenioProvision toDomain(QuinquenioProvisionJpa jpa) {
@@ -36,12 +32,11 @@ public interface BenefitsMapper {
       return null;
     }
     return new QuinquenioProvision(
-            jpa.getProvisionId(),
-            jpa.getRelationshipId(),
-            jpa.getTotalAccumulated(),
-            Boolean.TRUE.equals(jpa.getPenaltyActive()),
-            jpa.getTenantId()
-    );
+        jpa.getProvisionId(),
+        jpa.getRelationshipId(),
+        jpa.getTotalAccumulated(),
+        Boolean.TRUE.equals(jpa.getPenaltyActive()),
+        jpa.getTenantId());
   }
 
   default BenefitAccrual toDomain(BenefitAccrualJpa jpa) {
@@ -49,13 +44,12 @@ public interface BenefitsMapper {
       return null;
     }
     return new BenefitAccrual(
-            jpa.getBenefitId(),
-            jpa.getRelationshipId(),
-            jpa.getBenefitType(),
-            jpa.getFiscalYear(),
-            jpa.getAccruedAmount(),
-            jpa.getTenantId()
-    );
+        jpa.getBenefitId(),
+        jpa.getRelationshipId(),
+        jpa.getBenefitType(),
+        jpa.getFiscalYear(),
+        jpa.getAccruedAmount(),
+        jpa.getTenantId());
   }
 
   default String toEventPayload(QuinquenioProvision provision, DomainEvent event) {

@@ -11,4 +11,3 @@ public record RelationshipEndedEvent(UUID relationshipId, UUID tenantId, Instant
     this(relationshipId, tenantId, Instant.now());
   }
 }
-

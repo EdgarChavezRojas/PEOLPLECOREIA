@@ -8,4 +8,3 @@ public interface EvaluateDocumentExpirationsUseCase {
 
   List<DocumentRecord> handle(EvaluateDocumentExpirationsCommand command);
 }
-

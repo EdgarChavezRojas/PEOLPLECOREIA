@@ -7,8 +7,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AttendanceRecordRepositoryPort {
-    AttendanceRecord save(AttendanceRecord record);
-    Optional<AttendanceRecord> findById(UUID recordId);
-    Optional<AttendanceRecord> findByRelationshipIdAndDate(UUID relationshipId, LocalDate date);
-    List<AttendanceRecord> findOpenRecords();
+  AttendanceRecord save(AttendanceRecord record);
+
+  Optional<AttendanceRecord> findById(UUID recordId);
+
+  Optional<AttendanceRecord> findByRelationshipIdAndDate(UUID relationshipId, LocalDate date);
+
+  List<AttendanceRecord> findOpenRecords();
 }

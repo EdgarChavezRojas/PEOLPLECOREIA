@@ -7,4 +7,3 @@ public interface RejectLeaveUseCase {
 
   AccrualBalance handle(RejectLeaveCommand command);
 }
-

@@ -2,11 +2,10 @@ package com.solveria.core.financial.application.usecase;
 
 import com.solveria.core.financial.application.port.UfvQuotationPort;
 import com.solveria.core.financial.domain.event.UfvMaintenanceAppliedEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-
-import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,12 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Use Case: Aplicar Mantenimiento de Valor UFV a provisiones y crédito fiscal.
  *
- * <p>Flujo:
- * 1. Recibe fecha inicio y fin del período.
- * 2. Consulta UfvQuotationPort para obtener UFV inicial y final.
- * 3. Calcula factor de actualización: ufvFinal / ufvInicial.
- * 4. Actualiza saldos de provisiones/crédito fiscal multiplicando por el factor.
- * 5. Dispara evento UfvMaintenanceAppliedEvent.
+ * <p>Flujo: 1. Recibe fecha inicio y fin del período. 2. Consulta UfvQuotationPort para obtener UFV
+ * inicial y final. 3. Calcula factor de actualización: ufvFinal / ufvInicial. 4. Actualiza saldos
+ * de provisiones/crédito fiscal multiplicando por el factor. 5. Dispara evento
+ * UfvMaintenanceAppliedEvent.
  *
  * <p>Si el proveedor BCB no responde, se propaga UfvProviderUnavailableException.
  */
@@ -62,10 +59,7 @@ public class ApplyUfvMaintenanceUseCase extends DomainRoot {
     BigDecimal ufvInicial = ufvQuotationPort.getUfvValue(periodStart);
     BigDecimal ufvFinal = ufvQuotationPort.getUfvValue(periodEnd);
 
-    log.info(
-        "event=UFV_QUOTATIONS_RETRIEVED ufvInicial={} ufvFinal={}",
-        ufvInicial,
-        ufvFinal);
+    log.info("event=UFV_QUOTATIONS_RETRIEVED ufvInicial={} ufvFinal={}", ufvInicial, ufvFinal);
 
     // --- Paso 3: Calcular factor de actualización ---
     if (ufvInicial.compareTo(BigDecimal.ZERO) <= 0) {
@@ -80,14 +74,10 @@ public class ApplyUfvMaintenanceUseCase extends DomainRoot {
 
     // --- Paso 4: Actualizar saldos ---
     BigDecimal updatedProvisions =
-        currentProvisionBalance
-            .multiply(adjustmentFactor)
-            .setScale(2, RoundingMode.HALF_UP);
+        currentProvisionBalance.multiply(adjustmentFactor).setScale(2, RoundingMode.HALF_UP);
 
     BigDecimal updatedFiscalCredit =
-        currentFiscalCredit
-            .multiply(adjustmentFactor)
-            .setScale(2, RoundingMode.HALF_UP);
+        currentFiscalCredit.multiply(adjustmentFactor).setScale(2, RoundingMode.HALF_UP);
 
     log.info(
         "event=UFV_BALANCES_UPDATED provisions={} fiscalCredit={}",
@@ -99,10 +89,7 @@ public class ApplyUfvMaintenanceUseCase extends DomainRoot {
         new UfvMaintenanceAppliedEvent(
             periodStart, periodEnd, ufvInicial, ufvFinal, adjustmentFactor, tenantId));
 
-    log.info(
-        "event=UFV_MAINTENANCE_APPLIED tenantId={} factor={}",
-        tenantId,
-        adjustmentFactor);
+    log.info("event=UFV_MAINTENANCE_APPLIED tenantId={} factor={}", tenantId, adjustmentFactor);
 
     return new UfvMaintenanceResult(
         adjustmentFactor, updatedProvisions, updatedFiscalCredit, ufvInicial, ufvFinal);

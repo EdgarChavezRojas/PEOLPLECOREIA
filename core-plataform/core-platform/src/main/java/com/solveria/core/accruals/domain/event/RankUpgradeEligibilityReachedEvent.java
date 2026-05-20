@@ -5,10 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record RankUpgradeEligibilityReachedEvent(
-    UUID relationshipId,
-    String currentRank,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID relationshipId, String currentRank, Instant occurredAt) implements DomainEvent {
 
   public RankUpgradeEligibilityReachedEvent {
     if (relationshipId == null) {
@@ -26,4 +23,3 @@ public record RankUpgradeEligibilityReachedEvent(
     return new RankUpgradeEligibilityReachedEvent(relationshipId, currentRank, Instant.now());
   }
 }
-

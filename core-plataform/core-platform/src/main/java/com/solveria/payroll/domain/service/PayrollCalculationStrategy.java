@@ -4,5 +4,5 @@ import com.solveria.payroll.domain.model.entity.PayrollLine;
 import java.math.BigDecimal;
 
 public interface PayrollCalculationStrategy {
-    void calculate(PayrollLine line, int seniorityYears, BigDecimal fiscalCredit);
+  void calculate(PayrollLine line, int seniorityYears, BigDecimal fiscalCredit);
 }

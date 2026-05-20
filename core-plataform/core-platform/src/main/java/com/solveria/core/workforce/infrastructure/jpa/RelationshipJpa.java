@@ -63,18 +63,10 @@ public class RelationshipJpa {
   @Column(name = "hire_date")
   private LocalDate hireDate;
 
-  @OneToOne(
-      mappedBy = "relationship",
-      cascade = CascadeType.ALL,
-      orphanRemoval = true
-  )
+  @OneToOne(mappedBy = "relationship", cascade = CascadeType.ALL, orphanRemoval = true)
   private WorkerProfileJpa workerProfile;
 
-  @OneToOne(
-      mappedBy = "relationship",
-      cascade = CascadeType.ALL,
-      orphanRemoval = true
-  )
+  @OneToOne(mappedBy = "relationship", cascade = CascadeType.ALL, orphanRemoval = true)
   private AcademicProfileJpa academicProfile;
 
   @OneToMany(

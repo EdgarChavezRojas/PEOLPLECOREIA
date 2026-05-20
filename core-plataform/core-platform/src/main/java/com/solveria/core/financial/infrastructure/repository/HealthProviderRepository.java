@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface HealthProviderRepository extends JpaRepository<HealthProviderJpa, Long> {
 
-  Optional<HealthProviderJpa> findByProviderIdAndTenantId(UUID providerId, String tenantId);
+  Optional<HealthProviderJpa> findByProviderIdAndTenantId(UUID providerId, UUID tenantId);
 }

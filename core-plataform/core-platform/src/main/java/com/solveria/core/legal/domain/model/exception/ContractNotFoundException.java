@@ -10,4 +10,3 @@ public class ContractNotFoundException extends DomainException {
     super("LEGAL_CONTRACT_NOT_FOUND", Map.of("contractId", contractId), null);
   }
 }
-

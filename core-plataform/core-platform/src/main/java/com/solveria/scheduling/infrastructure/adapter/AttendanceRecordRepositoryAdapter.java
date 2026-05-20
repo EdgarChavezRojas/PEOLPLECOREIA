@@ -17,32 +17,35 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AttendanceRecordRepositoryAdapter implements AttendanceRecordRepositoryPort {
 
-    private final AttendanceRecordJpaRepository attendanceRecordJpaRepository;
-    private final AttendanceRecordMapper attendanceRecordMapper;
+  private final AttendanceRecordJpaRepository attendanceRecordJpaRepository;
+  private final AttendanceRecordMapper attendanceRecordMapper;
 
-    @Override
-    public AttendanceRecord save(AttendanceRecord record) {
-        AttendanceRecordJpa jpa = attendanceRecordMapper.toJpa(record);
-        AttendanceRecordJpa saved = attendanceRecordJpaRepository.save(jpa);
-        return attendanceRecordMapper.toDomain(saved);
-    }
+  @Override
+  public AttendanceRecord save(AttendanceRecord record) {
+    AttendanceRecordJpa jpa = attendanceRecordMapper.toJpa(record);
+    AttendanceRecordJpa saved = attendanceRecordJpaRepository.save(jpa);
+    return attendanceRecordMapper.toDomain(saved);
+  }
 
-    @Override
-    public Optional<AttendanceRecord> findById(UUID recordId) {
-        return attendanceRecordJpaRepository.findByRecordId(recordId)
-            .map(attendanceRecordMapper::toDomain);
-    }
+  @Override
+  public Optional<AttendanceRecord> findById(UUID recordId) {
+    return attendanceRecordJpaRepository
+        .findByRecordId(recordId)
+        .map(attendanceRecordMapper::toDomain);
+  }
 
-    @Override
-    public Optional<AttendanceRecord> findByRelationshipIdAndDate(UUID relationshipId, LocalDate date) {
-        return attendanceRecordJpaRepository.findByRelationshipIdAndWorkDate(relationshipId, date)
-            .map(attendanceRecordMapper::toDomain);
-    }
+  @Override
+  public Optional<AttendanceRecord> findByRelationshipIdAndDate(
+      UUID relationshipId, LocalDate date) {
+    return attendanceRecordJpaRepository
+        .findByRelationshipIdAndWorkDate(relationshipId, date)
+        .map(attendanceRecordMapper::toDomain);
+  }
 
-    @Override
-    public List<AttendanceRecord> findOpenRecords() {
-        return attendanceRecordJpaRepository.findOpenRecords().stream()
-            .map(attendanceRecordMapper::toDomain)
-            .collect(Collectors.toList());
-    }
+  @Override
+  public List<AttendanceRecord> findOpenRecords() {
+    return attendanceRecordJpaRepository.findOpenRecords().stream()
+        .map(attendanceRecordMapper::toDomain)
+        .collect(Collectors.toList());
+  }
 }

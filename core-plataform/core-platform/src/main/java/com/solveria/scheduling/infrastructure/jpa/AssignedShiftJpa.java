@@ -11,60 +11,105 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "sch_assigned_shift")
 public class AssignedShiftJpa extends BaseEntity {
 
-    @Column(name = "shift_id", updatable = false, columnDefinition = "UUID")
-    private UUID shiftId;
+  @Column(name = "shift_id", updatable = false, columnDefinition = "UUID")
+  private UUID shiftId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "plan_id", nullable = false)
-    private SchedulePlanJpa schedulePlan;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "plan_id", nullable = false)
+  private SchedulePlanJpa schedulePlan;
 
-    @Column(name = "relationship_id", nullable = false)
-    private UUID relationshipId;
+  @Column(name = "relationship_id", nullable = false)
+  private UUID relationshipId;
 
-    @Column(name = "expected_start", nullable = false)
-    private LocalDateTime expectedStart;
+  @Column(name = "expected_start", nullable = false)
+  private LocalDateTime expectedStart;
 
-    @Column(name = "expected_end", nullable = false)
-    private LocalDateTime expectedEnd;
+  @Column(name = "expected_end", nullable = false)
+  private LocalDateTime expectedEnd;
 
-    @Column(name = "shift_type", nullable = false)
-    private String shiftType;
+  @Column(name = "shift_type", nullable = false)
+  private String shiftType;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "metadata", columnDefinition = "jsonb")
-    private String metadata;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "metadata", columnDefinition = "jsonb")
+  private String metadata;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "violations", columnDefinition = "jsonb")
-    private String violations;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "violations", columnDefinition = "jsonb")
+  private String violations;
 
-    public UUID getShiftId() { return shiftId; }
-    public void setShiftId(UUID shiftId) { this.shiftId = shiftId; }
+  public UUID getShiftId() {
+    return shiftId;
+  }
 
-    public SchedulePlanJpa getSchedulePlan() { return schedulePlan; }
-    public void setSchedulePlan(SchedulePlanJpa schedulePlan) { this.schedulePlan = schedulePlan; }
+  public void setShiftId(UUID shiftId) {
+    this.shiftId = shiftId;
+  }
 
-    public UUID getRelationshipId() { return relationshipId; }
-    public void setRelationshipId(UUID relationshipId) { this.relationshipId = relationshipId; }
+  public SchedulePlanJpa getSchedulePlan() {
+    return schedulePlan;
+  }
 
-    public LocalDateTime getExpectedStart() { return expectedStart; }
-    public void setExpectedStart(LocalDateTime expectedStart) { this.expectedStart = expectedStart; }
+  public void setSchedulePlan(SchedulePlanJpa schedulePlan) {
+    this.schedulePlan = schedulePlan;
+  }
 
-    public LocalDateTime getExpectedEnd() { return expectedEnd; }
-    public void setExpectedEnd(LocalDateTime expectedEnd) { this.expectedEnd = expectedEnd; }
+  public UUID getRelationshipId() {
+    return relationshipId;
+  }
 
-    public String getShiftType() { return shiftType; }
-    public void setShiftType(String shiftType) { this.shiftType = shiftType; }
+  public void setRelationshipId(UUID relationshipId) {
+    this.relationshipId = relationshipId;
+  }
 
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
+  public LocalDateTime getExpectedStart() {
+    return expectedStart;
+  }
 
-    public String getMetadata() { return metadata; }
-    public void setMetadata(String metadata) { this.metadata = metadata; }
+  public void setExpectedStart(LocalDateTime expectedStart) {
+    this.expectedStart = expectedStart;
+  }
 
-    public String getViolations() { return violations; }
-    public void setViolations(String violations) { this.violations = violations; }
+  public LocalDateTime getExpectedEnd() {
+    return expectedEnd;
+  }
+
+  public void setExpectedEnd(LocalDateTime expectedEnd) {
+    this.expectedEnd = expectedEnd;
+  }
+
+  public String getShiftType() {
+    return shiftType;
+  }
+
+  public void setShiftType(String shiftType) {
+    this.shiftType = shiftType;
+  }
+
+  public boolean isActive() {
+    return isActive;
+  }
+
+  public void setActive(boolean active) {
+    isActive = active;
+  }
+
+  public String getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(String metadata) {
+    this.metadata = metadata;
+  }
+
+  public String getViolations() {
+    return violations;
+  }
+
+  public void setViolations(String violations) {
+    this.violations = violations;
+  }
 }

@@ -21,94 +21,92 @@ import org.springframework.stereotype.Component;
 @Component
 public class SchedulePlanMapper {
 
-    private final ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
 
-    public SchedulePlanMapper(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
+  public SchedulePlanMapper(ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
-    public SchedulePlanJpa toJpa(SchedulePlan domain) {
-        if (domain == null) return null;
+  public SchedulePlanJpa toJpa(SchedulePlan domain) {
+    if (domain == null) return null;
 
-        SchedulePlanJpa jpa = new SchedulePlanJpa();
-        jpa.setPlanId(domain.getPlanId());
-        jpa.setUnitId(domain.getUnitId());
-        jpa.setPeriodStart(domain.getPeriodStart());
-        jpa.setPeriodEnd(domain.getPeriodEnd());
-        jpa.setStatus(domain.getStatus().name());
-        jpa.setTotalProjectedCost(domain.getTotalProjectedCost());
+    SchedulePlanJpa jpa = new SchedulePlanJpa();
+    jpa.setPlanId(domain.getPlanId());
+    jpa.setUnitId(domain.getUnitId());
+    jpa.setPeriodStart(domain.getPeriodStart());
+    jpa.setPeriodEnd(domain.getPeriodEnd());
+    jpa.setStatus(domain.getStatus().name());
+    jpa.setTotalProjectedCost(domain.getTotalProjectedCost());
 
-        List<AssignedShiftJpa> shiftJpas = domain.getShifts().stream()
+    List<AssignedShiftJpa> shiftJpas =
+        domain.getShifts().stream()
             .map(shift -> toAssignedShiftJpa(shift, jpa))
             .collect(Collectors.toList());
-        jpa.setShifts(shiftJpas);
+    jpa.setShifts(shiftJpas);
 
-        return jpa;
+    return jpa;
+  }
+
+  public SchedulePlan toDomain(SchedulePlanJpa jpa) {
+    if (jpa == null) return null;
+
+    List<AssignedShift> shifts =
+        jpa.getShifts().stream().map(this::toAssignedShiftDomain).collect(Collectors.toList());
+
+    return new SchedulePlan(
+        jpa.getPlanId(),
+        jpa.getUnitId(),
+        jpa.getPeriodStart(),
+        jpa.getPeriodEnd(),
+        PlanStatus.valueOf(jpa.getStatus()),
+        jpa.getTotalProjectedCost(),
+        shifts);
+  }
+
+  private AssignedShiftJpa toAssignedShiftJpa(AssignedShift shift, SchedulePlanJpa parentJpa) {
+    AssignedShiftJpa jpa = new AssignedShiftJpa();
+    jpa.setShiftId(shift.getShiftId());
+    jpa.setSchedulePlan(parentJpa);
+    jpa.setRelationshipId(shift.getRelationshipId());
+    jpa.setExpectedStart(shift.getExpectedStart());
+    jpa.setExpectedEnd(shift.getExpectedEnd());
+    jpa.setShiftType(shift.getShiftType().name());
+    jpa.setActive(shift.isActive());
+    jpa.setMetadata(toJson(shift.getMetadata()));
+    jpa.setViolations(toJson(shift.getViolations()));
+    return jpa;
+  }
+
+  private AssignedShift toAssignedShiftDomain(AssignedShiftJpa jpa) {
+    ShiftMetadata metadata = fromJson(jpa.getMetadata(), new TypeReference<>() {});
+    List<ConstraintViolation> violations = fromJson(jpa.getViolations(), new TypeReference<>() {});
+
+    return new AssignedShift(
+        jpa.getShiftId(),
+        jpa.getRelationshipId(),
+        jpa.getExpectedStart(),
+        jpa.getExpectedEnd(),
+        ShiftType.valueOf(jpa.getShiftType()),
+        jpa.isActive(),
+        metadata,
+        violations);
+  }
+
+  private String toJson(Object value) {
+    if (value == null) return null;
+    try {
+      return objectMapper.writeValueAsString(value);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Error serializando a JSON", e);
     }
+  }
 
-    public SchedulePlan toDomain(SchedulePlanJpa jpa) {
-        if (jpa == null) return null;
-
-        List<AssignedShift> shifts = jpa.getShifts().stream()
-            .map(this::toAssignedShiftDomain)
-            .collect(Collectors.toList());
-
-        return new SchedulePlan(
-            jpa.getPlanId(),
-            jpa.getUnitId(),
-            jpa.getPeriodStart(),
-            jpa.getPeriodEnd(),
-            PlanStatus.valueOf(jpa.getStatus()),
-            jpa.getTotalProjectedCost(),
-            shifts
-        );
+  private <T> T fromJson(String json, TypeReference<T> typeRef) {
+    if (json == null || json.isBlank()) return null;
+    try {
+      return objectMapper.readValue(json, typeRef);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Error deserializando desde JSON", e);
     }
-
-    private AssignedShiftJpa toAssignedShiftJpa(AssignedShift shift, SchedulePlanJpa parentJpa) {
-        AssignedShiftJpa jpa = new AssignedShiftJpa();
-        jpa.setShiftId(shift.getShiftId());
-        jpa.setSchedulePlan(parentJpa);
-        jpa.setRelationshipId(shift.getRelationshipId());
-        jpa.setExpectedStart(shift.getExpectedStart());
-        jpa.setExpectedEnd(shift.getExpectedEnd());
-        jpa.setShiftType(shift.getShiftType().name());
-        jpa.setActive(shift.isActive());
-        jpa.setMetadata(toJson(shift.getMetadata()));
-        jpa.setViolations(toJson(shift.getViolations()));
-        return jpa;
-    }
-
-    private AssignedShift toAssignedShiftDomain(AssignedShiftJpa jpa) {
-        ShiftMetadata metadata = fromJson(jpa.getMetadata(), new TypeReference<>() {});
-        List<ConstraintViolation> violations = fromJson(jpa.getViolations(), new TypeReference<>() {});
-
-        return new AssignedShift(
-            jpa.getShiftId(),
-            jpa.getRelationshipId(),
-            jpa.getExpectedStart(),
-            jpa.getExpectedEnd(),
-            ShiftType.valueOf(jpa.getShiftType()),
-            jpa.isActive(),
-            metadata,
-            violations
-        );
-    }
-
-    private String toJson(Object value) {
-        if (value == null) return null;
-        try {
-            return objectMapper.writeValueAsString(value);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Error serializando a JSON", e);
-        }
-    }
-
-    private <T> T fromJson(String json, TypeReference<T> typeRef) {
-        if (json == null || json.isBlank()) return null;
-        try {
-            return objectMapper.readValue(json, typeRef);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Error deserializando desde JSON", e);
-        }
-    }
+  }
 }

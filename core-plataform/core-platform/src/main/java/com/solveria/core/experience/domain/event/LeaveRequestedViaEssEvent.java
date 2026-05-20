@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Evento de integración: Solicitud de ausencia/permiso creada vía ESS.
- * Publicado para que BC de Tiempos y Marcaciones procese la ausencia.
+ * Evento de integración: Solicitud de ausencia/permiso creada vía ESS. Publicado para que BC de
+ * Tiempos y Marcaciones procese la ausencia.
  */
 public record LeaveRequestedViaEssEvent(
     UUID actionId,

@@ -5,5 +5,4 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record AddendumSalaryAdjustmentApprovedEvent(
-    UUID contractId, UUID addendumId, Instant occurredAt)
-    implements DomainEvent {}
+    UUID contractId, UUID addendumId, Instant occurredAt) implements DomainEvent {}

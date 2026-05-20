@@ -28,4 +28,3 @@ public class ApproveLeaveService implements ApproveLeaveUseCase {
     return accrualBalanceRepository.save(balance);
   }
 }
-

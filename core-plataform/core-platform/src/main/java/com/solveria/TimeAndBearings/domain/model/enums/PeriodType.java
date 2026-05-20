@@ -7,12 +7,12 @@ package com.solveria.TimeAndBearings.domain.model.enums;
  */
 public enum PeriodType {
 
-    /** Periodo de 7 días naturales. */
-    WEEKLY,
+  /** Periodo de 7 días naturales. */
+  WEEKLY,
 
-    /** Periodo de 15 días naturales (quincenal). */
-    BIWEEKLY,
+  /** Periodo de 15 días naturales (quincenal). */
+  BIWEEKLY,
 
-    /** Periodo del mes calendario completo. */
-    MONTHLY
+  /** Periodo del mes calendario completo. */
+  MONTHLY
 }

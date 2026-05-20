@@ -4,10 +4,8 @@ import com.solveria.core.legal.application.dto.TerminateContractRequest;
 import com.solveria.core.legal.application.port.ContractRepositoryPort;
 import com.solveria.core.legal.domain.exception.ContractNotFoundException;
 import com.solveria.core.legal.domain.exception.InvalidContractStatusException;
-import com.solveria.core.legal.domain.exception.TenantMismatchException;
 import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.vo.ContractStatus;
-import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.security.context.SecurityUserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +21,6 @@ public class TerminateContractUseCase {
 
   @Transactional
   public void execute(TerminateContractRequest request) {
-
 
     Contract contract =
         contractRepositoryPort

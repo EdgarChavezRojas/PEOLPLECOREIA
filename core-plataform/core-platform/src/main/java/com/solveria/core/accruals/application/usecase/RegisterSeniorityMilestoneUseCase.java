@@ -7,4 +7,3 @@ public interface RegisterSeniorityMilestoneUseCase {
 
   AccrualBalance handle(RegisterSeniorityMilestoneCommand command);
 }
-

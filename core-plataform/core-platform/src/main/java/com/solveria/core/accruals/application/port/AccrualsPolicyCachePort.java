@@ -6,4 +6,3 @@ public interface AccrualsPolicyCachePort {
 
   void updateLegalThreshold(String ruleName, BigDecimal newValue);
 }
-

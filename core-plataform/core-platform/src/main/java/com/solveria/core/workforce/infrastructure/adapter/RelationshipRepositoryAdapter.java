@@ -9,7 +9,6 @@ import com.solveria.core.workforce.domain.model.vo.RelationshipType;
 import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
 import com.solveria.core.workforce.infrastructure.mapper.RelationshipMapper;
 import com.solveria.core.workforce.infrastructure.repository.RelationshipRepository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,7 +33,7 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
     RelationshipJpa savedRelationshipJpa = relationshipRepository.save(relationshipJpa);
     Relationship savedRelationship = relationshipMapper.toDomain(savedRelationshipJpa);
 
-   eventOutboxPort.publish(relationship.pullDomainEvents());
+    eventOutboxPort.publish(relationship.pullDomainEvents());
 
     return savedRelationship;
   }
@@ -66,7 +65,7 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
     List<RelationshipJpa> jpaEntities = relationshipRepository.findByPersonId(personId);
 
     return jpaEntities.stream()
-            .map(relationshipMapper::toDomain) // Transforma cada JPA a Modelo de Dominio
-            .toList();
+        .map(relationshipMapper::toDomain) // Transforma cada JPA a Modelo de Dominio
+        .toList();
   }
 }

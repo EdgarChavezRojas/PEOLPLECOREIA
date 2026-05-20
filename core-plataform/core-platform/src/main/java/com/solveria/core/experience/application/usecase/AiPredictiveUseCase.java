@@ -5,11 +5,10 @@ import com.solveria.core.experience.application.port.in.AiPredictivePI;
 import com.solveria.core.experience.application.port.out.PredictionModelPO;
 import com.solveria.core.experience.domain.model.PredictionModel;
 import com.solveria.core.experience.domain.model.vo.RiskAlert;
+import com.solveria.core.security.context.SecurityTenantContext;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-
-import com.solveria.core.security.context.SecurityTenantContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,11 +31,9 @@ public class AiPredictiveUseCase implements AiPredictivePI {
   @Transactional
   public UUID registerPredictionModel(RegisterPredictionModelCommand cmd) {
     log.info(
-        "event=PREDICTION_MODEL_REGISTER modelType={} version={} ",
-        cmd.modelType(),
-        cmd.version());
+        "event=PREDICTION_MODEL_REGISTER modelType={} version={} ", cmd.modelType(), cmd.version());
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
-    PredictionModel model = PredictionModel.create(cmd.modelType(), cmd.version(),tenantId );
+    PredictionModel model = PredictionModel.create(cmd.modelType(), cmd.version(), tenantId);
     predictionModelPO.save(model);
 
     log.info(

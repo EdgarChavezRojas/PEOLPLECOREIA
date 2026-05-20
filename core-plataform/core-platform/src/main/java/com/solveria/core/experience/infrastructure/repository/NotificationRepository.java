@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificationRepository extends JpaRepository<NotificationJpa, UUID> {
 
-  List<NotificationJpa> findByRecipientIdAndTenantId(UUID recipientId, String tenantId);
+  List<NotificationJpa> findByRecipientIdAndTenantId(UUID recipientId, UUID tenantId);
 }

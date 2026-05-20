@@ -12,8 +12,8 @@ public record LeaveRequestSubmittedEvent(
     LocalDate startDate,
     LocalDate endDate,
     BigDecimal chargeableDays,
-    Instant occurredAt
-) implements DomainEvent {
+    Instant occurredAt)
+    implements DomainEvent {
 
   public LeaveRequestSubmittedEvent {
     if (balanceId == null) {
@@ -46,4 +46,3 @@ public record LeaveRequestSubmittedEvent(
         balanceId, transactionId, startDate, endDate, chargeableDays, Instant.now());
   }
 }
-

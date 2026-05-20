@@ -5,4 +5,3 @@ public enum BenefitType {
   PRIMA_UTILIDAD,
   SEGUNDO_AGUINALDO
 }
-

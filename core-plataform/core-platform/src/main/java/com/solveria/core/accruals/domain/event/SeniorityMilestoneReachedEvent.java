@@ -5,17 +5,13 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Emitido al alcanzar un hito de antigüedad durante el tick mensual de accrual.
- * Trigger: MonthlyAccrualTick.
- * expectedSmMultiplier indica el multiplicador de Salario Mínimo esperado
- * para el cálculo del Bono de Antigüedad.
+ * Emitido al alcanzar un hito de antigüedad durante el tick mensual de accrual. Trigger:
+ * MonthlyAccrualTick. expectedSmMultiplier indica el multiplicador de Salario Mínimo esperado para
+ * el cálculo del Bono de Antigüedad.
  */
 public record SeniorityMilestoneReachedEvent(
-    UUID personId,
-    int newSeniorityYears,
-    int expectedSmMultiplier,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID personId, int newSeniorityYears, int expectedSmMultiplier, Instant occurredAt)
+    implements DomainEvent {
 
   public SeniorityMilestoneReachedEvent {
     if (personId == null) {

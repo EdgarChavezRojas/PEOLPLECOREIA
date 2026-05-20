@@ -28,4 +28,3 @@ public class RejectLeaveService implements RejectLeaveUseCase {
     return accrualBalanceRepository.save(balance);
   }
 }
-

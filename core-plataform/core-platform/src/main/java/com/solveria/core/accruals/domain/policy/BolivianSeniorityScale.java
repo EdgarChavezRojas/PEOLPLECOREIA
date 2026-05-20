@@ -8,8 +8,8 @@ import java.util.TreeMap;
 /**
  * Escala de Bono de Antigüedad según D.S. 21060 (Bolivia).
  *
- * <p>Define los porcentajes sobre el Salario Mínimo Nacional (SMN)
- * que corresponden a cada tramo de antigüedad laboral.
+ * <p>Define los porcentajes sobre el Salario Mínimo Nacional (SMN) que corresponden a cada tramo de
+ * antigüedad laboral.
  *
  * <pre>
  *   2-4  años  →  5%
@@ -24,9 +24,8 @@ import java.util.TreeMap;
 public final class BolivianSeniorityScale {
 
   /**
-   * NavigableMap donde la key es el año mínimo del tramo
-   * y el value es el porcentaje de bono (como BigDecimal).
-   * floorEntry(years) retorna el tramo aplicable.
+   * NavigableMap donde la key es el año mínimo del tramo y el value es el porcentaje de bono (como
+   * BigDecimal). floorEntry(years) retorna el tramo aplicable.
    */
   private static final NavigableMap<Integer, BigDecimal> SCALE;
 

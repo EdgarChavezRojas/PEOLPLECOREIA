@@ -17,4 +17,3 @@ public record EligibilitySuspendedByComplianceEvent(UUID relationshipId, Instant
     return new EligibilitySuspendedByComplianceEvent(relationshipId, Instant.now());
   }
 }
-

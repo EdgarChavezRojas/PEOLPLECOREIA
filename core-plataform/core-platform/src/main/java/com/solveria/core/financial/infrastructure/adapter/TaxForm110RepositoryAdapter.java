@@ -31,7 +31,7 @@ public class TaxForm110RepositoryAdapter implements TaxForm110RepositoryPort {
 
   @Override
   public Optional<TaxForm110> findById(UUID formId) {
-    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return taxForm110Repository
         .findByFormIdAndTenantId(formId, currentTenantId)
         .map(taxForm110Mapper::toDomain);
@@ -40,8 +40,8 @@ public class TaxForm110RepositoryAdapter implements TaxForm110RepositoryPort {
   @Override
   public List<TaxForm110> findByPersonIdAndPeriod(
       UUID personId, YearMonth period, String tenantId) {
-    String resolvedTenantId =
-        tenantId != null ? tenantId : SecurityTenantContext.getCurrentTenantId();
+    UUID resolvedTenantId =
+            UUID.fromString(tenantId != null ? tenantId : SecurityTenantContext.getCurrentTenantId());
     return taxForm110Repository
         .findByPersonIdAndPeriodYearAndPeriodMonthAndTenantId(
             personId, period.getYear(), period.getMonthValue(), resolvedTenantId)

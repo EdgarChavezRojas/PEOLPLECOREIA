@@ -17,4 +17,3 @@ public record MandatoryComplianceDocMissingEvent(UUID relationshipId, Instant oc
     return new MandatoryComplianceDocMissingEvent(relationshipId, Instant.now());
   }
 }
-

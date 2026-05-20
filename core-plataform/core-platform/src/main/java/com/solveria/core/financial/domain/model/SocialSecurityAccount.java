@@ -1,14 +1,9 @@
 package com.solveria.core.financial.domain.model;
 
 import com.solveria.core.financial.domain.model.vo.ContributionRate;
-import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.domain.DomainRoot;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -26,8 +21,6 @@ public class SocialSecurityAccount extends DomainRoot {
   private LocalDate lastContribution;
   private final UUID tenantId;
   private final String createdBy;
-
-
 
   private SocialSecurityAccount(
       UUID ssaId,
@@ -101,8 +94,6 @@ public class SocialSecurityAccount extends DomainRoot {
     }
     this.lastContribution = date;
   }
-
-
 
   // --- Getters ---
 

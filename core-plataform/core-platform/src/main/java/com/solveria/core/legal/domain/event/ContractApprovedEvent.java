@@ -5,9 +5,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record ContractApprovedEvent(UUID contractId, UUID tenantId, Instant occurredAt)
-	implements DomainEvent {
+    implements DomainEvent {
 
   public ContractApprovedEvent(UUID contractId, UUID tenantId) {
-	this(contractId, tenantId, Instant.now());
+    this(contractId, tenantId, Instant.now());
   }
 }

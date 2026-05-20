@@ -9,7 +9,7 @@ public interface FundingSourceRepositoryPort {
 
   Optional<FundingSource> findById(UUID sourceId);
 
-  Optional<FundingSource> findByProjectCode(String projectCode, String tenantId);
+  Optional<FundingSource> findByProjectCode(String projectCode, UUID tenantId);
 
   void save(FundingSource fundingSource);
 }

@@ -6,11 +6,9 @@ import com.solveria.core.dossier.infrastructure.jpa.TalentInventoryJpa;
 import com.solveria.core.dossier.infrastructure.mapper.TalentInventoryMapper;
 import com.solveria.core.dossier.infrastructure.repository.TalentInventoryRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
-
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

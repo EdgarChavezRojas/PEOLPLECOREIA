@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
 /**
  * Adapter: Implementación del puerto ACL {@link RelationshipPersonResolverPort}.
  *
- * <p>Resuelve el {@code personId} asociado a un {@code relationshipId} consultando
- * directamente el repositorio JPA del BC Workforce. Este adapter actúa como capa
- * Anti-Corruption (ACL) que desacopla Experience del modelo de dominio de Workforce,
- * accediendo únicamente a la entidad de infraestructura {@link RelationshipJpa}.
+ * <p>Resuelve el {@code personId} asociado a un {@code relationshipId} consultando directamente el
+ * repositorio JPA del BC Workforce. Este adapter actúa como capa Anti-Corruption (ACL) que
+ * desacopla Experience del modelo de dominio de Workforce, accediendo únicamente a la entidad de
+ * infraestructura {@link RelationshipJpa}.
  *
- * <p>En un monolito modular, el acceso directo al repositorio JPA de otro BC es
- * aceptable como estrategia ACL pragmática. Si se migra a microservicios, este adapter
- * se reemplazaría por una llamada HTTP/gRPC al servicio Workforce.
+ * <p>En un monolito modular, el acceso directo al repositorio JPA de otro BC es aceptable como
+ * estrategia ACL pragmática. Si se migra a microservicios, este adapter se reemplazaría por una
+ * llamada HTTP/gRPC al servicio Workforce.
  */
 @Slf4j
 @Component
@@ -33,9 +33,7 @@ public class RelationshipPersonResolverAdapter implements RelationshipPersonReso
       throw new IllegalArgumentException("relationshipId no puede ser nulo");
     }
 
-    log.debug(
-        "event=EXP_RESOLVE_PERSON_BY_RELATIONSHIP_START relationshipId={}",
-        relationshipId);
+    log.debug("event=EXP_RESOLVE_PERSON_BY_RELATIONSHIP_START relationshipId={}", relationshipId);
 
     RelationshipJpa relationship =
         relationshipRepository

@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ContractRepository extends JpaRepository<ContractJpa, Long> {
 
-  Optional<ContractJpa> findByContractIdAndTenantId(UUID contractId, String tenantId);
+  Optional<ContractJpa> findByContractIdAndTenantId(UUID contractId, UUID tenantId);
 
   @Query(
       "select distinct c from ContractJpa c join c.addendums a "
@@ -34,9 +34,9 @@ public interface ContractRepository extends JpaRepository<ContractJpa, Long> {
   List<ContractJpa> findContractsExpiringExactlyOn(
       @Param("contractType") ContractType contractType,
       @Param("exactDate") LocalDate exactDate,
-      @Param("tenantId") String tenantId);
+      @Param("tenantId") UUID tenantId);
 
-    Optional<Contract> findByRelationshipId(UUID relationshipId);
+  Optional<ContractJpa> findByRelationshipId(UUID relationshipId);
 
-  List<Contract> findByProjectId(UUID projectId);
+  List<ContractJpa> findByProjectId(UUID projectId);
 }

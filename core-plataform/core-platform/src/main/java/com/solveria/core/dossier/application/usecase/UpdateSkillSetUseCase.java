@@ -7,4 +7,3 @@ public interface UpdateSkillSetUseCase {
 
   TalentInventory handle(UpdateSkillSetCommand command);
 }
-

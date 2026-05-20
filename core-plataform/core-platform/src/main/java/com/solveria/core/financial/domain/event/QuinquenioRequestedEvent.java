@@ -7,11 +7,11 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Evento (Async): Quinquenio solicitado — inicia cronómetro de 30 días para pago.
- * Trigger: Empleado cumple 60 meses continuos de antigüedad.
+ * Evento (Async): Quinquenio solicitado — inicia cronómetro de 30 días para pago. Trigger: Empleado
+ * cumple 60 meses continuos de antigüedad.
  *
- * <p>El quinquenio es exento de RC-IVA y deducciones de Gestora.
- * El paymentDeadline marca la fecha límite legal para efectivizar el pago.
+ * <p>El quinquenio es exento de RC-IVA y deducciones de Gestora. El paymentDeadline marca la fecha
+ * límite legal para efectivizar el pago.
  */
 public record QuinquenioRequestedEvent(
     UUID personId,

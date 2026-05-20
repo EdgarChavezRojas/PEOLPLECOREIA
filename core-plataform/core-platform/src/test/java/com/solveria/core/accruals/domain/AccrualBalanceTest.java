@@ -14,7 +14,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-class  AccrualBalanceTest {
+class AccrualBalanceTest {
 
   @Test
   void requestLeaveEmitsThresholdEventWhenInsufficientBalance() {

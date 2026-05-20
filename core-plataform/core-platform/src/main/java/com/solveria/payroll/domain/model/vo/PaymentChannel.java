@@ -6,7 +6,7 @@ package com.solveria.payroll.domain.model.vo;
  * <p>Dominio puro — sin dependencias de framework.
  */
 public enum PaymentChannel {
-    BANK_TRANSFER,
-    CHEQUE,
-    CASH
+  BANK_TRANSFER,
+  CHEQUE,
+  CASH
 }

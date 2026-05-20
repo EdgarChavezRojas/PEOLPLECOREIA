@@ -11,8 +11,6 @@ import com.solveria.core.experience.infrastructure.jpa.SelfServiceActionJpa;
 import com.solveria.core.shared.events.DomainEvent;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -99,7 +97,7 @@ public interface SelfServiceActionMapper {
         jpa.getPersonId(),
         jpa.getActionType(),
         jpa.getPayload(),
-            jpa.getTenantId(),
+        jpa.getTenantId(),
         jpa.getCreatedBy(),
         jpa.getCreatedAt(),
         wf,

@@ -77,8 +77,8 @@ public class ApprovalWorkflow {
   }
 
   /**
-   * Cancela la solicitud (ESS). Solo solicitudes en PENDING_REVIEW pueden cancelarse.
-   * Registra el actor que cancela en el historial para auditoría.
+   * Cancela la solicitud (ESS). Solo solicitudes en PENDING_REVIEW pueden cancelarse. Registra el
+   * actor que cancela en el historial para auditoría.
    *
    * @param cancelledBy ID del empleado que cancela (debe ser el solicitante original)
    */

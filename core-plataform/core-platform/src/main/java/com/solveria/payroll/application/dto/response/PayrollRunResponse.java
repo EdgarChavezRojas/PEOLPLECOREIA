@@ -7,11 +7,10 @@ import java.util.UUID;
 public record PayrollRunResponse(
     UUID id,
     UUID periodId,
-    String tenantId,
+    UUID tenantId,
     String runType,
     String status,
     BigDecimal totalGrossAmount,
     BigDecimal totalNetAmount,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
-) {}
+    LocalDateTime updatedAt) {}

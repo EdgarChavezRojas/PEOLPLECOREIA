@@ -1,4 +1,5 @@
-// Ruta: core-plataform/core-platform/src/main/java/com/solveria/core/dossier/infrastructure/listener/DossierEventListener.java
+// Ruta:
+// core-plataform/core-platform/src/main/java/com/solveria/core/dossier/infrastructure/listener/DossierEventListener.java
 package com.solveria.core.dossier.infrastructure.listener;
 
 import com.solveria.core.dossier.application.command.ArchiveContractCommand;
@@ -13,7 +14,6 @@ import com.solveria.core.dossier.application.usecase.ReturnAssetUseCase;
 import com.solveria.core.dossier.domain.model.vo.DisciplinarySeverity;
 import com.solveria.core.dossier.domain.policy.LocalizationPolicy;
 import com.solveria.core.experience.domain.event.DisciplinaryThresholdReachedEvent;
-
 import com.solveria.core.legal.domain.event.ContractApprovedEvent;
 import com.solveria.core.workforce.domain.event.OrgUnitGeographicMovedEvent;
 import com.solveria.core.workforce.domain.event.PersonMasterCreatedEvent;
@@ -42,7 +42,7 @@ public class DossierEventListener {
   private final ArchiveContractUseCase archiveContractUseCase;
   private final ReturnAssetUseCase returnAssetUseCase;
   private final RecordDisciplinaryActionUseCase recordDisciplinaryActionUseCase;
-  //private final AcknowledgeMemorandumUseCase acknowledgeMemorandumUseCase;
+  // private final AcknowledgeMemorandumUseCase acknowledgeMemorandumUseCase;
   private final AssignedAssetRepositoryPort assignedAssetRepository;
 
   @EventListener
@@ -50,8 +50,7 @@ public class DossierEventListener {
   public void handle(PersonMasterCreatedEvent event) {
     log.info("Recibido PersonMasterCreatedEvent para personId={}", event.personId());
     CreateDocumentRequirementsCommand command =
-        new CreateDocumentRequirementsCommand(
-            event.personId(), event.tenantId());
+        new CreateDocumentRequirementsCommand(event.personId(), event.tenantId());
     createDocumentRequirementsUseCase.handle(command);
   }
 
@@ -61,10 +60,7 @@ public class DossierEventListener {
     log.info("Recibido ContractApprovedEvent para contractId={}", event.contractId());
     ArchiveContractCommand command =
         new ArchiveContractCommand(
-            event.contractId(),
-            event.contractId(),
-            CONTRACT_REFERENCE_DEFAULT,
-            event.tenantId());
+            event.contractId(), event.contractId(), CONTRACT_REFERENCE_DEFAULT, event.tenantId());
     archiveContractUseCase.handle(command);
   }
 
@@ -74,10 +70,12 @@ public class DossierEventListener {
     log.info("Recibido RelationshipEndedEvent para relationshipId={}", event.relationshipId());
 
     // Necesitas inyectar AssignedAssetRepositoryPort en el DossierEventListener
-    List<UUID> pendingAssetIds = assignedAssetRepository.findPendingAssetIds(event.relationshipId());
+    List<UUID> pendingAssetIds =
+        assignedAssetRepository.findPendingAssetIds(event.relationshipId());
 
     for (UUID assetId : pendingAssetIds) {
-      ReturnAssetCommand command = new ReturnAssetCommand(
+      ReturnAssetCommand command =
+          new ReturnAssetCommand(
               assetId, // <-- ID correcto del activo
               LocalDateTime.now(),
               false,
@@ -91,7 +89,8 @@ public class DossierEventListener {
   @Transactional
   public void handle(DisciplinaryThresholdReachedEvent event) {
     log.info("Recibido DisciplinaryThresholdReachedEvent para tenantId={}", event.tenantId());
-    String reason = "AI_THRESHOLD_REACHED memos=%d periodMonths=%d recommendation=%s"
+    String reason =
+        "AI_THRESHOLD_REACHED memos=%d periodMonths=%d recommendation=%s"
             .formatted(event.memorandumCount(), event.periodMonths(), event.recommendation());
 
     RecordDisciplinaryActionCommand command =
@@ -102,54 +101,61 @@ public class DossierEventListener {
             reason.getBytes(StandardCharsets.UTF_8),
             "ai_disciplinary_alert.txt",
             LocalDate.now().plusYears(1),
-                LocalizationPolicy.SANTA_CRUZ_BOLIVIA,
+            LocalizationPolicy.SANTA_CRUZ_BOLIVIA,
             event.tenantId());
     recordDisciplinaryActionUseCase.handle(command);
   }
 
-//  @EventListener revisar este evento porque el flujo no es el correcto
-//  @Transactional
-//  public void handle(MemorandumAcknowledgedEvent event) {
-//    log.info("Procesando acuse de recibo para notificación: {}", event.notificationId());
-//
-//    // 1. RESOLVER LA UBICACIÓN (Ya que el BC6 no la envía)
-//    // Opción A: Si tu BC3 tiene forma de consultar la ciudad del empleado:
-//    // LocalizationPolicy policy = workforceQueryPort.getPolicyForPerson(event.personId());
-//
-//    // Opción B (Fallback provisional si aún no tienes el puerto):
-//    LocalizationPolicy policy = LocalizationPolicy.SANTA_CRUZ_BOLIVIA;
-//
-//    // 2. RESOLVER LA FIRMA (Generar un rastro de auditoría determinista y seguro)
-//    // Esto es mucho más profesional y auditable que usar "ACK" o datos falsos.
-//    String auditTrail = String.format("SYSTEM_E_SIGNATURE|NOTIF:%s|PERSON:%s|TIMESTAMP:%s|TENANT:%s",
-//            event.notificationId(),
-//            event.personId(),
-//            event.acknowledgedAt(),
-//            event.tenantId());
-//    byte[] simpleElectronicSignature = auditTrail.getBytes(StandardCharsets.UTF_8);
-//
-//    // 3. ARMAR EL COMANDO PARA EL DOSSIER
-//    AcknowledgeMemorandumCommand command = new AcknowledgeMemorandumCommand(
-//            // Nota: Asegúrate de que tu BC3 pueda buscar el documentId a partir del notificationId
-//            event.notificationId(),
-//            simpleElectronicSignature, // La firma autogenerada por auditoría
-//            null,                      // Expiración (null = permanente o calculada en el Service)
-//            policy,                    // La política resuelta
-//            UUID.fromString(event.tenantId())
-//    );
-//
-//    // 4. EJECUTAR EL CASO DE USO
-//    acknowledgeMemorandumUseCase.handle(command);
-//  }
+  //  @EventListener revisar este evento porque el flujo no es el correcto
+  //  @Transactional
+  //  public void handle(MemorandumAcknowledgedEvent event) {
+  //    log.info("Procesando acuse de recibo para notificación: {}", event.notificationId());
+  //
+  //    // 1. RESOLVER LA UBICACIÓN (Ya que el BC6 no la envía)
+  //    // Opción A: Si tu BC3 tiene forma de consultar la ciudad del empleado:
+  //    // LocalizationPolicy policy = workforceQueryPort.getPolicyForPerson(event.personId());
+  //
+  //    // Opción B (Fallback provisional si aún no tienes el puerto):
+  //    LocalizationPolicy policy = LocalizationPolicy.SANTA_CRUZ_BOLIVIA;
+  //
+  //    // 2. RESOLVER LA FIRMA (Generar un rastro de auditoría determinista y seguro)
+  //    // Esto es mucho más profesional y auditable que usar "ACK" o datos falsos.
+  //    String auditTrail =
+  // String.format("SYSTEM_E_SIGNATURE|NOTIF:%s|PERSON:%s|TIMESTAMP:%s|TENANT:%s",
+  //            event.notificationId(),
+  //            event.personId(),
+  //            event.acknowledgedAt(),
+  //            event.tenantId());
+  //    byte[] simpleElectronicSignature = auditTrail.getBytes(StandardCharsets.UTF_8);
+  //
+  //    // 3. ARMAR EL COMANDO PARA EL DOSSIER
+  //    AcknowledgeMemorandumCommand command = new AcknowledgeMemorandumCommand(
+  //            // Nota: Asegúrate de que tu BC3 pueda buscar el documentId a partir del
+  // notificationId
+  //            event.notificationId(),
+  //            simpleElectronicSignature, // La firma autogenerada por auditoría
+  //            null,                      // Expiración (null = permanente o calculada en el
+  // Service)
+  //            policy,                    // La política resuelta
+  //            UUID.fromString(event.tenantId())
+  //    );
+  //
+  //    // 4. EJECUTAR EL CASO DE USO
+  //    acknowledgeMemorandumUseCase.handle(command);
+  //  }
   @Async
   @EventListener
   public void handle(PersonUpdatedEvent event) {
-    log.info("Recibido PersonUpdatedEvent para personId={}. Pendiente de procesamiento.", event.personId());
+    log.info(
+        "Recibido PersonUpdatedEvent para personId={}. Pendiente de procesamiento.",
+        event.personId());
   }
+
   @Async
   @EventListener
   public void handle(OrgUnitGeographicMovedEvent event) {
-    log.info("Recibido OrgUnitGeographicMovedEvent para unitId={}. Pendiente de procesamiento.", event.unitId());
+    log.info(
+        "Recibido OrgUnitGeographicMovedEvent para unitId={}. Pendiente de procesamiento.",
+        event.unitId());
   }
 }
-

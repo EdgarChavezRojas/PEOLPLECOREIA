@@ -20,7 +20,14 @@ public class Position extends DomainRoot {
 
   public Position() {}
 
-  public Position(UUID positionId, UUID unitId, Job job, PositionStatus status, Boolean isBudgeted, HeadcountPlan headcountPlan, UUID personId) {
+  public Position(
+      UUID positionId,
+      UUID unitId,
+      Job job,
+      PositionStatus status,
+      Boolean isBudgeted,
+      HeadcountPlan headcountPlan,
+      UUID personId) {
     this.positionId = positionId;
     this.unitId = unitId;
     this.job = job;
@@ -30,26 +37,61 @@ public class Position extends DomainRoot {
     this.personId = personId;
   }
 
-  public UUID getPositionId() { return positionId; }
-  public void setPositionId(UUID positionId) { this.positionId = positionId; }
+  public UUID getPositionId() {
+    return positionId;
+  }
 
-  public UUID getUnitId() { return unitId; }
-  public void setUnitId(UUID unitId) { this.unitId = unitId; }
+  public void setPositionId(UUID positionId) {
+    this.positionId = positionId;
+  }
 
-  public Job getJob() { return job; }
-  public void setJob(Job job) { this.job = job; }
+  public UUID getUnitId() {
+    return unitId;
+  }
 
-  public PositionStatus getStatus() { return status; }
-  public void setStatus(PositionStatus status) { this.status = status; }
+  public void setUnitId(UUID unitId) {
+    this.unitId = unitId;
+  }
 
-  public Boolean getIsBudgeted() { return isBudgeted; }
-  public void setIsBudgeted(Boolean isBudgeted) { this.isBudgeted = isBudgeted; }
+  public Job getJob() {
+    return job;
+  }
 
-  public HeadcountPlan getHeadcountPlan() { return headcountPlan; }
-  public void setHeadcountPlan(HeadcountPlan headcountPlan) { this.headcountPlan = headcountPlan; }
+  public void setJob(Job job) {
+    this.job = job;
+  }
 
-  public UUID getPersonId() { return personId; }
-  public void setPersonId(UUID personId) { this.personId = personId; }
+  public PositionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(PositionStatus status) {
+    this.status = status;
+  }
+
+  public Boolean getIsBudgeted() {
+    return isBudgeted;
+  }
+
+  public void setIsBudgeted(Boolean isBudgeted) {
+    this.isBudgeted = isBudgeted;
+  }
+
+  public HeadcountPlan getHeadcountPlan() {
+    return headcountPlan;
+  }
+
+  public void setHeadcountPlan(HeadcountPlan headcountPlan) {
+    this.headcountPlan = headcountPlan;
+  }
+
+  public UUID getPersonId() {
+    return personId;
+  }
+
+  public void setPersonId(UUID personId) {
+    this.personId = personId;
+  }
 
   public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
     if (unitId == null || jobId == null || maxSlots == null) {
@@ -62,14 +104,13 @@ public class Position extends DomainRoot {
     associatedJob.setJobId(jobId);
 
     return new Position(
-            UUID.randomUUID(),
-            unitId,
-            associatedJob,
-            PositionStatus.VACANT,
-            isBudgeted != null ? isBudgeted : false,
-            HeadcountPlan.create(maxSlots),
-            null
-    );
+        UUID.randomUUID(),
+        unitId,
+        associatedJob,
+        PositionStatus.VACANT,
+        isBudgeted != null ? isBudgeted : false,
+        HeadcountPlan.create(maxSlots),
+        null);
   }
 
   public UUID getJobId() {

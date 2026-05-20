@@ -7,11 +7,11 @@ import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
 import com.solveria.core.legal.infrastructure.mapper.ContractMapper;
 import com.solveria.core.legal.infrastructure.repository.ContractRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -37,7 +37,7 @@ public class ContractRepositoryAdapter implements ContractRepositoryPort {
 
   @Override
   public Optional<Contract> findById(UUID contractId) {
-    String currentTenantId = SecurityTenantContext.getCurrentTenantId();
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return contractRepository
         .findByContractIdAndTenantId(contractId, currentTenantId)
         .map(contractMapper::toDomain);
@@ -55,21 +55,19 @@ public class ContractRepositoryAdapter implements ContractRepositoryPort {
 
   @Override
   public List<Contract> findContractsExpiringExactlyOn(
-      ContractType type, LocalDate exactDate, String tenantId) {
-    return contractRepository
-        .findContractsExpiringExactlyOn(type, exactDate, tenantId)
-        .stream()
+      ContractType type, LocalDate exactDate, UUID tenantId) {
+    return contractRepository.findContractsExpiringExactlyOn(type, exactDate, tenantId).stream()
         .map(contractMapper::toDomain)
         .toList();
   }
 
   @Override
-  public Optional<Contract> findByRelationshipId(UUID relationId) {
+  public Optional<ContractJpa> findByRelationshipId(UUID relationId) {
     return contractRepository.findByRelationshipId(relationId);
   }
 
   @Override
-  public List<Contract> findByProjectId(UUID projectId) {
+  public List<ContractJpa> findByProjectId(UUID projectId) {
     return contractRepository.findByProjectId(projectId);
   }
 }

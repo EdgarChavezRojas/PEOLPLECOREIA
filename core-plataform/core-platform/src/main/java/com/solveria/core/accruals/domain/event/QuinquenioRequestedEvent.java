@@ -6,11 +6,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record QuinquenioRequestedEvent(
-    UUID provisionId,
-    UUID relationshipId,
-    LocalDate requestDate,
-    Instant occurredAt
-) implements DomainEvent {
+    UUID provisionId, UUID relationshipId, LocalDate requestDate, Instant occurredAt)
+    implements DomainEvent {
 
   public QuinquenioRequestedEvent {
     if (provisionId == null) {
@@ -32,4 +29,3 @@ public record QuinquenioRequestedEvent(
     return new QuinquenioRequestedEvent(provisionId, relationshipId, requestDate, Instant.now());
   }
 }
-

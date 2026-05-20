@@ -7,4 +7,3 @@ public interface RecordDisciplinaryActionUseCase {
 
   DocumentRecord handle(RecordDisciplinaryActionCommand command);
 }
-

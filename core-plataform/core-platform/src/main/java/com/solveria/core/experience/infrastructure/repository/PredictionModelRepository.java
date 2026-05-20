@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PredictionModelRepository extends JpaRepository<PredictionModelJpa, UUID> {
 
-  Optional<PredictionModelJpa> findByModelIdAndTenantId(UUID modelId, String tenantId);
+  Optional<PredictionModelJpa> findByModelIdAndTenantId(UUID modelId, UUID tenantId);
 }

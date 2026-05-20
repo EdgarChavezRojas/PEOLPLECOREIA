@@ -7,4 +7,3 @@ public interface OpenAccrualBalanceUseCase {
 
   AccrualBalance handle(OpenAccrualBalanceCommand command);
 }
-

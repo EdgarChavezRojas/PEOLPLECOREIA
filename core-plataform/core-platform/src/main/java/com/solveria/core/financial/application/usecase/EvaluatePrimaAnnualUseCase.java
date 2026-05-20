@@ -1,11 +1,9 @@
 package com.solveria.core.financial.application.usecase;
 
 import com.solveria.core.financial.domain.event.PrimaCalculatedEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.UUID;
-
-import com.solveria.core.shared.outbox.domain.DomainRoot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,13 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Use Case: Distribución de Utilidades / Primas según tipo de Tenant.
  *
- * <p>Flujo:
- * 1. Recibe tenantId, tipo de tenant, utilidad neta y datos de planilla.
- * 2. Invariante P2: Si Tenant es ONG/Fundación o Educación, retorna 0 (exención total).
- * 3. Si es Retail/Corporativo: calcula límite legal del pozo (25% de utilidad neta).
- * 4. Compara el pozo con el costo de 1 sueldo por cada empleado elegible.
- * 5. Si el 25% no cubre la planilla completa, distribuye el pozo equitativamente (prorrateo).
- * 6. Dispara evento PrimaCalculatedEvent.
+ * <p>Flujo: 1. Recibe tenantId, tipo de tenant, utilidad neta y datos de planilla. 2. Invariante
+ * P2: Si Tenant es ONG/Fundación o Educación, retorna 0 (exención total). 3. Si es
+ * Retail/Corporativo: calcula límite legal del pozo (25% de utilidad neta). 4. Compara el pozo con
+ * el costo de 1 sueldo por cada empleado elegible. 5. Si el 25% no cubre la planilla completa,
+ * distribuye el pozo equitativamente (prorrateo). 6. Dispara evento PrimaCalculatedEvent.
  */
 @Slf4j
 @Service
@@ -66,13 +62,7 @@ public class EvaluatePrimaAnnualUseCase extends DomainRoot {
 
       registerEvent(
           new PrimaCalculatedEvent(
-              tenantId,
-              fiscalYear,
-              utilidadNeta,
-              BigDecimal.ZERO,
-              BigDecimal.ZERO,
-              0,
-              false));
+              tenantId, fiscalYear, utilidadNeta, BigDecimal.ZERO, BigDecimal.ZERO, 0, false));
 
       return BigDecimal.ZERO;
     }
@@ -105,19 +95,14 @@ public class EvaluatePrimaAnnualUseCase extends DomainRoot {
     if (poolAmount.compareTo(totalPayrollCost) >= 0) {
       // El pozo cubre al menos 1 sueldo por empleado
       perEmployeeAmount =
-          totalPayrollCost
-              .divide(new BigDecimal(eligibleEmployeeCount), 2, RoundingMode.HALF_UP);
+          totalPayrollCost.divide(new BigDecimal(eligibleEmployeeCount), 2, RoundingMode.HALF_UP);
       prorateApplied = false;
 
-      log.info(
-          "event=PRIMA_FULL_COVERAGE tenantId={} perEmployee={}",
-          tenantId,
-          perEmployeeAmount);
+      log.info("event=PRIMA_FULL_COVERAGE tenantId={} perEmployee={}", tenantId, perEmployeeAmount);
     } else {
       // El 25% no cubre la planilla → prorrateo equitativo
       perEmployeeAmount =
-          poolAmount
-              .divide(new BigDecimal(eligibleEmployeeCount), 2, RoundingMode.HALF_UP);
+          poolAmount.divide(new BigDecimal(eligibleEmployeeCount), 2, RoundingMode.HALF_UP);
       prorateApplied = true;
 
       log.warn(
