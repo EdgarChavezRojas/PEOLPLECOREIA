@@ -13,4 +13,3 @@ public interface LeaveTransactionRepository extends JpaRepository<LeaveTransacti
   Page<LeaveTransactionJpa> findByBalanceRelationshipIdAndBalanceTenantId(
       UUID relationshipId, UUID tenantId, Pageable pageable);
 }
-

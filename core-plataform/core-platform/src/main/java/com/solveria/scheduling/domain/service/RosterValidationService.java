@@ -2,12 +2,11 @@ package com.solveria.scheduling.domain.service;
 
 import com.solveria.scheduling.domain.exception.DomainRuleViolationException;
 import com.solveria.scheduling.domain.model.entity.AssignedShift;
-import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
  * Servicio de dominio para validar políticas de asignación de turnos (Rostering). Implementa las

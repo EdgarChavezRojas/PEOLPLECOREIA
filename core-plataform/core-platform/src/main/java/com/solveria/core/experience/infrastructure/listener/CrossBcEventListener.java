@@ -1,17 +1,19 @@
 package com.solveria.core.experience.infrastructure.listener;
 
+import com.solveria.core.accruals.domain.event.LeaveRequestSubmittedEvent;
 import com.solveria.core.accruals.domain.event.QuinquenioPaymentOverdueEvent;
 import com.solveria.core.dossier.domain.event.DocumentValidationRejectedEvent;
 import com.solveria.core.dossier.domain.event.EligibilitySuspendedByComplianceEvent;
 import com.solveria.core.experience.application.port.out.RelationshipPersonResolverPort;
 import com.solveria.core.experience.application.usecase.CrossBcEventConsumerUseCase;
+import com.solveria.core.experience.application.usecase.SendNotificationUseCase;
 import com.solveria.core.security.context.SecurityTenantContext;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Listener de eventos cross-BC para el Bounded Context Experience (BC 6).
@@ -42,8 +44,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CrossBcEventListener {
 
-  // ── Use Case ────────────────────────────────────────────────────────────
+  // ── Use Cases ────────────────────────────────────────────────────────────
   private final CrossBcEventConsumerUseCase crossBcEventConsumerUseCase;
+  private final SendNotificationUseCase sendNotificationUseCase;
 
   // ── ACL Port (resolución de datos cross-BC) ─────────────────────────────
   private final RelationshipPersonResolverPort relationshipPersonResolverPort;
@@ -54,8 +57,9 @@ public class CrossBcEventListener {
    * experience.prediction.default-model-id} . Usado cuando el evento no transporta un modelId
    * explícito.
    */
-  //revisar urgente porque usa defaultPredictionModelId
-  private final UUID defaultPredictionModelId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+  // revisar urgente porque usa defaultPredictionModelId
+  private final UUID defaultPredictionModelId =
+      UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. QuinquenioPaymentOverdueEvent → handleQuinquenioPaymentOverdue
@@ -205,5 +209,51 @@ public class CrossBcEventListener {
       return "UNKNOWN";
     }
     return tenantId;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────────
+  // 4. LeaveRequestSubmittedEvent → Notificación al Manager
+  // ──────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Reacciona a la solicitud de ausencia enviada (Accruals BC).
+   * Envía una notificación al supervisor indicando que hay una solicitud de ausencia pendiente
+   * de revisión.
+   */
+  @EventListener
+  @Transactional
+  public void handle(LeaveRequestSubmittedEvent event) {
+    log.info(
+        "event=EXP_LEAVE_REQUEST_SUBMITTED_RECEIVED balanceId={} transactionId={} startDate={} endDate={}",
+        event.balanceId(),
+        event.transactionId(),
+        event.startDate(),
+        event.endDate());
+    try {
+      String tenantId = resolveTenantId();
+
+      sendNotificationUseCase.send(
+          event.balanceId(), // recipientId – se resuelve al supervisor en capas internas
+          "PUSH_MOBILE",
+          "Solicitud de ausencia pendiente",
+          String.format(
+              "Se ha recibido una solicitud de ausencia (transactionId=%s) del %s al %s por %s días. Requiere su aprobación.",
+              event.transactionId(),
+              event.startDate(),
+              event.endDate(),
+              event.chargeableDays()),
+          UUID.fromString(tenantId));
+
+      log.info(
+          "event=EXP_LEAVE_REQUEST_NOTIFICATION_SENT balanceId={} transactionId={}",
+          event.balanceId(),
+          event.transactionId());
+    } catch (Exception ex) {
+      log.warn(
+          "event=EXP_LEAVE_REQUEST_NOTIFICATION_FAILED transactionId={} error={}",
+          event.transactionId(),
+          ex.getMessage(),
+          ex);
+    }
   }
 }

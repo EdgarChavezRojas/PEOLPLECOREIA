@@ -42,18 +42,34 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IamServiceException.class)
     public ResponseEntity<ApiErrorResponse> handleIamServiceException(
             IamServiceException ex, HttpServletRequest request) {
+        HttpStatus status = resolveIamServiceHttpStatus(ex);
+
         log.error(
                 "event=IAM_API_EXCEPTION_HANDLED errorCode={} status={} path={}",
                 ex.getErrorCode(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                status.value(),
                 request.getRequestURI(),
                 ex);
 
         ApiErrorResponse errorResponse =
                 new ApiErrorResponse(ex.getErrorCode(), Instant.now(), request.getRequestURI());
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        return ResponseEntity.status(status).body(errorResponse);
     }
+
+    /**
+     * Authentication-related error codes return HTTP 401; everything else stays 500.
+     *
+     * <p>Auth codes are prefixed with {@code IAM_AUTH_} by convention (see
+     * {@link com.solveria.iamservice.application.orchestration.AuthOrchestrator}).
+     */
+    private HttpStatus resolveIamServiceHttpStatus(IamServiceException ex) {
+        if (ex.getErrorCode() != null && ex.getErrorCode().startsWith("IAM_AUTH_")) {
+            return HttpStatus.UNAUTHORIZED;
+        }
+        return HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(

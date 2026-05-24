@@ -40,4 +40,5 @@ public interface PartyIdentifierMapper {
   default Extension toExtensionEnum(String value) {
     return value != null ? Extension.valueOf(value) : null;
   }
+  //test
 }

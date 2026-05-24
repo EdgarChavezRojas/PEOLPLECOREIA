@@ -18,4 +18,5 @@ public interface RelationshipRepositoryPort {
   boolean existsPrimaryRelationshipForPersonInTenant(UUID personId, UUID tenantId);
 
   List<Relationship> findByPersonId(UUID personId);
+  List<Relationship> findAll();
 }

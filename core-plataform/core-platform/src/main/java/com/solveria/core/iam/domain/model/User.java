@@ -15,6 +15,7 @@ public class User {
   private final Long id;
   private String username;
   private String email;
+  private String password;
   private boolean active;
   private Set<Long> roleIds = new HashSet<>();
   private UUID tenantId;
@@ -28,10 +29,11 @@ public class User {
     this.id = null;
   }
 
-  public User(String username, String email, boolean active) {
+  public User(String username, String email, String password, boolean active) {
     this.id = null;
     this.username = username;
     this.email = email;
+    this.password = password;
     this.active = active;
   }
 
@@ -39,6 +41,7 @@ public class User {
       Long id,
       String username,
       String email,
+      String password,
       boolean active,
       Set<Long> roleIds,
       UUID tenantId,
@@ -50,6 +53,7 @@ public class User {
     this.id = id;
     this.username = username;
     this.email = email;
+    this.password = password;
     this.active = active;
     this.roleIds = roleIds != null ? new HashSet<>(roleIds) : new HashSet<>();
     this.tenantId = tenantId;
@@ -85,6 +89,14 @@ public class User {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public boolean isActive() {

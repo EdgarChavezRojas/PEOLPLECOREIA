@@ -27,4 +27,3 @@ public class ListPositionsUseCase {
     return positions.map(positionMapper::toResponse);
   }
 }
-

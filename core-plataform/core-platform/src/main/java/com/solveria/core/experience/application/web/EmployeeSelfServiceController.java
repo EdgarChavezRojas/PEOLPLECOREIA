@@ -9,10 +9,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,5 +48,19 @@ public class EmployeeSelfServiceController {
 
     return ResponseEntity.status(HttpStatus.CREATED).body(actionId);
   }
-}
 
+  @GetMapping("/leaves/balance/{personId}")
+  @Operation(
+      summary = "Consultar saldo de vacaciones",
+      description = "Retorna el saldo disponible de días de vacaciones/ausencias para un empleado")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Saldo consultado exitosamente"),
+    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Empleado no encontrado", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+  })
+  public ResponseEntity<BigDecimal> getLeaveBalance(@PathVariable UUID personId) {
+    BigDecimal balance = employeeSelfServiceUseCase.getAvailableLeaveBalance(personId);
+    return ResponseEntity.ok(balance);
+  }
+}

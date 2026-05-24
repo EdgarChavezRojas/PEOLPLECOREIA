@@ -14,6 +14,9 @@ public class PayrollLine {
   private BigDecimal otherDeductions;
   private BigDecimal netPayable;
   private final UUID tenantId;
+  private BigDecimal seniorityBonus;
+  private BigDecimal infocalRetained;
+  private BigDecimal fiscalCredit;
 
   public PayrollLine(
       UUID id,
@@ -26,6 +29,36 @@ public class PayrollLine {
       BigDecimal otherDeductions,
       BigDecimal netPayable,
       UUID tenantId) {
+    this(
+        id,
+        runId,
+        employeeId,
+        basicSalary,
+        totalEarned,
+        rcIvaRetained,
+        gestoraRetained,
+        otherDeductions,
+        netPayable,
+        tenantId,
+        BigDecimal.ZERO,
+        BigDecimal.ZERO,
+        BigDecimal.ZERO);
+  }
+
+  public PayrollLine(
+      UUID id,
+      UUID runId,
+      UUID employeeId,
+      BigDecimal basicSalary,
+      BigDecimal totalEarned,
+      BigDecimal rcIvaRetained,
+      BigDecimal gestoraRetained,
+      BigDecimal otherDeductions,
+      BigDecimal netPayable,
+      UUID tenantId,
+      BigDecimal seniorityBonus,
+      BigDecimal infocalRetained,
+      BigDecimal fiscalCredit) {
     this.id = id;
     this.runId = runId;
     this.employeeId = employeeId;
@@ -36,11 +69,18 @@ public class PayrollLine {
     this.otherDeductions = otherDeductions;
     this.netPayable = netPayable;
     this.tenantId = tenantId;
+    this.seniorityBonus = seniorityBonus != null ? seniorityBonus : BigDecimal.ZERO;
+    this.infocalRetained = infocalRetained != null ? infocalRetained : BigDecimal.ZERO;
+    this.fiscalCredit = fiscalCredit != null ? fiscalCredit : BigDecimal.ZERO;
   }
 
   public void recalculateNet() {
     this.netPayable =
-        totalEarned.subtract(rcIvaRetained).subtract(gestoraRetained).subtract(otherDeductions);
+        totalEarned
+            .subtract(rcIvaRetained)
+            .subtract(gestoraRetained)
+            .subtract(infocalRetained)
+            .subtract(otherDeductions);
   }
 
   public UUID getId() {
@@ -81,6 +121,30 @@ public class PayrollLine {
 
   public UUID getTenantId() {
     return tenantId;
+  }
+
+  public BigDecimal getSeniorityBonus() {
+    return seniorityBonus;
+  }
+
+  public void setSeniorityBonus(BigDecimal seniorityBonus) {
+    this.seniorityBonus = seniorityBonus;
+  }
+
+  public BigDecimal getInfocalRetained() {
+    return infocalRetained;
+  }
+
+  public void setInfocalRetained(BigDecimal infocalRetained) {
+    this.infocalRetained = infocalRetained;
+  }
+
+  public BigDecimal getFiscalCredit() {
+    return fiscalCredit;
+  }
+
+  public void setFiscalCredit(BigDecimal fiscalCredit) {
+    this.fiscalCredit = fiscalCredit;
   }
 
   public void setBasicSalary(BigDecimal basicSalary) {

@@ -41,7 +41,7 @@ public class TaxForm110RepositoryAdapter implements TaxForm110RepositoryPort {
   public List<TaxForm110> findByPersonIdAndPeriod(
       UUID personId, YearMonth period, String tenantId) {
     UUID resolvedTenantId =
-            UUID.fromString(tenantId != null ? tenantId : SecurityTenantContext.getCurrentTenantId());
+        UUID.fromString(tenantId != null ? tenantId : SecurityTenantContext.getCurrentTenantId());
     return taxForm110Repository
         .findByPersonIdAndPeriodYearAndPeriodMonthAndTenantId(
             personId, period.getYear(), period.getMonthValue(), resolvedTenantId)

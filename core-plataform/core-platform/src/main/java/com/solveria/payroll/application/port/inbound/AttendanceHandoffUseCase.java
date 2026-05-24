@@ -1,6 +1,7 @@
 package com.solveria.payroll.application.port.inbound;
 
 import com.solveria.TimeAndBearings.domain.event.AttendancePeriodClosedEvent;
+import java.util.UUID;
 
 /**
  * Puerto Primario (Inbound): Caso de uso de recepción del handoff de asistencia.
@@ -26,4 +27,12 @@ public interface AttendanceHandoffUseCase {
    * @param event evento de dominio con el handoff de asistencia
    */
   void handle(AttendancePeriodClosedEvent event);
+
+  /**
+   * Ejecuta manualmente la sincronización de asistencia para un período.
+   *
+   * @param periodId id del periodo a sincronizar
+   * @param tenantId id del tenant
+   */
+  void manualSync(UUID periodId, UUID tenantId);
 }

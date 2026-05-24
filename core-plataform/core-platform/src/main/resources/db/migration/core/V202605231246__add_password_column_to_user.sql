@@ -1,0 +1,1 @@
+ALTER table iam_user ADD COLUMN password VARCHAR(255);

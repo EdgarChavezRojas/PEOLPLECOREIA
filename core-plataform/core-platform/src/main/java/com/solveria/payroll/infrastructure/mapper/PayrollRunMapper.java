@@ -16,6 +16,9 @@ public interface PayrollRunMapper {
 
   PayrollRunJpa toJpa(PayrollRun domain);
 
+  @Mapping(target = "lineId", source = "id")
+  PayrollLineJpa toJpa(PayrollLine domain);
+
   // Nota: Si jpa.getId() devuelve un Long (por el BaseEntity),
   // asegúrate de pasar el campo UUID correcto aquí, por ejemplo: jpa.getRunId() si lo creaste.
   @Mapping(target = "lines", expression = "java(mapLines(jpa.getLines(), jpa.getPayrollRunId()))")
@@ -31,9 +34,6 @@ public interface PayrollRunMapper {
         .map(
             lineJpa ->
                 new PayrollLine(
-                    // Asegúrate de que el primer parámetro sea el UUID de la línea, no el Long
-                    // heredado.
-                    // Si la BD autogenera UUIDs, usa el campo específico que hayas definido.
                     lineJpa.getLineId(),
                     payrollRunId,
                     lineJpa.getEmployeeId(),
@@ -43,7 +43,10 @@ public interface PayrollRunMapper {
                     lineJpa.getGestoraRetained(),
                     lineJpa.getOtherDeductions(),
                     lineJpa.getNetPayable(),
-                    lineJpa.getTenantId()))
+                    lineJpa.getTenantId(),
+                    lineJpa.getSeniorityBonus(),
+                    lineJpa.getInfocalRetained(),
+                    lineJpa.getFiscalCredit()))
         .collect(Collectors.toList());
   }
 }

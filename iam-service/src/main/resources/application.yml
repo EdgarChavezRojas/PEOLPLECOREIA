@@ -4,9 +4,10 @@ spring:
   profiles:
     active: dev
   autoconfigure:
-    exclude:
-      - org.springdoc.webmvc.core.configuration.SpringDocWebMvcConfiguration
-      - org.springdoc.webmvc.ui.SwaggerConfig
+    exclude: []
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 # JWT Security Configuration
 security:
@@ -33,3 +34,4 @@ springdoc:
     # enabled: false esto se activa en produccion
   swagger-ui:
     path: /swagger-ui.html
+

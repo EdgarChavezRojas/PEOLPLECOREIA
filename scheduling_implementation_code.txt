@@ -1,0 +1,388 @@
+================================================================================
+CÓDIGO DE IMPLEMENTACIÓN - MÓDULO SCHEDULING (CORE HR BOLIVIA)
+================================================================================
+Este archivo contiene la totalidad del código fuente implementado para la nueva
+funcionalidad: "Obtener el horario/turnos de un empleado en un rango de fechas".
+Se ha estructurado bajo los principios de DDD, Clean Architecture y CQRS.
+
+--------------------------------------------------------------------------------
+1. CAPA DE DOMINIO: EXCEPCIONES
+--------------------------------------------------------------------------------
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\domain\exception\EmployeeNotActiveException.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.domain.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import java.util.UUID;
+
+/**
+ * Excepción lanzada cuando el empleado consultado no existe o no se encuentra activo
+ * en el sistema de Core HR (BC 01).
+ */
+@ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Employee is not active or does not exist")
+public class EmployeeNotActiveException extends RuntimeException {
+
+  private static final long serialVersionUID = 1L;
+
+  public EmployeeNotActiveException(UUID relationshipId) {
+    super("El empleado con relación ID " + relationshipId + " no existe o no está activo en Core HR.");
+  }
+}
+
+
+--------------------------------------------------------------------------------
+2. CAPA DE APLICACIÓN: DTOs
+--------------------------------------------------------------------------------
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\application\dto\response\AssignedShiftResponseDto.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.application.dto.response;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * DTO de respuesta para representar los detalles individuales de un turno asignado.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AssignedShiftResponseDto {
+
+  private UUID shiftId;
+  private UUID relationshipId;
+  private LocalDateTime expectedStart;
+  private LocalDateTime expectedEnd;
+  private String shiftType;
+  private boolean isActive;
+  private String metadata;
+  private String violations;
+}
+
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\application\dto\response\ScheduleEmployeeResponseDto.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.application.dto.response;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * DTO contenedor de respuesta que agrupa los turnos asignados a un empleado
+ * dentro de un rango de fechas específico.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ScheduleEmployeeResponseDto {
+
+  private UUID relationshipId;
+  private LocalDate startDate;
+  private LocalDate endDate;
+  private List<AssignedShiftResponseDto> shifts;
+}
+
+
+--------------------------------------------------------------------------------
+3. CAPA DE APLICACIÓN: PUERTOS (PORTS)
+--------------------------------------------------------------------------------
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\application\port\inbound\ScheduleQueryUseCase.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.application.port.inbound;
+
+import com.solveria.scheduling.application.dto.response.ScheduleEmployeeResponseDto;
+import java.time.LocalDate;
+import java.util.UUID;
+
+/**
+ * Puerto de entrada (interfaz) para el caso de uso de consulta de horarios de empleados.
+ */
+public interface ScheduleQueryUseCase {
+
+  /**
+   * Obtiene el horario/turnos de un empleado dentro de un rango de fechas.
+   *
+   * @param relationshipId el ID de la relación laboral del empleado en Core HR.
+   * @param startDate fecha inicial del rango.
+   * @param endDate fecha final del rango.
+   * @return DTO conteniendo la lista de turnos asignados y activos.
+   */
+  ScheduleEmployeeResponseDto getEmployeeSchedule(
+      UUID relationshipId, LocalDate startDate, LocalDate endDate);
+}
+
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\application\port\outbound\CoreHrPort.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.application.port.outbound;
+
+import java.util.UUID;
+
+/**
+ * Puerto de salida (interfaz) para validar el estado del empleado en el módulo Core HR (BC 01).
+ */
+public interface CoreHrPort {
+
+  /**
+   * Valida si un empleado existe y está activo.
+   *
+   * @param relationshipId id de la relación laboral.
+   * @return true si el empleado está activo; false de lo contrario.
+   */
+  boolean isEmployeeActive(UUID relationshipId);
+}
+
+
+--------------------------------------------------------------------------------
+4. CAPA DE APLICACIÓN: CASO DE USO (USE CASE)
+--------------------------------------------------------------------------------
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\application\usecase\ScheduleQueryUseCaseImpl.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.scheduling.application.dto.response.AssignedShiftResponseDto;
+import com.solveria.scheduling.application.dto.response.ScheduleEmployeeResponseDto;
+import com.solveria.scheduling.application.port.inbound.ScheduleQueryUseCase;
+import com.solveria.scheduling.domain.exception.EmployeeNotActiveException;
+import com.solveria.scheduling.application.port.outbound.CoreHrPort;
+import com.solveria.scheduling.infrastructure.jpa.AssignedShiftJpa;
+import com.solveria.scheduling.infrastructure.repository.AssignedShiftJpaRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Caso de uso (Read Model / CQRS) enfocado en la consulta ágil de turnos asignados de empleados.
+ */
+@Service
+@RequiredArgsConstructor
+public class ScheduleQueryUseCaseImpl implements ScheduleQueryUseCase {
+
+  private final AssignedShiftJpaRepository assignedShiftJpaRepository;
+  private final CoreHrPort coreHrPort;
+
+  @Override
+  @Transactional(readOnly = true)
+  public ScheduleEmployeeResponseDto getEmployeeSchedule(
+      UUID relationshipId, LocalDate startDate, LocalDate endDate) {
+    
+    // 1. Obtener tenantId desde el contexto de seguridad para aislamiento multi-tenant
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+    // 2. Validar que el empleado exista y esté ACTIVE en Core HR (BC 01)
+    if (!coreHrPort.isEmployeeActive(relationshipId)) {
+      throw new EmployeeNotActiveException(relationshipId);
+    }
+
+    // 3. Convertir rangos de fecha LocalDate a límites LocalDateTime para la consulta en DB
+    LocalDateTime startDateTime = startDate.atStartOfDay();
+    LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+    // 4. Ejecutar consulta de lectura directa sobre la tabla sch_assigned_shift
+    List<AssignedShiftJpa> shifts =
+        assignedShiftJpaRepository.findByRelationshipIdAndDateRange(
+            relationshipId, tenantId, startDateTime, endDateTime);
+
+    // 5. Mapear a DTOs de respuesta para evitar acoplamiento con entidades JPA/Dominio
+    List<AssignedShiftResponseDto> shiftDtos =
+        shifts.stream().map(this::mapToAssignedShiftDto).toList();
+
+    return ScheduleEmployeeResponseDto.builder()
+        .relationshipId(relationshipId)
+        .startDate(startDate)
+        .endDate(endDate)
+        .shifts(shiftDtos)
+        .build();
+  }
+
+  private AssignedShiftResponseDto mapToAssignedShiftDto(AssignedShiftJpa jpa) {
+    return AssignedShiftResponseDto.builder()
+        .shiftId(jpa.getShiftId())
+        .relationshipId(jpa.getRelationshipId())
+        .expectedStart(jpa.getExpectedStart())
+        .expectedEnd(jpa.getExpectedEnd())
+        .shiftType(jpa.getShiftType())
+        .isActive(jpa.isActive())
+        .metadata(jpa.getMetadata())
+        .violations(jpa.getViolations())
+        .build();
+  }
+}
+
+
+--------------------------------------------------------------------------------
+5. CAPA DE INFRAESTRUCTURA: ADAPTADORES Y REPOSITORIOS
+--------------------------------------------------------------------------------
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\infrastructure\adapter\CoreHrAdapter.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.infrastructure.adapter;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.scheduling.application.port.outbound.CoreHrPort;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+/**
+ * Adaptador de infraestructura que implementa CoreHrPort para conectarse con el módulo Core HR (BC 01)
+ * de manera directa en el monolito, consultando al puerto del repositorio de relaciones laborales.
+ */
+@Component
+@RequiredArgsConstructor
+public class CoreHrAdapter implements CoreHrPort {
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  @Override
+  public boolean isEmployeeActive(UUID relationshipId) {
+    // 1. Obtener tenantId de la sesión de seguridad
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+    // 2. Buscar la relación laboral a través del puerto del repositorio de workforce
+    Optional<Relationship> relationshipOpt =
+        relationshipRepositoryPort.findByRelationshipIdAndTenantId(relationshipId, tenantId);
+
+    // 3. Validar si la relación laboral existe y tiene el estado activo
+    return relationshipOpt
+        .map(relationship -> RelationshipStatus.ACTIVE.equals(relationship.getCurrentStatus()))
+        .orElse(false);
+  }
+}
+
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\infrastructure\repository\AssignedShiftJpaRepository.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.infrastructure.repository;
+
+import com.solveria.scheduling.infrastructure.jpa.AssignedShiftJpa;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+/**
+ * Repositorio JPA para realizar consultas directas y eficientes sobre la tabla 'sch_assigned_shift'.
+ */
+@Repository
+public interface AssignedShiftJpaRepository extends JpaRepository<AssignedShiftJpa, Long> {
+
+  /**
+   * Obtiene los turnos asignados de un empleado en un rango de fecha y hora específicos,
+   * filtrado por tenant y asegurando que estén activos.
+   *
+   * @param relationshipId id del empleado/relación.
+   * @param tenantId id del inquilino para aislamiento multi-tenant.
+   * @param startDateTime fecha y hora de inicio de búsqueda.
+   * @param endDateTime fecha y hora de fin de búsqueda.
+   * @return Lista de turnos asignados recuperados.
+   */
+  @Query(
+      "SELECT a FROM AssignedShiftJpa a WHERE a.relationshipId = :relationshipId "
+          + "AND a.tenantId = :tenantId "
+          + "AND a.expectedStart >= :startDateTime AND a.expectedEnd <= :endDateTime "
+          + "AND a.isActive = true")
+  List<AssignedShiftJpa> findByRelationshipIdAndDateRange(
+      @Param("relationshipId") UUID relationshipId,
+      @Param("tenantId") UUID tenantId,
+      @Param("startDateTime") LocalDateTime startDateTime,
+      @Param("endDateTime") LocalDateTime endDateTime);
+}
+
+
+--------------------------------------------------------------------------------
+6. CAPA WEB: CONTROLADORES
+--------------------------------------------------------------------------------
+
+ARCHIVO: c:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\scheduling\application\web\ScheduleQueryController.java
+--------------------------------------------------------------------------------
+package com.solveria.scheduling.application.web;
+
+import com.solveria.scheduling.application.dto.response.ScheduleEmployeeResponseDto;
+import com.solveria.scheduling.application.port.inbound.ScheduleQueryUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * Controlador REST para consultas asociadas a planificación de horarios y turnos.
+ */
+@RestController
+@RequestMapping("/api/v1/schedules")
+@RequiredArgsConstructor
+@Tag(name = "Schedule Queries", description = "Endpoints para consultas de horarios de trabajadores")
+public class ScheduleQueryController {
+
+  private final ScheduleQueryUseCase scheduleQueryUseCase;
+
+  /**
+   * Endpoint para obtener los turnos asignados de un empleado específico en un rango de fechas.
+   *
+   * @param relationshipId id de la relación laboral del empleado en Core HR.
+   * @param startDate fecha inicial del rango de búsqueda (ISO DATE: YYYY-MM-DD).
+   * @param endDate fecha final del rango de búsqueda (ISO DATE: YYYY-MM-DD).
+   * @return DTO conteniendo el listado de turnos correspondientes.
+   */
+  @GetMapping("/employees/{relationshipId}")
+  @Operation(
+      summary = "Obtener el horario/turnos de un empleado en un rango de fechas",
+      description = "Retorna una lista con todos los turnos asignados y activos de un empleado específico en un rango de fechas determinado.")
+  @ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Horario recuperado exitosamente",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleEmployeeResponseDto.class))),
+    @ApiResponse(responseCode = "400", description = "Solicitud inválida o empleado inactivo", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Recurso no encontrado", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = @Content)
+  })
+  public ResponseEntity<ScheduleEmployeeResponseDto> getEmployeeSchedule(
+      @PathVariable UUID relationshipId,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+    ScheduleEmployeeResponseDto response =
+        scheduleQueryUseCase.getEmployeeSchedule(relationshipId, startDate, endDate);
+    return ResponseEntity.ok(response);
+  }
+}
+================================================================================
+FIN DE IMPLEMENTACIÓN
+================================================================================

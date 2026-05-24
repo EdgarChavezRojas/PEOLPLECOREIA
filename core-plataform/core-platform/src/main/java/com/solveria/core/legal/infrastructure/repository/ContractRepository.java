@@ -1,6 +1,5 @@
 package com.solveria.core.legal.infrastructure.repository;
 
-import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
 import java.time.LocalDate;

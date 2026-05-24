@@ -24,5 +24,8 @@ public enum DeductionType {
   PENSION_ALIMENTICIA,
 
   /** Seguro complementario de salud (COSSMIL, seguro privado). */
-  SEGURO_COMPLEMENTARIO
+  SEGURO_COMPLEMENTARIO,
+
+  /** Descuento de beneficios (ej. vales de alimentación) por días de vacación. */
+  AJUSTE_VACACION
 }

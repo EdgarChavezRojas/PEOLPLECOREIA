@@ -1,6 +1,7 @@
 package com.solveria.iamservice.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solveria.core.security.filter.SecurityContextFilter;
 import com.solveria.iamservice.api.exception.ErrorCodes;
 import com.solveria.iamservice.api.exception.dto.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,17 +21,18 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
  * Security configuration for IAM Service.
  *
  * <p>Provides two security filter chains: 1. JWT-enabled mode (security.jwt.enabled=true): Requires
- * JWT authentication for /api/** 2. JWT-disabled mode (security.jwt.enabled=false, default): No
- * authentication required (DEV mode)
+ * JWT authentication for /api/** (except /api/auth/**) 2. JWT-disabled mode
+ * (security.jwt.enabled=false, default): No authentication required (DEV mode)
  *
  * <p>Both modes allow public access to: - /actuator/health/**, /actuator/info/** - /v3/api-docs/**,
- * /swagger-ui/**, /swagger-ui.html
+ * /swagger-ui/**, /swagger-ui.html - /api/auth/login, /api/auth/google
  */
 @Configuration
 @EnableWebSecurity
@@ -48,11 +50,12 @@ public class SecurityConfig {
 
     /**
      * Security filter chain for JWT-enabled mode. Requires JWT authentication for /api/**
-     * endpoints.
+     * endpoints, with public access to /api/auth/*.
      */
     @Bean
     @ConditionalOnProperty(name = "security.jwt.enabled", havingValue = "true")
-    public SecurityFilterChain jwtSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain jwtSecurityFilterChain(
+            HttpSecurity http, SecurityContextFilter securityContextFilter) throws Exception {
         log.info("event=SECURITY_CONFIG_JWT_ENABLED");
 
         http
@@ -89,6 +92,12 @@ public class SecurityConfig {
                                         .requestMatchers(new AntPathRequestMatcher("/error"))
                                         .permitAll()
 
+                                        // Public endpoints: Authentication (login, Google SSO)
+                                        .requestMatchers(
+                                                new AntPathRequestMatcher("/api/auth/login"),
+                                                new AntPathRequestMatcher("/api/auth/google"))
+                                        .permitAll()
+
                                         // Protected endpoints: All /api/** require authentication
                                         .requestMatchers(new AntPathRequestMatcher("/api/**"))
                                         .authenticated()
@@ -97,11 +106,10 @@ public class SecurityConfig {
                                         .anyRequest()
                                         .denyAll())
 
-                // Configure OAuth2 Resource Server with JWT
-                // JWT decoder will be auto-configured from
-                // spring.security.oauth2.resourceserver.jwt.issuer-uri
-                // or spring.security.oauth2.resourceserver.jwt.jwk-set-uri properties
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}))
+                // JWT context extraction filter runs before Spring's own auth filter.
+                // Validation is fully stateless (RSA public key only — no DB calls).
+                .addFilterBefore(
+                        securityContextFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // Configure exception handling to return consistent ApiErrorResponse
                 .exceptionHandling(

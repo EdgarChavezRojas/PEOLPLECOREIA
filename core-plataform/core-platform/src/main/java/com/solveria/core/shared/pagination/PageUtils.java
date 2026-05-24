@@ -21,4 +21,3 @@ public final class PageUtils {
     return new PageImpl<>(items.subList(start, end), pageable, items.size());
   }
 }
-

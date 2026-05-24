@@ -35,6 +35,7 @@ public class UserJpaMapper {
         entity.getId(),
         entity.getUsername(),
         entity.getEmail(),
+        entity.getPassword(),
         entity.isActive(),
         roleIds,
         entity.getTenantId(),
@@ -60,7 +61,8 @@ public class UserJpaMapper {
     }
 
     UserJpaEntity entity =
-        new UserJpaEntity(domain.getUsername(), domain.getEmail(), domain.isActive());
+        new UserJpaEntity(
+            domain.getUsername(), domain.getEmail(), domain.getPassword(), domain.isActive());
     entity.setTenantId(domain.getTenantId());
     entity.assignRoles(roles);
     return entity;

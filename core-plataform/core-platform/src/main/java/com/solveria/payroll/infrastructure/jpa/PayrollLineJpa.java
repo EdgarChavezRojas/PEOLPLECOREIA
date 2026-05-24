@@ -39,6 +39,15 @@ public class PayrollLineJpa extends BaseEntity {
   @Column(name = "tenant_id")
   private UUID tenantId;
 
+  @Column(name = "seniority_bonus")
+  private BigDecimal seniorityBonus;
+
+  @Column(name = "infocal_retained")
+  private BigDecimal infocalRetained;
+
+  @Column(name = "fiscal_credit")
+  private BigDecimal fiscalCredit;
+
   public UUID getLineId() {
     return lineId;
   }
@@ -117,5 +126,29 @@ public class PayrollLineJpa extends BaseEntity {
 
   public void setTenantId(UUID tenantId) {
     this.tenantId = tenantId;
+  }
+
+  public BigDecimal getSeniorityBonus() {
+    return seniorityBonus;
+  }
+
+  public void setSeniorityBonus(BigDecimal seniorityBonus) {
+    this.seniorityBonus = seniorityBonus;
+  }
+
+  public BigDecimal getInfocalRetained() {
+    return infocalRetained;
+  }
+
+  public void setInfocalRetained(BigDecimal infocalRetained) {
+    this.infocalRetained = infocalRetained;
+  }
+
+  public BigDecimal getFiscalCredit() {
+    return fiscalCredit;
+  }
+
+  public void setFiscalCredit(BigDecimal fiscalCredit) {
+    this.fiscalCredit = fiscalCredit;
   }
 }

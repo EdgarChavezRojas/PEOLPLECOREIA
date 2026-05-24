@@ -11,6 +11,7 @@ import com.solveria.core.experience.domain.model.SelfServiceAction;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
 import com.solveria.core.experience.domain.service.CertificateGenerationService;
 import com.solveria.core.security.context.SecurityTenantContext;
+import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -154,5 +155,16 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
         cmd.personId(),
         cmd.leaveType());
     return action.getActionId();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public BigDecimal getAvailableLeaveBalance(UUID personId) {
+    log.info("event=LEAVE_BALANCE_QUERY_REQUESTED personId={}", personId);
+
+    BigDecimal balance = selfServiceActionPO.getAvailableLeaveBalance(personId);
+
+    log.info("event=LEAVE_BALANCE_QUERY_SUCCESS personId={} balance={}", personId, balance);
+    return balance;
   }
 }

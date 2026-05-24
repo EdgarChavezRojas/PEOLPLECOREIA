@@ -60,4 +60,3 @@ public class ManagerSelfServiceController {
     return ResponseEntity.ok().build();
   }
 }
-

@@ -3,6 +3,8 @@ package com.solveria.core.workforce.application.port;
 import com.solveria.core.workforce.domain.model.OrgUnit;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Puerto de Salida: Repository Abstracción para OrgUnit
@@ -35,4 +37,7 @@ public interface OrgUnitRepositoryPort {
 
   /** Verifica si existe una unidad por ID y Tenant */
   boolean existsByUnitIdAndTenantId(UUID unitId, UUID tenantId);
+
+  /** Lista unidades organizativas por tenant con paginacion */
+  Page<OrgUnit> findByTenantId(UUID tenantId, Pageable pageable);
 }

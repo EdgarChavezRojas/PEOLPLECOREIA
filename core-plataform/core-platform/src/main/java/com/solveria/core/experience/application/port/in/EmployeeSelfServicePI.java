@@ -2,6 +2,7 @@ package com.solveria.core.experience.application.port.in;
 
 import com.solveria.core.experience.application.command.RequestDataUpdateCommand;
 import com.solveria.core.experience.application.command.RequestLeaveCommand;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -27,4 +28,7 @@ public interface EmployeeSelfServicePI {
 
   /** Solicitar ausencia/permiso vía ESS. */
   UUID requestLeave(RequestLeaveCommand cmd);
+
+  /** Consultar saldo disponible de vacaciones/ausencias para un empleado. */
+  BigDecimal getAvailableLeaveBalance(UUID personId);
 }

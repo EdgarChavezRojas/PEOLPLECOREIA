@@ -1,8 +1,10 @@
 package com.solveria.core.accruals.infrastructure.listener;
 
+import com.solveria.core.accruals.application.command.ApproveLeaveCommand;
 import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
 import com.solveria.core.accruals.application.port.AccrualsPolicyCachePort;
 import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.ApproveLeaveUseCase;
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.model.BenefitAccrual;
 import com.solveria.core.accruals.domain.model.HolidayCalendar;
@@ -12,6 +14,7 @@ import com.solveria.core.accruals.domain.model.vo.AccrualUnit;
 import com.solveria.core.accruals.domain.model.vo.BenefitType;
 import com.solveria.core.accruals.domain.model.vo.SenioritySpan;
 import com.solveria.core.accruals.domain.policy.HolidayPolicy;
+import com.solveria.core.experience.domain.event.DataChangeRequestedEvent;
 import com.solveria.core.experience.domain.event.LeaveRequestedViaEssEvent;
 import com.solveria.core.legal.domain.event.LegalThresholdUpdatedEvent;
 import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
@@ -21,6 +24,8 @@ import com.solveria.core.workforce.domain.event.RelationshipEndedEvent;
 import com.solveria.core.workforce.domain.event.RelationshipReactivatedEvent;
 import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +47,8 @@ public class AccrualsEventListener {
   private final BenefitsRepositoryPort benefitsRepository;
   private final RelationshipRepositoryPort relationshipRepository;
   private final ObjectProvider<AccrualsPolicyCachePort> policyCacheProvider;
+  private final ApproveLeaveUseCase approveLeaveUseCase;
+  private final ObjectMapper objectMapper;
 
   @EventListener
   @Transactional
@@ -223,5 +230,50 @@ public class AccrualsEventListener {
         "event=ACCRUALS_LEGAL_THRESHOLD_UPDATED ruleName={} newValue={}",
         event.ruleName(),
         event.newValue());
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 7. DataChangeRequestedEvent (LEAVE_APPROVAL) → ApproveLeaveUseCase
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Reacciona a eventos de aprobación de cambio de datos (Experience BC).
+   * Filtra por actionType "LEAVE_APPROVAL" para orquestar la aprobación cross-BC
+   * de ausencias, delegando a {@link ApproveLeaveUseCase}.
+   */
+  @EventListener
+  @Transactional
+  public void handle(DataChangeRequestedEvent event) {
+    if (!"LEAVE_APPROVAL".equals(event.actionType())) {
+      return;
+    }
+
+    log.info(
+        "event=ACCRUALS_LEAVE_APPROVAL_RECEIVED actionId={} personId={}",
+        event.actionId(),
+        event.personId());
+    try {
+      JsonNode payloadNode = objectMapper.readTree(event.payload());
+
+      UUID balanceId = UUID.fromString(payloadNode.path("balanceId").asText());
+      UUID transactionId = UUID.fromString(payloadNode.path("transactionId").asText());
+      String location = payloadNode.path("location").asText("UNKNOWN");
+
+      ApproveLeaveCommand command = new ApproveLeaveCommand(balanceId, transactionId, location);
+      AccrualBalance result = approveLeaveUseCase.handle(command);
+
+      log.info(
+          "event=ACCRUALS_LEAVE_APPROVAL_PROCESSED actionId={} balanceId={} transactionId={}",
+          event.actionId(),
+          balanceId,
+          transactionId);
+    } catch (Exception ex) {
+      log.warn(
+          "event=ACCRUALS_LEAVE_APPROVAL_FAILED actionId={} personId={} error={}",
+          event.actionId(),
+          event.personId(),
+          ex.getMessage(),
+          ex);
+    }
   }
 }

@@ -79,9 +79,11 @@ public class AttendanceLedgerJpa extends BaseEntity {
   public UUID getOrgUnitId() {
     return orgUnitId;
   }
+
   public void setOrgUnitId(UUID orgUnitId) {
     this.orgUnitId = orgUnitId;
   }
+
   public UUID getLedgerId() {
     return ledgerId;
   }

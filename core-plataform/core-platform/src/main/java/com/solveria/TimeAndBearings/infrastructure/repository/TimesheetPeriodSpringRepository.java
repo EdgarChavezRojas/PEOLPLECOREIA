@@ -70,8 +70,8 @@ public interface TimesheetPeriodSpringRepository extends JpaRepository<Timesheet
    * @param orgUnitId OrgUnit del periodo
    * @param periodStart primer día del rango
    * @param periodEnd último día del rango
-   * @return número de ledgers no cerrados
-   * revisar despues los commands si enviar orgunitId para attendance legder
+   * @return número de ledgers no cerrados revisar despues los commands si enviar orgunitId para
+   *     attendance legder
    */
   @Query(
       """

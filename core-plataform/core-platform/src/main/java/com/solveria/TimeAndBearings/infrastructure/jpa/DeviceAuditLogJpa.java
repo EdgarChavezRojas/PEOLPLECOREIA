@@ -16,7 +16,6 @@ import java.util.UUID;
 @Table(name = "device_audit_log")
 public class DeviceAuditLogJpa extends BaseEntity {
 
-
   @Column(name = "audit_log_id", nullable = false, updatable = false, columnDefinition = "UUID")
   private UUID auditLogId;
 

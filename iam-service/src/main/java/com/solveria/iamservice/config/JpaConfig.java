@@ -1,11 +1,7 @@
 package com.solveria.iamservice.config;
 
-import com.solveria.core.iam.infrastructure.persistence.entity.*;
-import com.solveria.core.shared.base.BaseEntity;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 
 /**
  * JPA configuration for IAM Service.
@@ -15,23 +11,28 @@ import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
  * Hibernate initialization errors.
  */
 @Configuration
-@EnableJpaRepositories(basePackages = "com.solveria.core.iam.infrastructure.persistence.repository")
+@EntityScan(basePackages = {
+        "com.solveria.core.accruals.infrastructure.jpa",
+       "com.solveria.TimeAndBearings.infrastructure.jpa"
+})
 public class JpaConfig {
 
     /**
      * Explicitly lists the managed JPA entity classes so that Hibernate does not pick up example
      * entities from the core-platform entity package.
      */
-    @Bean
-    PersistenceManagedTypes persistenceManagedTypes() {
-        return PersistenceManagedTypes.of(
-                BaseEntity.class.getName(),
-                RoleJpaEntity.class.getName(),
-                PermissionJpaEntity.class.getName(),
-                UserJpaEntity.class.getName(),
-                ModuleJpaEntity.class.getName(),
-                ResourceJpaEntity.class.getName(),
-                ActionJpaEntity.class.getName(),
-                FieldJpaEntity.class.getName());
-    }
+//    @Bean
+//    PersistenceManagedTypes persistenceManagedTypes() {
+//        return PersistenceManagedTypes.of(
+//                BaseEntity.class.getName(),
+//                RoleJpaEntity.class.getName(),
+//                PermissionJpaEntity.class.getName(),
+//                UserJpaEntity.class.getName(),
+//                ModuleJpaEntity.class.getName(),
+//                ResourceJpaEntity.class.getName(),
+//                ActionJpaEntity.class.getName(),
+//                AccrualBalanceJpa.class.getName(),
+//                LeaveTransactionJpa.class.getName(),
+//                FieldJpaEntity.class.getName());
+//    }
 }

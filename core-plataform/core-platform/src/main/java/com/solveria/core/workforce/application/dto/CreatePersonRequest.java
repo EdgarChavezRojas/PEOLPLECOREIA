@@ -38,4 +38,7 @@ public class CreatePersonRequest {
   private String maritalStatus; // SOLTERO, CASADO, VIUDO, DIVORCIADO
 
   private String professionTitle;
+
+  @NotBlank(message = "gender es requerido")
+  private String DNI;
 }

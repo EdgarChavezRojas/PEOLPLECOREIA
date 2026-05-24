@@ -1,4 +1,4 @@
-package com.solveria.payroll.application.mapper;
+package com.solveria.payroll.infrastructure.mapper;
 
 import com.solveria.payroll.application.dto.response.DispersionFileResponse;
 import com.solveria.payroll.application.dto.response.PayrollRunResponse;

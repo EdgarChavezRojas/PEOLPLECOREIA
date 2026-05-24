@@ -16,4 +16,3 @@ public class AssignPersonToPositionRequest {
   @NotNull(message = "personId es requerido")
   private UUID personId;
 }
-

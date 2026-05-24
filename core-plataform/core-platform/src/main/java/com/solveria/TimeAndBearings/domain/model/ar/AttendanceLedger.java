@@ -516,9 +516,11 @@ public class AttendanceLedger {
   public void loadDeviations(List<TimeDeviationRecord> devs) {
     this.deviations.addAll(devs);
   }
+
   public UUID getOrgUnitId() {
     return orgUnitId;
   }
+
   public void setOrgUnitId(UUID orgUnitId) {
     this.orgUnitId = orgUnitId;
   }

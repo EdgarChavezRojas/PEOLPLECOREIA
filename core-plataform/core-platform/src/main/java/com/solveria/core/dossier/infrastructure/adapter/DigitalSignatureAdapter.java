@@ -41,12 +41,12 @@ public class DigitalSignatureAdapter implements DigitalSignaturePort {
         fileName,
         hashSha256);
 
-    return new SignedDocument(storageId, fileName, hashSha256, expiryDate, qrPayload, signedContent);
+    return new SignedDocument(
+        storageId, fileName, hashSha256, expiryDate, qrPayload, signedContent);
   }
 
   private String normalizeBaseUrl(String baseUrl) {
-    String resolved =
-        (baseUrl == null || baseUrl.isBlank()) ? DEFAULT_QR_BASE_URL : baseUrl.trim();
+    String resolved = (baseUrl == null || baseUrl.isBlank()) ? DEFAULT_QR_BASE_URL : baseUrl.trim();
     return resolved.endsWith("/") ? resolved : resolved + "/";
   }
 
@@ -60,4 +60,3 @@ public class DigitalSignatureAdapter implements DigitalSignaturePort {
     }
   }
 }
-

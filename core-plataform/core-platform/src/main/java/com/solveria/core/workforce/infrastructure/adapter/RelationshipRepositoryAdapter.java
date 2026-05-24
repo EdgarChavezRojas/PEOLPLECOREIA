@@ -68,4 +68,13 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
         .map(relationshipMapper::toDomain) // Transforma cada JPA a Modelo de Dominio
         .toList();
   }
+
+  @Override
+  public List<Relationship> findAll() {
+    List<RelationshipJpa> jpaEntities = relationshipRepository.findAll();
+
+    return jpaEntities.stream()
+        .map(relationshipMapper::toDomain) // Transforma cada JPA a Modelo de Dominio
+        .toList();
+  }
 }

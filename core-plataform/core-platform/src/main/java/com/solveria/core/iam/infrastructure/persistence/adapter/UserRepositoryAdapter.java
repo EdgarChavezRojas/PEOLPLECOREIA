@@ -33,6 +33,16 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
   }
 
   @Override
+  public Optional<User> findByEmail(String email) {
+    return userJpaRepository.findByEmail(email);
+  }
+
+  @Override
+  public Optional<User> findByUsername(String username) {
+    return userJpaRepository.findByUsername(username);
+  }
+
+  @Override
   public User save(User user) {
     // Load RoleJpaEntity entities from IDs
     Set<RoleJpaEntity> roles =

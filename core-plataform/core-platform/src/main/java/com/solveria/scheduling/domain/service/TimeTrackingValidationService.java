@@ -3,10 +3,9 @@ package com.solveria.scheduling.domain.service;
 import com.solveria.scheduling.domain.model.entity.AssignedShift;
 import com.solveria.scheduling.domain.model.enums.DeviationType;
 import com.solveria.scheduling.domain.model.vo.TimeDeviation;
-import org.springframework.stereotype.Component;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
+import org.springframework.stereotype.Component;
 
 /**
  * Servicio de dominio para validar las políticas de marcación y tiempo. Implementa las políticas

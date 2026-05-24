@@ -1,6 +1,6 @@
 package com.solveria.core.accruals.application.service;
 
-import com.solveria.core.accruals.application.port.LeaveTransactionRepositoryPort;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
 import com.solveria.core.accruals.application.usecase.ListEmployeeLeavesUseCase;
 import com.solveria.core.accruals.domain.model.LeaveTransaction;
 import java.util.UUID;
@@ -13,11 +13,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ListEmployeeLeavesService implements ListEmployeeLeavesUseCase {
 
-  private final LeaveTransactionRepositoryPort leaveTransactionRepositoryPort;
+  private final AccrualBalanceRepositoryPort accrualBalanceRepositoryPort;
 
   @Override
   public Page<LeaveTransaction> handle(UUID personId, Pageable pageable) {
-    return leaveTransactionRepositoryPort.findByPersonId(personId, pageable);
+    return accrualBalanceRepositoryPort.findLeaveTransactionsByRelationshipId(personId, pageable);
   }
 }
-

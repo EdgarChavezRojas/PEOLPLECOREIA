@@ -45,7 +45,8 @@ public class CreatePersonUseCase {
             maritalStatus,
             request.getProfessionTitle(),
             request.getGlobalId(),
-            contact);
+            contact,
+                request.getDNI());
 
     Person savedPerson = personRepositoryPort.save(person);
 

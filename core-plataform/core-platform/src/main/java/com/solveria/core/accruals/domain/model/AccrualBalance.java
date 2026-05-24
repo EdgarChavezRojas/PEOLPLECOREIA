@@ -134,7 +134,7 @@ public class AccrualBalance extends DomainRoot {
     return transaction;
   }
 
-  public void approveLeave(UUID transactionId) {
+  public void approveLeave(UUID transactionId, UUID tenantId) {
     LeaveTransaction transaction = findTransaction(transactionId);
     if (transaction.getStatus() != LeaveStatus.PENDING) {
       throw new InvalidLeaveStateException("leave transaction is not pending");
@@ -143,7 +143,7 @@ public class AccrualBalance extends DomainRoot {
     deduct(transaction.getDaysRequested());
     registerEvent(
         LeaveRequestManagerApprovedEvent.now(
-            balanceId, transaction.getTransactionId(), transaction.getDaysRequested()));
+            balanceId, transaction.getTransactionId(), transaction.getDaysRequested(), tenantId));
     registerEvent(AccrualBalanceDeductedEvent.now(balanceId, transaction.getDaysRequested()));
   }
 

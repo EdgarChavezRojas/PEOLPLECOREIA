@@ -8,4 +8,8 @@ public interface PayrollRunRepositoryPort {
   PayrollRun save(PayrollRun payrollRun);
 
   Optional<PayrollRun> findById(UUID id);
+
+  Optional<PayrollRun> findByPeriodAndTenant(UUID periodId, UUID tenantId);
+
+  Optional<PayrollRun> findByIdWithLines(UUID runId);
 }

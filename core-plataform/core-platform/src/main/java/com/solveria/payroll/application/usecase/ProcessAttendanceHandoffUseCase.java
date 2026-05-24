@@ -1,6 +1,8 @@
 package com.solveria.payroll.application.usecase;
 
+import com.solveria.TimeAndBearings.application.port.outbound.TimesheetPeriodRepositoryPort;
 import com.solveria.TimeAndBearings.domain.event.AttendancePeriodClosedEvent;
+import com.solveria.TimeAndBearings.domain.model.ar.TimesheetPeriod;
 import com.solveria.TimeAndBearings.domain.model.entity.PayrollHandoffPackage;
 import com.solveria.TimeAndBearings.domain.model.vo.EmployeeHandoffRecord;
 import com.solveria.payroll.application.port.inbound.AttendanceHandoffUseCase;
@@ -41,6 +43,46 @@ public class ProcessAttendanceHandoffUseCase implements AttendanceHandoffUseCase
 
   private final IncomeRecordRepositoryPort incomeRecordRepository;
   private final DeductionRecordRepositoryPort deductionRecordRepository;
+  private final TimesheetPeriodRepositoryPort periodRepository;
+
+  @Override
+  @Transactional
+  public void manualSync(UUID periodId, UUID tenantId) {
+    Objects.requireNonNull(periodId, "periodId no puede ser nulo");
+    Objects.requireNonNull(tenantId, "tenantId no puede ser nulo");
+
+    log.info(
+        "event=PRL_ATTENDANCE_HANDOFF_MANUAL_START periodId={} tenantId={}", periodId, tenantId);
+
+    TimesheetPeriod period =
+        periodRepository
+            .findById(periodId)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "No se encontró el período de asistencia: " + periodId));
+
+    if (!period.getTenantId().equals(tenantId)) {
+      throw new IllegalArgumentException(
+          "El tenantId del período no coincide con el tenantId solicitado");
+    }
+
+    PayrollHandoffPackage handoff = period.getHandoffPackage();
+    if (handoff == null || handoff.getEmployeeRecords() == null) {
+      log.warn(
+          "event=PRL_ATTENDANCE_HANDOFF_MANUAL_NO_DATA periodId={} tenantId={}",
+          periodId,
+          tenantId);
+      return;
+    }
+
+    for (EmployeeHandoffRecord employeeRecord : handoff.getEmployeeRecords()) {
+      processEmployeeHandoff(employeeRecord, periodId, tenantId);
+    }
+
+    log.info(
+        "event=PRL_ATTENDANCE_HANDOFF_MANUAL_SUCCESS periodId={} tenantId={}", periodId, tenantId);
+  }
 
   @Override
   @Transactional

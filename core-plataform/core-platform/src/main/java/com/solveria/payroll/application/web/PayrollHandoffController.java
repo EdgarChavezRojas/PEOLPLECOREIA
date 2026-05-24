@@ -1,5 +1,6 @@
 package com.solveria.payroll.application.web;
 
+import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.payroll.application.port.inbound.AttendanceHandoffUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,8 +24,9 @@ public class PayrollHandoffController {
       summary = "Sincronizar asistencia",
       description = "Ejecuta la sincronización manual de asistencia para un periodo.")
   public ResponseEntity<Void> syncAttendance(
-      @RequestParam UUID periodId, @RequestHeader("X-Tenant-ID") String tenantId) {
-    //        attendanceHandoffUseCase.process(periodId, tenantId);
+      @RequestParam UUID periodId) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    attendanceHandoffUseCase.manualSync(periodId, tenantId);
     return ResponseEntity.ok().build();
   }
 }

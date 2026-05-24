@@ -9,4 +9,3 @@ public interface ListEmployeeLeavesUseCase {
 
   Page<LeaveTransaction> handle(UUID personId, Pageable pageable);
 }
-

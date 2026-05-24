@@ -16,9 +16,16 @@ public class Job {
   private String gradeBand;
   private String description;
   private UUID tenantId;
+
   public Job() {}
 
-  public Job(UUID jobId, String jobCode, String title, String gradeBand, String description, UUID tenantId) {
+  public Job(
+      UUID jobId,
+      String jobCode,
+      String title,
+      String gradeBand,
+      String description,
+      UUID tenantId) {
     this.jobId = jobId;
     this.jobCode = jobCode;
     this.title = title;
@@ -26,18 +33,22 @@ public class Job {
     this.description = description;
     this.tenantId = tenantId;
   }
+
   public Job(UUID jobId, String jobCode, String title, String gradeBand) {
     this.jobId = jobId;
     this.jobCode = jobCode;
     this.title = title;
     this.gradeBand = gradeBand;
   }
+
   public UUID getTenantId() {
     return tenantId;
   }
+
   public void setTenantId(UUID tenantId) {
     this.tenantId = tenantId;
   }
+
   public UUID getJobId() {
     return jobId;
   }

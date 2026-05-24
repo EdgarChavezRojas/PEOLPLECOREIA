@@ -12,4 +12,6 @@ public interface PersonRepository extends JpaRepository<PersonJpa, UUID> {
   boolean existsByGlobalId(String globalId);
 
   Optional<PersonJpa> findByGlobalId(String globalId);
+
+  Optional<PersonJpa> findByDNI(String dni);
 }

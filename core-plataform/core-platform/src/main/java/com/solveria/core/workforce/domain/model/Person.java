@@ -30,7 +30,7 @@ public class Person extends DomainRoot {
   private String mergedIntoGlobalId;
   private LocalDate createdAt;
   private LocalDate updatedAt;
-
+  private String DNI;
   private static final int MINIMUM_AGE = 18;
 
   public Person() {}
@@ -49,7 +49,8 @@ public class Person extends DomainRoot {
       boolean active,
       String mergedIntoGlobalId,
       LocalDate createdAt,
-      LocalDate updatedAt) {
+      LocalDate updatedAt,
+      String DNI) {
     this.personId = personId;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -64,6 +65,7 @@ public class Person extends DomainRoot {
     this.mergedIntoGlobalId = mergedIntoGlobalId;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.DNI = DNI;
   }
 
   // Getters y Setters
@@ -189,7 +191,8 @@ public class Person extends DomainRoot {
       MaritalStatus maritalStatus,
       String professionTitle,
       String globalId,
-      ContactPoint contactPoint) {
+      ContactPoint contactPoint,
+      String DNI) {
     Period age = Period.between(birthDate, LocalDate.now());
     if (age.getYears() < MINIMUM_AGE) {
       throw new IllegalArgumentException("La persona debe tener minimo " + MINIMUM_AGE + " anos");
@@ -218,7 +221,8 @@ public class Person extends DomainRoot {
             true,
             null,
             LocalDate.now(),
-            LocalDate.now());
+            LocalDate.now(),
+            DNI    );
     person.registerEvent(
         new PersonCreatedEvent(person.getPersonId(), person.getGlobalId(), Instant.now()));
     return person;
@@ -294,5 +298,11 @@ public class Person extends DomainRoot {
 
   public String getFullName() {
     return firstName + " " + lastName;
+  }
+  public String getDNI() {
+    return DNI;
+  }
+  public void setDNI(String DNI) {
+    this.DNI = DNI;
   }
 }

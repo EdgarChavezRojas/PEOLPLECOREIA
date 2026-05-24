@@ -22,4 +22,3 @@ public class ListOrgUnitsUseCase {
     return orgUnitRepositoryPort.findByTenantId(tenantId, pageable).map(orgUnitMapper::toResponse);
   }
 }
-

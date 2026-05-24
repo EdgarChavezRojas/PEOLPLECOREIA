@@ -61,6 +61,9 @@ public class PersonJpa {
   @Column(name = "profession_title")
   private String professionTitle;
 
+  @Column(name = "DNI")
+  private String DNI;
+
   @Column(name = "global_id", nullable = false, unique = true)
   private String globalId;
 

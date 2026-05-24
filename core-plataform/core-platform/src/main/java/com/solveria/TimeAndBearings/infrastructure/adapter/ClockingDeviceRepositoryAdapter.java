@@ -83,9 +83,7 @@ public class ClockingDeviceRepositoryAdapter implements ClockingDeviceRepository
 
   @Override
   public Optional<ClockingDevice> findByDeviceId(UUID deviceId, UUID tenantId) {
-    return springRepository
-        .findByDeviceIdAndTenantId(deviceId, tenantId)
-        .map(this::reconstitute);
+    return springRepository.findByDeviceIdAndTenantId(deviceId, tenantId).map(this::reconstitute);
   }
 
   @Override

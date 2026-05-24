@@ -11,8 +11,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PaymentMethodSpringRepository extends JpaRepository<PaymentMethodJpa, Long> {
 
-  Optional<PaymentMethodJpa> findByPaymentMethodIdAndTenantId(
-      UUID paymentMethodId, UUID tenantId);
+  Optional<PaymentMethodJpa> findByPaymentMethodIdAndTenantId(UUID paymentMethodId, UUID tenantId);
 
   List<PaymentMethodJpa> findAllByTenantId(UUID tenantId);
 

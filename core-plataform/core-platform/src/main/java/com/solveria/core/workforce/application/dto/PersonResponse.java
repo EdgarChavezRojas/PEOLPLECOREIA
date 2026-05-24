@@ -26,4 +26,5 @@ public class PersonResponse {
   private String maritalStatus;
   private String professionTitle;
   private LocalDate createdAt;
+  private String DNI;
 }

@@ -24,6 +24,9 @@ public class PayrollRunRepositoryAdapter implements PayrollRunRepositoryPort {
   @Override
   public PayrollRun save(PayrollRun payrollRun) {
     PayrollRunJpa jpa = mapper.toJpa(payrollRun);
+    if (jpa.getLines() != null) {
+      jpa.getLines().forEach(line -> line.setPayrollRun(jpa));
+    }
     PayrollRunJpa saved = repository.save(jpa);
     return mapper.toDomain(saved);
   }
@@ -31,5 +34,15 @@ public class PayrollRunRepositoryAdapter implements PayrollRunRepositoryPort {
   @Override
   public Optional<PayrollRun> findById(UUID id) {
     return repository.findById(id).map(mapper::toDomain);
+  }
+
+  @Override
+  public Optional<PayrollRun> findByPeriodAndTenant(UUID periodId, UUID tenantId) {
+    return repository.findByPeriodAndTenant(periodId, tenantId).map(mapper::toDomain);
+  }
+
+  @Override
+  public Optional<PayrollRun> findByIdWithLines(UUID runId) {
+    return repository.findByIdWithLines(runId).map(mapper::toDomain);
   }
 }

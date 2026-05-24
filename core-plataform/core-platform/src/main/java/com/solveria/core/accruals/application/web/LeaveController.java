@@ -45,8 +45,10 @@ public class LeaveController {
 
   @GetMapping
   @Operation(
-      summary = "Listar historial de licencias",
-      description = "Obtiene el historial paginado de licencias por empleado")
+          summary = "Registrar licencia en el motor de saldos",
+          description = "Crea y asienta una transacción de licencia directamente en el saldo del colaborador. " +
+                  "Esta operación es administrativa y se utiliza para integraciones directas o " +
+                  "ajustes de RRHH. No activa el flujo de aprobación gerencial de Experience BC.")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Listado paginado obtenido"),
     @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
@@ -75,7 +77,9 @@ public class LeaveController {
   }
 
   @PostMapping("/{transactionId}/approve")
-  @Operation(summary = "Aprobar licencia", description = "Aprueba una solicitud de licencia")
+  @Operation(summary = "Asentar aprobación de licencia en la base de datos",
+          description = "Ejecuta el descuento matemático y el cierre de estado de una transacción de licencia " +
+                  "previamente existente. Esta operación es de bajo nivel y actualiza directamente el AccrualBalance.")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Solicitud aprobada"),
     @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
@@ -108,4 +112,3 @@ public class LeaveController {
     return ResponseEntity.ok().build();
   }
 }
-

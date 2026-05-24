@@ -6,19 +6,31 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
+        scanBasePackages = {"com.solveria", " com.solveria.core.accruals"},
         exclude = {
             MongoAutoConfiguration.class,
             MongoDataAutoConfiguration.class,
             RedisAutoConfiguration.class,
             RedisRepositoriesAutoConfiguration.class
         })
+@EnableJpaRepositories(
+        basePackages = {
+            "com.solveria",
+        })
+@EntityScan(
+        basePackages = {
+            "com.solveria"
+        })
 @EnableConfigurationProperties(JwtProperties.class)
 @EnableScheduling
+
 public class IamServiceApplication {
 
     public static void main(String[] args) {

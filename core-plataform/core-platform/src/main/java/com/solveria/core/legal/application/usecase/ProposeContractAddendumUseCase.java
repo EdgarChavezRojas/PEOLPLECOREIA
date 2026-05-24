@@ -21,7 +21,6 @@ import java.util.Comparator;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +32,9 @@ public class ProposeContractAddendumUseCase {
   private final ContractRepositoryPort contractRepositoryPort;
   private final PolicyRuleRepositoryPort policyRuleRepositoryPort;
 
-  // en un futuro sera implementado con una clase application properties, revisar que es esto urgentemente
-  //@Value("${legal.policies.smn.id}")
+  // en un futuro sera implementado con una clase application properties, revisar que es esto
+  // urgentemente
+  // @Value("${legal.policies.smn.id}")
   private final String smnPolicyId = "00000000-0000-0000-0000-000000000000";
 
   @Transactional

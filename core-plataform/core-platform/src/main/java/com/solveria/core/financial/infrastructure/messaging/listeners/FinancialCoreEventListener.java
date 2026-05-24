@@ -2,6 +2,7 @@ package com.solveria.core.financial.infrastructure.messaging.listeners;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.solveria.core.accruals.domain.event.LeaveRequestManagerApprovedEvent;
 import com.solveria.core.experience.domain.event.DataChangeRequestedEvent;
 import com.solveria.core.financial.application.command.ImputeAnalyticCommand;
 import com.solveria.core.financial.application.command.ProcessLiquidationCommand;
@@ -12,6 +13,7 @@ import com.solveria.core.financial.application.usecase.ImputeAnalyticTerritorial
 import com.solveria.core.financial.application.usecase.ProcessLiquidationUseCase;
 import com.solveria.core.financial.application.usecase.ProcessQuinquenioPaymentUseCase;
 import com.solveria.core.financial.application.usecase.SyncBankAccountUseCase;
+import com.solveria.payroll.application.port.inbound.ApplyLeaveAdjustmentsUseCase;
 import com.solveria.core.financial.application.usecase.ValidateFundingSourceUseCase;
 import com.solveria.core.financial.domain.event.QuinquenioRequestedEvent;
 import com.solveria.core.legal.domain.event.ContractApprovedEvent;
@@ -48,6 +50,7 @@ public class FinancialCoreEventListener {
   private final ProcessLiquidationUseCase processLiquidationUseCase;
   private final ProcessQuinquenioPaymentUseCase processQuinquenioPaymentUseCase;
   private final SyncBankAccountUseCase syncBankAccountUseCase;
+  private final ApplyLeaveAdjustmentsUseCase applyLeaveAdjustmentsUseCase;
 
   // ── ACL Ports (resolución de datos cross-BC) ─────────────────────────────
   private final ContractFinancialDataPort contractFinancialDataPort;
@@ -298,5 +301,37 @@ public class FinancialCoreEventListener {
   private String extractRequiredField(JsonNode node, String fieldName) {
     String value = node.path(fieldName).asText("");
     return value.isBlank() ? null : value;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 7. LeaveRequestManagerApprovedEvent → Sincronización Financiera
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Reacciona a la aprobación gerencial de una solicitud de ausencia (Accruals BC).
+   * Intercepta el evento para futuro ajuste de nómina (vales/primas por vacaciones).
+   */
+  @EventListener
+  @Transactional
+  public void handle(LeaveRequestManagerApprovedEvent event) {
+    log.info(
+        "event=FINANCIAL_LEAVE_APPROVED_RECEIVED balanceId={} transactionId={} daysRequested={}",
+        event.balanceId(),
+        event.transactionId(),
+        event.daysRequested());
+    try {
+      applyLeaveAdjustmentsUseCase.applyAdjustments(event.transactionId(), event.daysRequested(), event.tenantId());
+
+      log.info(
+          "event=FINANCIAL_LEAVE_APPROVED_PROCESSED balanceId={} transactionId={}",
+          event.balanceId(),
+          event.transactionId());
+    } catch (Exception ex) {
+      log.warn(
+          "event=FINANCIAL_LEAVE_APPROVED_FAILED transactionId={} error={}",
+          event.transactionId(),
+          ex.getMessage(),
+          ex);
+    }
   }
 }

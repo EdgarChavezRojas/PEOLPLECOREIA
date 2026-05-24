@@ -6,10 +6,13 @@ import com.solveria.core.workforce.domain.model.Person;
 import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
 import com.solveria.core.workforce.infrastructure.mapper.PersonMapper;
 import com.solveria.core.workforce.infrastructure.repository.PersonRepository;
+
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,5 +50,15 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
   @Override
   public Optional<Person> findByPersonId(UUID personId) {
     return personRepository.findById(personId).map(personMapper::toDomain);
+  }
+
+  @Override
+  public Optional<Person> findByCi(String DNI) {
+    return personRepository.findByDNI(DNI).map(personMapper::toDomain);
+  }
+
+  @Override
+  public Page<Person> findAll(Pageable pageable) {
+    return personRepository.findAll(pageable).map(personMapper::toDomain);
   }
 }

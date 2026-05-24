@@ -6,7 +6,6 @@ import com.solveria.TimeAndBearings.domain.model.entity.PayrollHandoffPackage;
 import com.solveria.TimeAndBearings.domain.model.enums.ClosureType;
 import com.solveria.TimeAndBearings.domain.model.enums.DataQualityFlag;
 import com.solveria.TimeAndBearings.domain.model.enums.PeriodStatus;
-import com.solveria.TimeAndBearings.domain.model.enums.PeriodType;
 import com.solveria.TimeAndBearings.domain.model.vo.EmployeeHandoffRecord;
 import com.solveria.TimeAndBearings.domain.model.vo.PeriodBoundary;
 import com.solveria.TimeAndBearings.infrastructure.jpa.DailyConsolidationSummaryJpa;
@@ -167,10 +166,7 @@ public abstract class TimesheetPeriodMapper {
 
     PeriodBoundary boundary =
         new PeriodBoundary(
-            jpa.getPeriodStart(),
-            jpa.getPeriodEnd(),
-            jpa.getPeriodType(),
-            jpa.getGracePeriodEnd());
+            jpa.getPeriodStart(), jpa.getPeriodEnd(), jpa.getPeriodType(), jpa.getGracePeriodEnd());
 
     List<DailyConsolidationSummary> summaries = new ArrayList<>();
     for (DailyConsolidationSummaryJpa sJpa : jpa.getDailySummaries()) {

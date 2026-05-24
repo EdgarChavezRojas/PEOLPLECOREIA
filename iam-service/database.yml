@@ -5,7 +5,7 @@ services:
     image: postgres:16-alpine
     container_name: iam-service-postgres
     environment:
-      POSTGRES_DB: iam_db
+      POSTGRES_DB: peoplecore_db
       POSTGRES_USER: iam_user
       POSTGRES_PASSWORD: iam_password
       PGDATA: /var/lib/postgresql/data/pgdata

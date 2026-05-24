@@ -73,8 +73,8 @@ public class AttendanceLedgerRepositoryAdapter implements AttendanceLedgerReposi
 
   /**
    * Fully reconstitutes the AttendanceLedger aggregate from the JPA graph. Children ({@link
-   * TimeEntryTimeAndBearingsJpa}, {@link TimeDeviationRecordJpa}) are fetched lazily by Hibernate within the same
-   * transaction; the adapter triggers loading here by iterating the collections.
+   * TimeEntryTimeAndBearingsJpa}, {@link TimeDeviationRecordJpa}) are fetched lazily by Hibernate
+   * within the same transaction; the adapter triggers loading here by iterating the collections.
    */
   private AttendanceLedger reconstitute(AttendanceLedgerJpa jpa) {
     AttendanceLedger domain =
@@ -118,7 +118,8 @@ public class AttendanceLedgerRepositoryAdapter implements AttendanceLedgerReposi
    * Reconstitutes a single {@link TimeEntry} from its JPA model. Uses the mapper's VO helper
    * methods to rebuild {@code PunchContext} and {@code GeoValidationSnapshot} from flat columns.
    */
-  private TimeEntry reconstituteEntry(TimeEntryTimeAndBearingsJpa jpa, AttendanceLedgerJpa ledgerRef) {
+  private TimeEntry reconstituteEntry(
+      TimeEntryTimeAndBearingsJpa jpa, AttendanceLedgerJpa ledgerRef) {
     return new TimeEntry(
         jpa.getEntryId(),
         ledgerRef.getLedgerId(),

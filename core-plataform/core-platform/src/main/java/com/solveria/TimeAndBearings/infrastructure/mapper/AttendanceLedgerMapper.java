@@ -30,9 +30,9 @@ import org.mapstruct.*;
  *
  * <p>{@link PunchContext} and {@link GeoValidationSnapshot} are Java Records (VOs) that are stored
  * as flat columns in {@link TimeEntryTimeAndBearingsJpa}. The helper methods {@link
- * #buildPunchContext(TimeEntryTimeAndBearingsJpa)} and {@link #buildGeoSnapshot(TimeEntryTimeAndBearingsJpa)} reconstruct them
- * during mapping — they are also called directly by the adapter for individual TimeEntry
- * reconstitution.
+ * #buildPunchContext(TimeEntryTimeAndBearingsJpa)} and {@link
+ * #buildGeoSnapshot(TimeEntryTimeAndBearingsJpa)} reconstruct them during mapping — they are also
+ * called directly by the adapter for individual TimeEntry reconstitution.
  */
 @Mapper(componentModel = "spring")
 public interface AttendanceLedgerMapper {
