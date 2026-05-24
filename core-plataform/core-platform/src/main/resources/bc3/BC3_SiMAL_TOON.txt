@@ -1,0 +1,27 @@
+BC3_SIM_AL (Santa Cruz, Bolivia)
+
+SIM: BC3|Dossier|DigitalKardex+Assets+TalentInventory
+AL: SCZ-BO|Outbox|SDD|Hexagonal|Records
+
+TOON_SCHEMA
+AR:DocumentRecord{doc_id,relationship_id,doc_category,doc_type,is_critical,current_state,reviewer_id,review_date,reject_reason,storage_id,file_name,hash_sha256,expiry_date}
+AR:AssignedAsset{assignment_id,worker_id,asset_tag,status,assigned_at,returned_at,category,tech_specs,initial_state}
+AR:TalentInventory{inventory_id,relationship_id}
+E:PerformanceSnapshot{snapshot_id,inventory_id,eval_period,score}
+E:SkillSet{skill_id,inventory_id,skill_name,proficiency}
+E:TrainingHistory{training_id,inventory_id,course_name,doc_id}
+
+EVENTS
+DOCUMENT_RECORDED
+DOCUMENT_VALIDATION_REJECTED
+DOCENT_ACADEMIC_TITLE_VERIFIED
+HEALTH_CARD_EXPIRATION_WARNING
+MANDATORY_COMPLIANCE_DOC_MISSING
+ELIGIBILITY_SUSPENDED_BY_COMPLIANCE
+ELIGIBILITY_RESTORED
+ASSET_LOANED_TO_WORKER
+ASSET_TRANSFER_REQUIRED
+ASSET_RETURNED
+ASSET_DAMAGE_REPORTED
+OFFBOARDING_BLOCKED_BY_ASSETS
+

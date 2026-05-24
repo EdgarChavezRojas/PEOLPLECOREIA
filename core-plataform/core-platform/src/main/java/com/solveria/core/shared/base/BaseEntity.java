@@ -1,0 +1,88 @@
+package com.solveria.core.shared.base;
+
+import jakarta.persistence.*;
+import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import lombok.Setter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = String.class))
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
+@Setter
+@MappedSuperclass
+public abstract class BaseEntity implements Serializable {
+
+
+  @Version private Long version;
+
+  @Column(name = "tenant_id", nullable = false, updatable = false)
+  private UUID tenantId;
+
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt;
+
+  @CreatedBy
+  @Column(name = "created_by", updatable = false)
+  private String createdBy;
+
+  @LastModifiedDate
+  @Column(name = "last_modified_at")
+  private LocalDateTime lastModifiedAt;
+
+  @LastModifiedBy
+  @Column(name = "last_modified_by")
+  private String lastModifiedBy;
+
+  protected BaseEntity() {
+    // Constructor protegido requerido por JPA
+  }
+
+
+  public Long getVersion() {
+    return version;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
+
+  public void setTenantId(UUID tenantId) {
+    this.tenantId = tenantId;
+  }
+
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
+  public String getCreatedBy() {
+    return createdBy;
+  }
+
+  public LocalDateTime getLastModifiedAt() {
+    return lastModifiedAt;
+  }
+
+  public String getLastModifiedBy() {
+    return lastModifiedBy;
+  }
+
+  @PrePersist
+  protected void onCreate() {
+    this.createdAt = Instant.now();
+  }
+
+  @PreUpdate
+  protected void onUpdate() {
+    this.lastModifiedAt = LocalDateTime.now();
+  }
+}

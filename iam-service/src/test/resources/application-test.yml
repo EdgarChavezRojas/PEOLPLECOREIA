@@ -1,0 +1,22 @@
+# PostgreSQL with Testcontainers for tests
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///iam_test?TC_DAEMON=true
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    clean-disabled: false
+
+# Avoid PathPattern "No more pattern data after **" in SpringDoc resource handlers
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -1,0 +1,1179 @@
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\event\AccrualEventType.java ====
+package com.solveria.core.accruals.domain.event;
+
+public enum AccrualEventType {
+    LEAVE_REQUEST_SUBMITTED,
+    LEAVE_REQUEST_MANAGER_APPROVED,
+    LEAVE_REQUEST_MANAGER_REJECTED,
+    VACATION_BALANCE_THRESHOLD_LOW,
+    ACCRUAL_BALANCE_DEDUCTED,
+    RANK_UPGRADE_ELIGIBILITY_REACHED,
+    QUINQUENIO_ELIGIBILITY_REACHED,
+    QUINQUENIO_REQUESTED,
+    QUINQUENIO_CALCULATION_FINALIZED,
+    QUINQUENIO_PAYMENT_OVERDUE,
+    QUINQUENIO_PAYMENT_PROCESSED
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\event\AccrualEvent.java ====
+package com.solveria.core.accruals.domain.event;
+
+import com.solveria.core.shared.events.DomainEvent;
+import java.time.Instant;
+
+public record AccrualEvent(
+        AccrualEventType type,
+        Instant occurredAt) implements DomainEvent {
+
+    public AccrualEvent {
+        if (type == null) {
+            throw new IllegalArgumentException("type is required");
+        }
+        if (occurredAt == null) {
+            throw new IllegalArgumentException("occurredAt is required");
+        }
+    }
+
+    public static AccrualEvent now(AccrualEventType type) {
+        return new AccrualEvent(type, Instant.now());
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\AccrualBalanceType.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+public enum AccrualBalanceType {
+    VACATION,
+    SENIORITY_BONUS
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\AccrualUnit.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+public enum AccrualUnit {
+    DAYS,
+    AMOUNT_BOB
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\LeaveStatus.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+public enum LeaveStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\SeniorityBaseType.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+public enum SeniorityBaseType {
+    BASE_1_SMN,
+    BASE_3_SMN
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\HolidayScope.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+public enum HolidayScope {
+    NATIONAL,
+    REGIONAL_SCZ
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\BenefitType.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+public enum BenefitType {
+    AGUINALDO,
+    PRIMA_UTILIDAD
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\vo\SeniorityMilestone.java ====
+package com.solveria.core.accruals.domain.model.vo;
+
+import java.util.UUID;
+
+public record SeniorityMilestone(
+        UUID milestoneId,
+        int monthsCompleted,
+        SeniorityBaseType baseSmnType) {
+
+    public SeniorityMilestone {
+        if (milestoneId == null) {
+            throw new IllegalArgumentException("milestoneId is required");
+        }
+        if (monthsCompleted <= 0) {
+            throw new IllegalArgumentException("monthsCompleted must be positive");
+        }
+        if (baseSmnType == null) {
+            throw new IllegalArgumentException("baseSmnType is required");
+        }
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\exception\AccrualBalanceNotFoundException.java ====
+package com.solveria.core.accruals.domain.exception;
+
+import com.solveria.core.shared.exceptions.DomainException;
+import java.util.Map;
+import java.util.UUID;
+
+public class AccrualBalanceNotFoundException extends DomainException {
+
+    public AccrualBalanceNotFoundException(UUID balanceId) {
+        super("ACCRUAL_BALANCE_NOT_FOUND", Map.of("balanceId", balanceId), null);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\exception\QuinquenioProvisionNotFoundException.java ====
+package com.solveria.core.accruals.domain.exception;
+
+import com.solveria.core.shared.exceptions.DomainException;
+import java.util.Map;
+import java.util.UUID;
+
+public class QuinquenioProvisionNotFoundException extends DomainException {
+
+    public QuinquenioProvisionNotFoundException(UUID relationshipId) {
+        super("QUINQUENIO_PROVISION_NOT_FOUND", Map.of("relationshipId", relationshipId), null);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\exception\InsufficientAccrualBalanceException.java ====
+package com.solveria.core.accruals.domain.exception;
+
+import com.solveria.core.shared.exceptions.DomainException;
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.UUID;
+
+public class InsufficientAccrualBalanceException extends DomainException {
+
+    public InsufficientAccrualBalanceException(UUID balanceId, BigDecimal requested, BigDecimal available) {
+        super("INSUFFICIENT_ACCRUAL_BALANCE",
+                Map.of("balanceId", balanceId, "requested", requested, "available", available),
+                null);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\exception\InvalidLeaveStateException.java ====
+package com.solveria.core.accruals.domain.exception;
+
+import com.solveria.core.shared.exceptions.DomainException;
+import java.util.Map;
+
+public class InvalidLeaveStateException extends DomainException {
+
+    public InvalidLeaveStateException(String reason) {
+        super("INVALID_LEAVE_STATE", Map.of("reason", reason), null);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\exception\InvalidAccrualStateException.java ====
+package com.solveria.core.accruals.domain.exception;
+
+import com.solveria.core.shared.exceptions.DomainException;
+import java.util.Map;
+
+public class InvalidAccrualStateException extends DomainException {
+
+    public InvalidAccrualStateException(String reason) {
+        super("INVALID_ACCRUAL_STATE", Map.of("reason", reason), null);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\policy\LocalizationPolicy.java ====
+package com.solveria.core.accruals.domain.policy;
+
+import com.solveria.core.accruals.domain.exception.InvalidAccrualStateException;
+
+public final class LocalizationPolicy {
+
+    public static final String SANTA_CRUZ_BOLIVIA = "Santa Cruz, Bolivia";
+
+    private LocalizationPolicy() {}
+
+    public static void requireSantaCruz(String location) {
+        if (location == null || !SANTA_CRUZ_BOLIVIA.equalsIgnoreCase(location.trim())) {
+            throw new InvalidAccrualStateException("invalid location: " + location);
+        }
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\policy\VacationScalePolicy.java ====
+package com.solveria.core.accruals.domain.policy;
+
+public final class VacationScalePolicy {
+
+    private VacationScalePolicy() {}
+
+    public static int vacationDaysForYears(int yearsOfService) {
+        if (yearsOfService <= 0) {
+            return 0;
+        }
+        if (yearsOfService <= 5) {
+            return 15;
+        }
+        if (yearsOfService <= 10) {
+            return 20;
+        }
+        return 30;
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\policy\SeniorityBasePolicy.java ====
+package com.solveria.core.accruals.domain.policy;
+
+import com.solveria.core.accruals.domain.model.vo.SeniorityBaseType;
+import java.math.BigDecimal;
+
+public final class SeniorityBasePolicy {
+
+    private static final BigDecimal BASE_1_SMN = BigDecimal.valueOf(3300);
+    private static final BigDecimal BASE_3_SMN = BigDecimal.valueOf(9900);
+
+    private SeniorityBasePolicy() {}
+
+    public static SeniorityBaseType resolveBaseType(String tenantSegment) {
+        if (tenantSegment == null || tenantSegment.isBlank()) {
+            return SeniorityBaseType.BASE_3_SMN;
+        }
+        String normalized = tenantSegment.trim().toUpperCase();
+        return switch (normalized) {
+            case "ONG", "EDUCACION" -> SeniorityBaseType.BASE_1_SMN;
+            case "RETAIL", "CORPORATIVO" -> SeniorityBaseType.BASE_3_SMN;
+            default -> SeniorityBaseType.BASE_3_SMN;
+        };
+    }
+
+    public static BigDecimal resolveBaseAmount(String tenantSegment) {
+        SeniorityBaseType type = resolveBaseType(tenantSegment);
+        return type == SeniorityBaseType.BASE_1_SMN ? BASE_1_SMN : BASE_3_SMN;
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\policy\HolidayPolicy.java ====
+package com.solveria.core.accruals.domain.policy;
+
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.model.vo.HolidayScope;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.MonthDay;
+import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public final class HolidayPolicy {
+
+    private static final MonthDay SANTA_CRUZ_DAY = MonthDay.of(9, 24);
+
+    private HolidayPolicy() {}
+
+    public static BigDecimal calculateChargeableDays(
+            LocalDate startDate,
+            LocalDate endDate,
+            List<HolidayCalendar> holidays) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("startDate and endDate are required");
+        }
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("endDate must be after startDate");
+        }
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        long holidayDays = countHolidaysInRange(startDate, endDate, holidays);
+        long chargeable = Math.max(0, totalDays - holidayDays);
+        return BigDecimal.valueOf(chargeable);
+    }
+
+    public static boolean isHoliday(LocalDate date, List<HolidayCalendar> holidays) {
+        if (date == null) {
+            return false;
+        }
+        if (SANTA_CRUZ_DAY.equals(MonthDay.from(date))) {
+            return true;
+        }
+        if (holidays == null || holidays.isEmpty()) {
+            return false;
+        }
+        return holidays.stream().anyMatch(holiday -> holiday.appliesTo(date));
+    }
+
+    private static long countHolidaysInRange(
+            LocalDate startDate,
+            LocalDate endDate,
+            List<HolidayCalendar> holidays) {
+        Set<LocalDate> uniqueHolidays = new HashSet<>();
+        LocalDate cursor = startDate;
+        while (!cursor.isAfter(endDate)) {
+            if (SANTA_CRUZ_DAY.equals(MonthDay.from(cursor))) {
+                uniqueHolidays.add(cursor);
+            }
+            cursor = cursor.plusDays(1);
+        }
+        if (holidays == null || holidays.isEmpty()) {
+            return uniqueHolidays.size();
+        }
+        for (HolidayCalendar holiday : holidays) {
+            if (holiday == null || holiday.getHolidayDate() == null) {
+                continue;
+            }
+            if (holiday.getScope() == HolidayScope.NATIONAL || holiday.getScope() == HolidayScope.REGIONAL_SCZ) {
+                if (!holiday.getHolidayDate().isBefore(startDate) && !holiday.getHolidayDate().isAfter(endDate)) {
+                    uniqueHolidays.add(holiday.getHolidayDate());
+                }
+            }
+        }
+        return uniqueHolidays.size();
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\policy\QuinquenioPolicy.java ====
+package com.solveria.core.accruals.domain.policy;
+
+import java.time.LocalDate;
+
+public final class QuinquenioPolicy {
+
+    private QuinquenioPolicy() {}
+
+    public static boolean isEligible(int monthsCompleted) {
+        return monthsCompleted >= 60;
+    }
+
+    public static boolean isPaymentOverdue(LocalDate requestDate, LocalDate today, LocalDate paymentDate) {
+        if (requestDate == null || today == null) {
+            return false;
+        }
+        if (paymentDate != null) {
+            return false;
+        }
+        return today.isAfter(requestDate.plusDays(30));
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\AccrualBalance.java ====
+package com.solveria.core.accruals.domain.model;
+
+
+import com.solveria.core.accruals.domain.event.AccrualEventType;
+import com.solveria.core.accruals.domain.exception.InsufficientAccrualBalanceException;
+import com.solveria.core.accruals.domain.exception.InvalidAccrualStateException;
+import com.solveria.core.accruals.domain.exception.InvalidLeaveStateException;
+import com.solveria.core.accruals.domain.model.vo.AccrualBalanceType;
+import com.solveria.core.accruals.domain.model.vo.AccrualUnit;
+import com.solveria.core.accruals.domain.model.vo.LeaveStatus;
+import com.solveria.core.accruals.domain.model.vo.SeniorityMilestone;
+import com.solveria.core.accruals.domain.policy.VacationScalePolicy;
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AccrualBalance {
+
+    private UUID balanceId;
+    private UUID relationshipId;
+    private AccrualBalanceType balanceType;
+    private AccrualUnit unit;
+    private BigDecimal currentBalance;
+    private LocalDate lastAccrualDate;
+    private UUID tenantId;
+    private List<LeaveTransaction> leaveTransactions;
+    private List<SeniorityMilestone> seniorityMilestones;
+
+    @Builder.Default
+    private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
+    public static AccrualBalance open(
+            UUID relationshipId,
+            AccrualBalanceType balanceType,
+            AccrualUnit unit,
+            BigDecimal currentBalance,
+            LocalDate lastAccrualDate,
+            UUID tenantId) {
+        if (relationshipId == null) {
+            throw new IllegalArgumentException("relationshipId is required");
+        }
+        if (balanceType == null) {
+            throw new IllegalArgumentException("balanceType is required");
+        }
+        if (unit == null) {
+            throw new IllegalArgumentException("unit is required");
+        }
+        if (currentBalance == null) {
+            throw new IllegalArgumentException("currentBalance is required");
+        }
+        if (currentBalance.signum() < 0) {
+            throw new IllegalArgumentException("currentBalance must be non-negative");
+        }
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+        return AccrualBalance.builder()
+                .balanceId(UUID.randomUUID())
+                .relationshipId(relationshipId)
+                .balanceType(balanceType)
+                .unit(unit)
+                .currentBalance(currentBalance)
+                .lastAccrualDate(lastAccrualDate)
+                .tenantId(tenantId)
+                .leaveTransactions(new ArrayList<>())
+                .seniorityMilestones(new ArrayList<>())
+                .build();
+    }
+
+    public LeaveTransaction requestLeave(LocalDate startDate, LocalDate endDate, BigDecimal chargeableDays) {
+        requireVacationDays();
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("startDate and endDate are required");
+        }
+        if (chargeableDays == null || chargeableDays.signum() <= 0) {
+            throw new IllegalArgumentException("chargeableDays must be positive");
+        }
+        if (currentBalance.compareTo(chargeableDays) < 0) {
+            addDomainEvent(AccrualEvent.now(AccrualEventType.VACATION_BALANCE_THRESHOLD_LOW));
+            throw new InsufficientAccrualBalanceException(balanceId, chargeableDays, currentBalance);
+        }
+        LeaveTransaction transaction = LeaveTransaction.pending(balanceId, startDate, endDate, chargeableDays);
+        if (leaveTransactions == null) {
+            leaveTransactions = new ArrayList<>();
+        }
+        leaveTransactions.add(transaction);
+        addDomainEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_SUBMITTED));
+        return transaction;
+    }
+
+    public void approveLeave(UUID transactionId) {
+        LeaveTransaction transaction = findTransaction(transactionId);
+        if (transaction.getStatus() != LeaveStatus.PENDING) {
+            throw new InvalidLeaveStateException("leave transaction is not pending");
+        }
+        transaction.approve();
+        deduct(transaction.getDaysRequested());
+        addDomainEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_MANAGER_APPROVED));
+        addDomainEvent(AccrualEvent.now(AccrualEventType.ACCRUAL_BALANCE_DEDUCTED));
+    }
+
+    public void rejectLeave(UUID transactionId) {
+        LeaveTransaction transaction = findTransaction(transactionId);
+        if (transaction.getStatus() != LeaveStatus.PENDING) {
+            throw new InvalidLeaveStateException("leave transaction is not pending");
+        }
+        transaction.reject();
+        addDomainEvent(AccrualEvent.now(AccrualEventType.LEAVE_REQUEST_MANAGER_REJECTED));
+    }
+
+    public void accrueVacation(int yearsOfService, LocalDate accrualDate) {
+        requireVacationDays();
+        int days = VacationScalePolicy.vacationDaysForYears(yearsOfService);
+        if (days <= 0) {
+            return;
+        }
+        currentBalance = currentBalance.add(BigDecimal.valueOf(days));
+        lastAccrualDate = accrualDate != null ? accrualDate : LocalDate.now();
+    }
+
+    public void addSeniorityMilestone(SeniorityMilestone milestone) {
+        if (milestone == null) {
+            throw new IllegalArgumentException("milestone is required");
+        }
+        if (seniorityMilestones == null) {
+            seniorityMilestones = new ArrayList<>();
+        }
+        seniorityMilestones.add(milestone);
+    }
+
+    private void requireVacationDays() {
+        if (balanceType != AccrualBalanceType.VACATION || unit != AccrualUnit.DAYS) {
+            throw new InvalidAccrualStateException("balance type must be VACATION and unit DAYS");
+        }
+        if (currentBalance == null) {
+            currentBalance = BigDecimal.ZERO;
+        }
+        if (currentBalance.signum() < 0) {
+            throw new InvalidAccrualStateException("currentBalance must be non-negative");
+        }
+    }
+
+    private void deduct(BigDecimal days) {
+        if (days == null || days.signum() <= 0) {
+            throw new InvalidAccrualStateException("days must be positive");
+        }
+        BigDecimal newBalance = currentBalance.subtract(days);
+        if (newBalance.signum() < 0) {
+            throw new InvalidAccrualStateException("currentBalance cannot be negative");
+        }
+        currentBalance = newBalance;
+    }
+
+    private LeaveTransaction findTransaction(UUID transactionId) {
+        if (transactionId == null) {
+            throw new IllegalArgumentException("transactionId is required");
+        }
+        if (leaveTransactions == null || leaveTransactions.isEmpty()) {
+            throw new InvalidLeaveStateException("leave transaction not found");
+        }
+        return leaveTransactions.stream()
+                .filter(tx -> transactionId.equals(tx.getTransactionId()))
+                .findFirst()
+                .orElseThrow(() -> new InvalidLeaveStateException("leave transaction not found"));
+    }
+
+    public void addDomainEvent(DomainEvent event) {
+        if (event == null) {
+            return;
+        }
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(event);
+    }
+
+    public List<DomainEvent> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return List.of();
+        }
+        List<DomainEvent> events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\LeaveTransaction.java ====
+package com.solveria.core.accruals.domain.model;
+
+import com.solveria.core.accruals.domain.model.vo.LeaveStatus;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LeaveTransaction {
+
+    private UUID transactionId;
+    private UUID balanceId;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private BigDecimal daysRequested;
+    private LeaveStatus status;
+
+    public static LeaveTransaction pending(UUID balanceId, LocalDate startDate, LocalDate endDate, BigDecimal daysRequested) {
+        if (balanceId == null) {
+            throw new IllegalArgumentException("balanceId is required");
+        }
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("startDate and endDate are required");
+        }
+        if (daysRequested == null || daysRequested.signum() <= 0) {
+            throw new IllegalArgumentException("daysRequested must be positive");
+        }
+        return LeaveTransaction.builder()
+                .transactionId(UUID.randomUUID())
+                .balanceId(balanceId)
+                .startDate(startDate)
+                .endDate(endDate)
+                .daysRequested(daysRequested)
+                .status(LeaveStatus.PENDING)
+                .build();
+    }
+
+    public void approve() {
+        status = LeaveStatus.APPROVED;
+    }
+
+    public void reject() {
+        status = LeaveStatus.REJECTED;
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\HolidayCalendar.java ====
+package com.solveria.core.accruals.domain.model;
+
+import com.solveria.core.accruals.domain.model.vo.HolidayScope;
+import java.time.LocalDate;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class HolidayCalendar {
+
+    private UUID holidayId;
+    private LocalDate holidayDate;
+    private HolidayScope scope;
+    private UUID tenantId;
+
+    public static HolidayCalendar register(LocalDate holidayDate, HolidayScope scope, UUID tenantId) {
+        if (holidayDate == null) {
+            throw new IllegalArgumentException("holidayDate is required");
+        }
+        if (scope == null) {
+            throw new IllegalArgumentException("scope is required");
+        }
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+        return HolidayCalendar.builder()
+                .holidayId(UUID.randomUUID())
+                .holidayDate(holidayDate)
+                .scope(scope)
+                .tenantId(tenantId)
+                .build();
+    }
+
+    public boolean appliesTo(LocalDate date) {
+        if (date == null || holidayDate == null) {
+            return false;
+        }
+        return holidayDate.equals(date);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\QuinquenioProvision.java ====
+package com.solveria.core.accruals.domain.model;
+
+
+import com.solveria.core.accruals.domain.event.AccrualEventType;
+import com.solveria.core.accruals.domain.policy.QuinquenioPolicy;
+import com.solveria.core.shared.events.DomainEvent;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class QuinquenioProvision {
+
+    private UUID provisionId;
+    private UUID relationshipId;
+    private BigDecimal totalAccumulated;
+    private boolean penaltyActive;
+    private UUID tenantId;
+
+    @Builder.Default
+    private transient List<DomainEvent> domainEvents = new ArrayList<>();
+
+    public static QuinquenioProvision open(UUID relationshipId, BigDecimal totalAccumulated, UUID tenantId) {
+        if (relationshipId == null) {
+            throw new IllegalArgumentException("relationshipId is required");
+        }
+        if (totalAccumulated == null) {
+            throw new IllegalArgumentException("totalAccumulated is required");
+        }
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+        return QuinquenioProvision.builder()
+                .provisionId(UUID.randomUUID())
+                .relationshipId(relationshipId)
+                .totalAccumulated(totalAccumulated)
+                .penaltyActive(false)
+                .tenantId(tenantId)
+                .build();
+    }
+
+    public void addMonthlyProvision(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("amount must be positive");
+        }
+        totalAccumulated = totalAccumulated.add(amount);
+    }
+
+    public void markEligible() {
+        addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_ELIGIBILITY_REACHED));
+    }
+
+    public void requestPayment(LocalDate requestDate) {
+        if (requestDate == null) {
+            throw new IllegalArgumentException("requestDate is required");
+        }
+        addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_REQUESTED));
+    }
+
+    public void finalizeCalculation(BigDecimal averageLast90Days) {
+        if (averageLast90Days == null || averageLast90Days.signum() <= 0) {
+            throw new IllegalArgumentException("averageLast90Days must be positive");
+        }
+        totalAccumulated = averageLast90Days;
+        addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_CALCULATION_FINALIZED));
+    }
+
+    public void evaluatePenalty(LocalDate requestDate, LocalDate today, LocalDate paymentDate) {
+        if (QuinquenioPolicy.isPaymentOverdue(requestDate, today, paymentDate)) {
+            penaltyActive = true;
+            addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_OVERDUE));
+        }
+    }
+
+    public void markPaid(LocalDate paymentDate) {
+        if (paymentDate == null) {
+            throw new IllegalArgumentException("paymentDate is required");
+        }
+        penaltyActive = false;
+        addDomainEvent(AccrualEvent.now(AccrualEventType.QUINQUENIO_PAYMENT_PROCESSED));
+    }
+
+    public void addDomainEvent(DomainEvent event) {
+        if (event == null) {
+            return;
+        }
+        if (domainEvents == null) {
+            domainEvents = new ArrayList<>();
+        }
+        domainEvents.add(event);
+    }
+
+    public List<DomainEvent> pullDomainEvents() {
+        if (domainEvents == null || domainEvents.isEmpty()) {
+            return List.of();
+        }
+        List<DomainEvent> events = List.copyOf(domainEvents);
+        domainEvents.clear();
+        return events;
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\domain\model\BenefitAccrual.java ====
+package com.solveria.core.accruals.domain.model;
+
+import com.solveria.core.accruals.domain.model.vo.BenefitType;
+import java.math.BigDecimal;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BenefitAccrual {
+
+    private UUID benefitId;
+    private BenefitType benefitType;
+    private int fiscalYear;
+    private BigDecimal accruedAmount;
+    private UUID tenantId;
+
+    public static BenefitAccrual open(BenefitType benefitType, int fiscalYear, BigDecimal accruedAmount, UUID tenantId) {
+        if (benefitType == null) {
+            throw new IllegalArgumentException("benefitType is required");
+        }
+        if (fiscalYear <= 0) {
+            throw new IllegalArgumentException("fiscalYear must be positive");
+        }
+        if (accruedAmount == null) {
+            throw new IllegalArgumentException("accruedAmount is required");
+        }
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId is required");
+        }
+        return BenefitAccrual.builder()
+                .benefitId(UUID.randomUUID())
+                .benefitType(benefitType)
+                .fiscalYear(fiscalYear)
+                .accruedAmount(accruedAmount)
+                .tenantId(tenantId)
+                .build();
+    }
+
+    public void addAccrual(BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("amount must be positive");
+        }
+        accruedAmount = accruedAmount.add(amount);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\command\RequestLeaveCommand.java ====
+package com.solveria.core.accruals.application.command;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record RequestLeaveCommand(
+        UUID balanceId,
+        LocalDate startDate,
+        LocalDate endDate,
+        String location) {}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\command\AccrueVacationCommand.java ====
+package com.solveria.core.accruals.application.command;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record AccrueVacationCommand(
+        UUID balanceId,
+        int yearsOfService,
+        LocalDate accrualDate,
+        String location) {}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\command\CalculateQuinquenioCommand.java ====
+package com.solveria.core.accruals.application.command;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+public record CalculateQuinquenioCommand(
+        UUID relationshipId,
+        int monthsCompleted,
+        BigDecimal averageLast90Days,
+        LocalDate requestDate,
+        LocalDate paymentDate,
+        LocalDate today,
+        String location,
+        String tenantSegment) {}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\command\RegisterHolidayCommand.java ====
+package com.solveria.core.accruals.application.command;
+
+import com.solveria.core.accruals.domain.model.vo.HolidayScope;
+import java.time.LocalDate;
+
+public record RegisterHolidayCommand(
+        LocalDate holidayDate,
+        HolidayScope scope,
+        String location) {}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\command\ProvisionQuinquenioCommand.java ====
+package com.solveria.core.accruals.application.command;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record ProvisionQuinquenioCommand(
+        UUID relationshipId,
+        BigDecimal monthlyAmount,
+        String location) {}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\port\AccrualBalanceRepositoryPort.java ====
+package com.solveria.core.accruals.application.port;
+
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface AccrualBalanceRepositoryPort {
+
+    AccrualBalance save(AccrualBalance balance);
+
+    Optional<AccrualBalance> findById(UUID balanceId);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\port\BenefitsRepositoryPort.java ====
+package com.solveria.core.accruals.application.port;
+
+import com.solveria.core.accruals.domain.model.BenefitAccrual;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.model.vo.BenefitType;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface BenefitsRepositoryPort {
+
+    HolidayCalendar saveHoliday(HolidayCalendar holiday);
+
+    List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate);
+
+    QuinquenioProvision saveQuinquenio(QuinquenioProvision provision);
+
+    Optional<QuinquenioProvision> findQuinquenioByRelationshipId(UUID relationshipId);
+
+    BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual);
+
+    Optional<BenefitAccrual> findBenefitAccrual(BenefitType benefitType, int fiscalYear);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\port\EventOutboxPort.java ====
+package com.solveria.core.accruals.application.port;
+
+import java.util.UUID;
+
+public interface EventOutboxPort {
+
+    void publish(String aggregateType, UUID aggregateId, String eventType, String payload);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\usecase\RequestLeaveUseCase.java ====
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.RequestLeaveCommand;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+
+public interface RequestLeaveUseCase {
+
+    AccrualBalance handle(RequestLeaveCommand command);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\usecase\AccrueVacationUseCase.java ====
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.AccrueVacationCommand;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+
+public interface AccrueVacationUseCase {
+
+    AccrualBalance handle(AccrueVacationCommand command);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\usecase\CalculateQuinquenioUseCase.java ====
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.CalculateQuinquenioCommand;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+
+public interface CalculateQuinquenioUseCase {
+
+    QuinquenioProvision handle(CalculateQuinquenioCommand command);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\usecase\RegisterHolidayUseCase.java ====
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.RegisterHolidayCommand;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+
+public interface RegisterHolidayUseCase {
+
+    HolidayCalendar handle(RegisterHolidayCommand command);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\usecase\ProvisionQuinquenioUseCase.java ====
+package com.solveria.core.accruals.application.usecase;
+
+import com.solveria.core.accruals.application.command.ProvisionQuinquenioCommand;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+
+public interface ProvisionQuinquenioUseCase {
+
+    QuinquenioProvision handle(ProvisionQuinquenioCommand command);
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\service\RequestLeaveService.java ====
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.RequestLeaveCommand;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.RequestLeaveUseCase;
+import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundException;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.policy.HolidayPolicy;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+public class RequestLeaveService implements RequestLeaveUseCase {
+
+    private final AccrualBalanceRepositoryPort accrualBalanceRepository;
+    private final BenefitsRepositoryPort benefitsRepository;
+
+    public RequestLeaveService(
+            AccrualBalanceRepositoryPort accrualBalanceRepository,
+            BenefitsRepositoryPort benefitsRepository) {
+        this.accrualBalanceRepository = accrualBalanceRepository;
+        this.benefitsRepository = benefitsRepository;
+    }
+
+    @Override
+    public AccrualBalance handle(RequestLeaveCommand command) {
+        LocalizationPolicy.requireSantaCruz(command.location());
+        AccrualBalance balance = accrualBalanceRepository.findById(command.balanceId())
+                .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
+
+        LocalDate startDate = command.startDate();
+        LocalDate endDate = command.endDate();
+        List<HolidayCalendar> holidays = benefitsRepository.findHolidaysBetween(startDate, endDate);
+        BigDecimal chargeableDays = HolidayPolicy.calculateChargeableDays(startDate, endDate, holidays);
+
+        balance.requestLeave(startDate, endDate, chargeableDays);
+        return accrualBalanceRepository.save(balance);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\service\AccrueVacationService.java ====
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.AccrueVacationCommand;
+import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
+import com.solveria.core.accruals.application.usecase.AccrueVacationUseCase;
+import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundException;
+import com.solveria.core.accruals.domain.model.AccrualBalance;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+
+public class AccrueVacationService implements AccrueVacationUseCase {
+
+    private final AccrualBalanceRepositoryPort accrualBalanceRepository;
+
+    public AccrueVacationService(AccrualBalanceRepositoryPort accrualBalanceRepository) {
+        this.accrualBalanceRepository = accrualBalanceRepository;
+    }
+
+    @Override
+    public AccrualBalance handle(AccrueVacationCommand command) {
+        LocalizationPolicy.requireSantaCruz(command.location());
+        AccrualBalance balance = accrualBalanceRepository.findById(command.balanceId())
+                .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
+        balance.accrueVacation(command.yearsOfService(), command.accrualDate());
+        return accrualBalanceRepository.save(balance);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\service\CalculateQuinquenioService.java ====
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.CalculateQuinquenioCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.CalculateQuinquenioUseCase;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import com.solveria.core.accruals.domain.policy.QuinquenioPolicy;
+import com.solveria.core.accruals.domain.policy.SeniorityBasePolicy;
+import com.solveria.core.security.context.SecurityTenantContext;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+public class CalculateQuinquenioService implements CalculateQuinquenioUseCase {
+
+    private final BenefitsRepositoryPort benefitsRepository;
+
+    public CalculateQuinquenioService(BenefitsRepositoryPort benefitsRepository) {
+        this.benefitsRepository = benefitsRepository;
+    }
+
+    @Override
+    public QuinquenioProvision handle(CalculateQuinquenioCommand command) {
+        LocalizationPolicy.requireSantaCruz(command.location());
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+        QuinquenioProvision provision = benefitsRepository.findQuinquenioByRelationshipId(command.relationshipId())
+                .orElseGet(() -> QuinquenioProvision.open(command.relationshipId(), BigDecimal.ZERO, tenantId));
+
+        if (QuinquenioPolicy.isEligible(command.monthsCompleted())) {
+            provision.markEligible();
+        }
+
+        if (command.requestDate() != null) {
+            provision.requestPayment(command.requestDate());
+        }
+
+        if (command.averageLast90Days() != null) {
+            provision.finalizeCalculation(command.averageLast90Days());
+        } else {
+            BigDecimal base = SeniorityBasePolicy.resolveBaseAmount(command.tenantSegment());
+            provision.finalizeCalculation(base);
+        }
+
+        LocalDate today = command.today() != null ? command.today() : LocalDate.now();
+        provision.evaluatePenalty(command.requestDate(), today, command.paymentDate());
+
+        if (command.paymentDate() != null) {
+            provision.markPaid(command.paymentDate());
+        }
+
+        return benefitsRepository.saveQuinquenio(provision);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\service\RegisterHolidayService.java ====
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.RegisterHolidayCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.RegisterHolidayUseCase;
+import com.solveria.core.accruals.domain.model.HolidayCalendar;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import com.solveria.core.security.context.SecurityTenantContext;
+import java.util.UUID;
+
+public class RegisterHolidayService implements RegisterHolidayUseCase {
+
+    private final BenefitsRepositoryPort benefitsRepository;
+
+    public RegisterHolidayService(BenefitsRepositoryPort benefitsRepository) {
+        this.benefitsRepository = benefitsRepository;
+    }
+
+    @Override
+    public HolidayCalendar handle(RegisterHolidayCommand command) {
+        LocalizationPolicy.requireSantaCruz(command.location());
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+        HolidayCalendar holiday = HolidayCalendar.register(command.holidayDate(), command.scope(), tenantId);
+        return benefitsRepository.saveHoliday(holiday);
+    }
+}
+
+==== C:\Users\usuario\IdeaProjects\ProyectoAI\core-plataform\core-platform\src\main\java\com\solveria\core\accruals\application\service\ProvisionQuinquenioService.java ====
+package com.solveria.core.accruals.application.service;
+
+import com.solveria.core.accruals.application.command.ProvisionQuinquenioCommand;
+import com.solveria.core.accruals.application.port.BenefitsRepositoryPort;
+import com.solveria.core.accruals.application.usecase.ProvisionQuinquenioUseCase;
+import com.solveria.core.accruals.domain.model.QuinquenioProvision;
+import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import com.solveria.core.security.context.SecurityTenantContext;
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public class ProvisionQuinquenioService implements ProvisionQuinquenioUseCase {
+
+    private final BenefitsRepositoryPort benefitsRepository;
+
+    public ProvisionQuinquenioService(BenefitsRepositoryPort benefitsRepository) {
+        this.benefitsRepository = benefitsRepository;
+    }
+
+    @Override
+    public QuinquenioProvision handle(ProvisionQuinquenioCommand command) {
+        LocalizationPolicy.requireSantaCruz(command.location());
+        UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+        QuinquenioProvision provision = benefitsRepository.findQuinquenioByRelationshipId(command.relationshipId())
+                .orElseGet(() -> QuinquenioProvision.open(command.relationshipId(), BigDecimal.ZERO, tenantId));
+
+        provision.addMonthlyProvision(command.monthlyAmount());
+        return benefitsRepository.saveQuinquenio(provision);
+    }
+}

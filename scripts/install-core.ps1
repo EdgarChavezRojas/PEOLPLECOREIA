@@ -1,0 +1,35 @@
+#!/usr/bin/env pwsh
+<#
+.SYNOPSIS
+    Install core-platform to local Maven repository
+.DESCRIPTION
+    Convenience script to quickly install core-platform dependency.
+    Run this whenever core-platform changes before running services.
+.PARAMETER SkipTests
+    Skip test execution (default: true for speed)
+.EXAMPLE
+    .\scripts\install-core.ps1
+.EXAMPLE
+    .\scripts\install-core.ps1 -SkipTests:$false
+#>
+
+[CmdletBinding()]
+param(
+    [switch]$SkipTests = $true
+)
+
+$ErrorActionPreference = "Stop"
+$rootDir = Split-Path -Parent $PSScriptRoot
+
+Write-Host "Installing core-platform to local Maven repo..." -ForegroundColor Yellow
+
+$testFlag = if ($SkipTests) { "-DskipTests" } else { "" }
+
+Push-Location "$rootDir\core-plataform"
+& .\mvnw clean install $testFlag
+if ($LASTEXITCODE -ne 0) {
+    Pop-Location
+    throw "core-platform install failed"
+}
+Write-Host "[OK] core-platform installed successfully" -ForegroundColor Green
+Pop-Location

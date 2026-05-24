@@ -1,0 +1,726 @@
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdatePersonUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Person;
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.MaritalStatus;
+import java.util.List;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdatePersonUseCase {
+
+  private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
+
+  private final PersonRepositoryPort personRepositoryPort;
+
+  public void execute(
+      UUID personId,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      List<ContactPoint> contacts) {
+    Person person =
+        personRepositoryPort
+            .findByPersonId(personId)
+            .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
+
+    person.updateMasterData(
+        person.getFirstName(),
+        person.getLastName(),
+        person.getBirthDate(),
+        person.getGender(),
+        maritalStatus,
+        professionTitle,
+        person.getGlobalId());
+
+    if (contacts != null && !contacts.isEmpty() && contacts.get(0) != null) {
+      person.updateContactPoint(contacts.get(0));
+    }
+
+    personRepositoryPort.save(person);
+
+    log.info("event=CORE_WORKFORCE_PERSON_UPDATE_SUCCESS targetId={}", personId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/ResolveDeduplicationUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PersonRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Person;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class ResolveDeduplicationUseCase {
+
+  private static final String PERSON_NOT_FOUND = "PERSON_NOT_FOUND";
+
+  private final PersonRepositoryPort personRepositoryPort;
+
+  public void execute(UUID principalId, UUID duplicateId) {
+    Person principal =
+        personRepositoryPort
+            .findByPersonId(principalId)
+            .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
+
+    Person duplicate =
+        personRepositoryPort
+            .findByPersonId(duplicateId)
+            .orElseThrow(() -> new SolverException(PERSON_NOT_FOUND));
+
+    principal.recordDeduplicationMatchFound(duplicate.getGlobalId());
+    duplicate.markAsMerged(principal.getGlobalId());
+    personRepositoryPort.save(duplicate);
+    personRepositoryPort.save(principal);
+
+    log.info("event=CORE_WORKFORCE_PERSON_DEDUPLICATION_RESOLVE_SUCCESS targetId={}", principalId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdateAcademicRankUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.AcademicRank;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdateAcademicRankUseCase {
+
+  private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";
+  private static final String ACADEMIC_PROFILE_NOT_FOUND = "ACADEMIC_PROFILE_NOT_FOUND";
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  public void execute(UUID relationshipId, UUID tenantId, String newRank) {
+    Relationship relationship =
+        relationshipRepositoryPort
+            .findByRelationshipIdAndTenantId(relationshipId, tenantId)
+            .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
+
+    if (relationship.getAcademicProfile() == null) {
+      throw new SolverException(ACADEMIC_PROFILE_NOT_FOUND);
+    }
+
+    AcademicRank rank = AcademicRank.valueOf(newRank.toUpperCase());
+    relationship.getAcademicProfile().upgradeRank(rank);
+    relationship.notifyAcademicProfileRankUpdated(rank.name());
+
+    relationshipRepositoryPort.save(relationship);
+
+    log.info(
+        "event=CORE_WORKFORCE_ACADEMIC_RANK_UPDATE_SUCCESS targetId={}", relationshipId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/UpdateEmploymentConditionsUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.EmploymentCondition;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class UpdateEmploymentConditionsUseCase {
+
+  private static final String RELATIONSHIP_NOT_FOUND = "RELATIONSHIP_NOT_FOUND";
+
+  private final RelationshipRepositoryPort relationshipRepositoryPort;
+
+  public void execute(UUID relationshipId, EmploymentCondition condition) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    Relationship relationship =
+        relationshipRepositoryPort
+            .findByRelationshipIdAndTenantId(relationshipId, tenantId)
+            .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
+
+    relationship.updateEmploymentCondition(condition);
+    relationshipRepositoryPort.save(relationship);
+
+    log.info(
+        "event=CORE_WORKFORCE_EMPLOYMENT_CONDITION_UPDATE_SUCCESS targetId={}", relationshipId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/application/usecase/AssignPersonToPositionUseCase.java ====
+package com.solveria.core.workforce.application.usecase;
+
+import com.solveria.core.workforce.application.port.PositionRepositoryPort;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.model.Position;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RequiredArgsConstructor
+public class AssignPersonToPositionUseCase {
+
+  private static final String POSITION_NOT_FOUND = "POSITION_NOT_FOUND";
+
+  private final PositionRepositoryPort positionRepositoryPort;
+
+  public void execute(UUID positionId, UUID tenantId, UUID personId) {
+    Position position =
+        positionRepositoryPort
+            .findByPositionIdAndTenantId(positionId, tenantId)
+            .orElseThrow(() -> new SolverException(POSITION_NOT_FOUND));
+
+    position.occupy(personId);
+    positionRepositoryPort.save(position);
+
+    log.info(
+        "event=CORE_WORKFORCE_POSITION_ASSIGN_SUCCESS targetId={} personId={}",
+        positionId,
+        personId);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/Person.java ====
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.workforce.domain.event.PersonCreatedEvent;
+import com.solveria.core.workforce.domain.event.PersonDeduplicationMatchFoundEvent;
+import com.solveria.core.workforce.domain.event.PersonMasterCreatedEvent;
+import com.solveria.core.workforce.domain.event.PersonUpdatedEvent;
+import com.solveria.core.workforce.domain.model.vo.ContactPoint;
+import com.solveria.core.workforce.domain.model.vo.Gender;
+import com.solveria.core.workforce.domain.model.vo.MaritalStatus;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Person extends DomainRoot {
+
+  private UUID personId;
+  private String firstName;
+  private String lastName;
+  private LocalDate birthDate;
+  private Gender gender;
+  private MaritalStatus maritalStatus;
+  private String professionTitle;
+  private String globalId;
+  private ContactPoint contactPoint;
+  private List<PartyIdentifier> identifiers;
+  private boolean active;
+  private String mergedIntoGlobalId;
+  private LocalDate createdAt;
+  private LocalDate updatedAt;
+
+  private static final int MINIMUM_AGE = 18;
+
+  public static Person create(
+      String firstName,
+      String lastName,
+      LocalDate birthDate,
+      Gender gender,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      String globalId,
+      ContactPoint contactPoint) {
+    Period age = Period.between(birthDate, LocalDate.now());
+    if (age.getYears() < MINIMUM_AGE) {
+      throw new IllegalArgumentException("La persona debe tener minimo " + MINIMUM_AGE + " anos");
+    }
+
+    if (firstName == null
+        || firstName.isBlank()
+        || lastName == null
+        || lastName.isBlank()
+        || globalId == null
+        || globalId.isBlank()) {
+      throw new IllegalArgumentException("firstName, lastName y globalId son requeridos");
+    }
+
+    Person person =
+        Person.builder()
+            .personId(UUID.randomUUID())
+            .firstName(firstName)
+            .lastName(lastName)
+            .birthDate(birthDate)
+            .gender(gender)
+            .maritalStatus(maritalStatus)
+            .professionTitle(professionTitle)
+            .globalId(globalId)
+            .contactPoint(contactPoint != null ? contactPoint : new ContactPoint())
+            .identifiers(new ArrayList<>())
+            .active(true)
+            .mergedIntoGlobalId(null)
+            .createdAt(LocalDate.now())
+            .updatedAt(LocalDate.now())
+            .build();
+    person.registerEvent(new PersonCreatedEvent(person.personId, person.globalId, Instant.now()));
+    return person;
+  }
+
+  public void addIdentifier(PartyIdentifier identifier) {
+    if (identifier == null) {
+      throw new IllegalArgumentException("identifier no puede ser nulo");
+    }
+    boolean exists =
+        identifiers.stream().anyMatch(id -> id.getIdNumber().equals(identifier.getIdNumber()));
+    if (exists) {
+      throw new IllegalArgumentException(
+          "El identificador " + identifier.getIdNumber() + " ya esta vinculado a esta persona");
+    }
+    identifiers.add(identifier);
+    this.updatedAt = LocalDate.now();
+    registerEvent(new PersonUpdatedEvent(personId, Instant.now()));
+  }
+
+  public void updateContactPoint(ContactPoint newContactPoint) {
+    this.contactPoint = newContactPoint;
+    this.updatedAt = LocalDate.now();
+    registerEvent(new PersonUpdatedEvent(personId, Instant.now()));
+  }
+
+  public void updateMasterData(
+      String firstName,
+      String lastName,
+      LocalDate birthDate,
+      Gender gender,
+      MaritalStatus maritalStatus,
+      String professionTitle,
+      String globalId) {
+    if (firstName == null
+        || firstName.isBlank()
+        || lastName == null
+        || lastName.isBlank()
+        || globalId == null
+        || globalId.isBlank()) {
+      throw new IllegalArgumentException("firstName, lastName y globalId son requeridos");
+    }
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.birthDate = birthDate;
+    this.gender = gender;
+    this.maritalStatus = maritalStatus;
+    this.professionTitle = professionTitle;
+    this.globalId = globalId;
+    this.updatedAt = LocalDate.now();
+    registerEvent(new PersonUpdatedEvent(personId, Instant.now()));
+  }
+
+  public void markAsMasterCreated() {
+    registerEvent(new PersonMasterCreatedEvent(personId, Instant.now()));
+  }
+
+  public void recordDeduplicationMatchFound(String matchedGlobalId) {
+    registerEvent(
+        new PersonDeduplicationMatchFoundEvent(personId, matchedGlobalId, Instant.now()));
+  }
+
+  public void markAsMerged(String principalGlobalId) {
+    if (principalGlobalId == null || principalGlobalId.isBlank()) {
+      throw new IllegalArgumentException("principalGlobalId es requerido");
+    }
+    this.active = false;
+    this.mergedIntoGlobalId = principalGlobalId;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public Integer getAge() {
+    return Period.between(birthDate, LocalDate.now()).getYears();
+  }
+
+  public String getFullName() {
+    return firstName + " " + lastName;
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/Relationship.java ====
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.workforce.domain.exception.SolverException;
+import com.solveria.core.workforce.domain.event.AcademicProfileRankUpdatedEvent;
+import com.solveria.core.workforce.domain.event.RelationshipCreatedEvent;
+import com.solveria.core.workforce.domain.event.RelationshipEndedEvent;
+import com.solveria.core.workforce.domain.event.RelationshipReactivatedEvent;
+import com.solveria.core.workforce.domain.model.vo.EmploymentCondition;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import com.solveria.core.workforce.domain.model.vo.RelationshipType;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Relationship extends DomainRoot {
+
+  private UUID relationshipId;
+  private UUID personId;
+  private UUID tenantId;
+  private RelationshipType relationType;
+  private RelationshipStatus currentStatus;
+  private LocalDate hireDate;
+  private LocalDate createdAt;
+  private LocalDate updatedAt;
+
+  private WorkerProfile workerProfile;
+  private AcademicProfile academicProfile;
+  private EmploymentCondition employmentCondition;
+
+  @Builder.Default private List<StatusLog> statusLogs = new ArrayList<>();
+
+  public static Relationship create(
+      UUID personId, UUID tenantId, RelationshipType relationType, LocalDate hireDate) {
+    if (personId == null || tenantId == null || relationType == null) {
+      throw new IllegalArgumentException("personId, tenantId y relationType son requeridos");
+    }
+
+    Relationship relationship =
+        Relationship.builder()
+            .relationshipId(UUID.randomUUID())
+            .personId(personId)
+            .tenantId(tenantId)
+            .relationType(relationType)
+            .currentStatus(RelationshipStatus.DRAFT)
+            .hireDate(hireDate)
+            .createdAt(LocalDate.now())
+            .updatedAt(LocalDate.now())
+            .statusLogs(new ArrayList<>())
+            .build();
+    relationship.registerEvent(
+        new RelationshipCreatedEvent(
+            relationship.relationshipId, relationship.personId, relationship.tenantId, Instant.now()));
+    return relationship;
+  }
+
+  public void assignWorkerProfile(WorkerProfile profile) {
+    this.workerProfile = profile;
+    this.academicProfile = null;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void assignAcademicProfile(AcademicProfile profile) {
+    this.academicProfile = profile;
+    this.workerProfile = null;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void addStatusLog(StatusLog statusLog) {
+    if (statusLog == null) {
+      throw new IllegalArgumentException("statusLog no puede ser nulo");
+    }
+    if (statusLogs == null) {
+      statusLogs = new ArrayList<>();
+    }
+    statusLogs.add(statusLog);
+  }
+
+  public void activate() {
+    if (!RelationshipStatus.DRAFT.equals(currentStatus)) {
+      throw new IllegalStateException("Solo se puede activar una relacion en estado DRAFT");
+    }
+    this.currentStatus = RelationshipStatus.ACTIVE;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void suspend() {
+    this.currentStatus = RelationshipStatus.SUSPENDED;
+    this.updatedAt = LocalDate.now();
+  }
+
+  public void reactivate() {
+    if (!RelationshipStatus.SUSPENDED.equals(currentStatus)) {
+      throw new IllegalStateException("Solo se puede reactivar una relacion SUSPENDIDA");
+    }
+    this.currentStatus = RelationshipStatus.ACTIVE;
+    this.updatedAt = LocalDate.now();
+    registerEvent(new RelationshipReactivatedEvent(relationshipId, Instant.now()));
+  }
+
+  public void terminate() {
+    this.currentStatus = RelationshipStatus.TERMINATED;
+    this.updatedAt = LocalDate.now();
+    registerEvent(new RelationshipEndedEvent(relationshipId, Instant.now()));
+  }
+
+  public void updateEmploymentCondition(EmploymentCondition condition) {
+    if (condition == null) {
+      throw new SolverException("EMPLOYMENT_CONDITION_REQUIRED");
+    }
+    this.employmentCondition = condition;
+    this.updatedAt = LocalDate.now();
+    addStatusLog(
+        StatusLog.create(
+            relationshipId,
+            currentStatus,
+            currentStatus,
+            "EMPLOYMENT_CONDITION_UPDATED",
+            null));
+  }
+
+  public void notifyAcademicProfileRankUpdated(String newRank) {
+    registerEvent(new AcademicProfileRankUpdatedEvent(relationshipId, newRank, Instant.now()));
+    addStatusLog(
+        StatusLog.create(
+            relationshipId,
+            currentStatus,
+            currentStatus,
+            "ACADEMIC_RANK_UPDATED",
+            null));
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/Position.java ====
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.workforce.domain.event.PositionAssignedEvent;
+import com.solveria.core.workforce.domain.event.PositionVacatedEvent;
+import com.solveria.core.workforce.domain.model.vo.HeadcountPlan;
+import com.solveria.core.workforce.domain.model.vo.PositionStatus;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Position extends DomainRoot {
+
+  private UUID positionId;
+  private UUID unitId;
+  private Job job;
+  private PositionStatus status;
+  private Boolean isBudgeted;
+  private HeadcountPlan headcountPlan;
+  private UUID personId;
+
+  public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
+    if (unitId == null || jobId == null || maxSlots == null) {
+      throw new IllegalArgumentException("unitId, jobId y maxSlots son requeridos");
+    }
+    if (maxSlots <= 0) {
+      throw new IllegalArgumentException("maxSlots debe ser mayor a 0");
+    }
+
+    return Position.builder()
+        .positionId(UUID.randomUUID())
+        .unitId(unitId)
+        .job(Job.builder().jobId(jobId).build())
+        .status(PositionStatus.VACANT)
+        .isBudgeted(isBudgeted != null ? isBudgeted : false)
+        .headcountPlan(HeadcountPlan.create(maxSlots))
+        .personId(null)
+        .build();
+  }
+
+  public UUID getJobId() {
+    return job != null ? job.getJobId() : null;
+  }
+
+  public void occupy(UUID personId) {
+    if (!PositionStatus.VACANT.equals(status)) {
+      throw new IllegalStateException("Solo se puede ocupar una posicion vacante");
+    }
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido para ocupar una posicion");
+    }
+    headcountPlan.occupy();
+    this.status = PositionStatus.OCCUPIED;
+    this.personId = personId;
+    registerEvent(new PositionAssignedEvent(positionId, unitId, Instant.now()));
+  }
+
+  public void vacate() {
+    headcountPlan.vacate();
+    if (headcountPlan.getCurrentSlots() == 0) {
+      this.status = PositionStatus.VACANT;
+      this.personId = null;
+      registerEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
+    }
+  }
+
+  public void reserve() {
+    if (!PositionStatus.VACANT.equals(status)) {
+      throw new IllegalStateException("Solo se puede reservar una posicion vacante");
+    }
+    this.status = PositionStatus.RESERVED;
+  }
+
+  public boolean hasVacancy() {
+    return headcountPlan.hasVacancy();
+  }
+
+  public void updateBudgeted(boolean budgeted) {
+    this.isBudgeted = budgeted;
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/OrgUnit.java ====
+package com.solveria.core.workforce.domain.model;
+
+import com.solveria.core.shared.events.DomainEvent;
+import com.solveria.core.shared.outbox.domain.DomainRoot;
+import com.solveria.core.workforce.domain.event.OrgUnitAssignedChangedEvent;
+import com.solveria.core.workforce.domain.event.OrgUnitExtensionUpdatedEvent;
+import com.solveria.core.workforce.domain.event.OrgUnitGeographicMovedEvent;
+import com.solveria.core.workforce.domain.model.vo.CostCenter;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class OrgUnit extends DomainRoot {
+
+  private UUID unitId;
+  private UUID tenantId;
+  private UUID parentId;
+  private String name;
+  private OrgUnitType unitType;
+  private CostCenter costCenter;
+  private String geoCoords;
+  private Boolean isRoot;
+
+  @Builder.Default private List<OrgHierarchy> hierarchies = new ArrayList<>();
+
+  public enum OrgUnitType {
+    ADMINISTRATIVE("Administrativa"),
+    ACADEMIC("Academica"),
+    COMMERCIAL("Comercial");
+
+    private final String label;
+
+    OrgUnitType(String label) {
+      this.label = label;
+    }
+
+    public String getLabel() {
+      return label;
+    }
+  }
+
+  public static OrgUnit createRoot(
+      UUID tenantId, String name, OrgUnitType unitType, CostCenter costCenter) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("name es requerido");
+    }
+
+    return OrgUnit.builder()
+        .unitId(UUID.randomUUID())
+        .tenantId(tenantId)
+        .parentId(null)
+        .name(name)
+        .unitType(unitType)
+        .costCenter(costCenter)
+        .isRoot(true)
+        .hierarchies(new ArrayList<>())
+        .build();
+  }
+
+  public static OrgUnit createChild(
+      UUID tenantId, UUID parentId, String name, OrgUnitType unitType, CostCenter costCenter) {
+    if (parentId == null) {
+      throw new IllegalArgumentException("parentId no puede ser nulo para unidades no-raiz");
+    }
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("name es requerido");
+    }
+
+    return OrgUnit.builder()
+        .unitId(UUID.randomUUID())
+        .tenantId(tenantId)
+        .parentId(parentId)
+        .name(name)
+        .unitType(unitType)
+        .costCenter(costCenter)
+        .isRoot(false)
+        .hierarchies(new ArrayList<>())
+        .build();
+  }
+
+  public void changeAssignment(UUID newParentId) {
+    this.parentId = newParentId;
+    registerEvent(new OrgUnitAssignedChangedEvent(unitId, newParentId, Instant.now()));
+  }
+
+  public void updateCostCenter(CostCenter newCostCenter) {
+    this.costCenter = newCostCenter;
+    registerEvent(new OrgUnitExtensionUpdatedEvent(unitId, newCostCenter, Instant.now()));
+  }
+
+  public void updateGeoCoords(String newGeoCoords) {
+    this.geoCoords = newGeoCoords;
+    registerEvent(new OrgUnitGeographicMovedEvent(unitId, newGeoCoords, Instant.now()));
+  }
+
+  public void addHierarchy(OrgHierarchy hierarchy) {
+    if (hierarchy == null) {
+      throw new IllegalArgumentException("hierarchy no puede ser nulo");
+    }
+    hierarchies.add(hierarchy);
+  }
+}
+
+==== core-plataform/core-platform/src/main/java/com/solveria/core/workforce/domain/model/vo/EmploymentCondition.java ====
+package com.solveria.core.workforce.domain.model.vo;
+
+public enum EmploymentCondition {
+  PE("Permanente"),
+  PF("Plazo fijo"),
+  JU("Jubilado");
+   final String description;
+    EmploymentCondition(String label) {
+        this.description = label;
+    }
+}
+

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: iam-service
+  profiles:
+    active: dev
+  autoconfigure:
+    exclude: []
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+# JWT Security Configuration
+security:
+  jwt:
+    enabled: false  # Default: disabled for DEV mode
+
+server:
+  port: 8080
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:3000,http://localhost:3001

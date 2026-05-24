@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iam-service-postgres
+    environment:
+      POSTGRES_DB: peoplecore_db
+      POSTGRES_USER: iam_user
+      POSTGRES_PASSWORD: iam_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iam_user -d iam_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - iam-network
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  iam-network:
+    driver: bridge
+

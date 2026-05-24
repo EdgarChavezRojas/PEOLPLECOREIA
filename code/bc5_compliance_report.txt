@@ -1,0 +1,228 @@
+================================================================================
+BC5: FINANCIAL & SOCIAL COMPLIANCE — COMPLIANCE REPORT
+Generated: 2026-05-02
+Spec Source: 05_Financial_Social_Compliance.md + 00_Shared_Kernel_Overview.md
+================================================================================
+
+I. NEWLY IMPLEMENTED ITEMS (Driven by Spec)
+================================================================================
+
+A. AGGREGATE ROOTS (2)
+   [OK] FundingSource (AR) — domain/model/FundingSource.java
+        - sourceId, projectCode, totalBudget, availableBudget, burnRate, tenantId
+        - Methods: create(), rehydrate(), checkBudgetSufficiency(), allocateBudget(), adjustCostSplit()
+        - Invariant: LaborCostSplit sum = 100% ✓
+        - Domain events: FundingSourceValidatedEvent, FundingSourceProjectExhaustedEvent, CostCenterSplitAdjustedEvent ✓
+   [OK] SocialSecurityAccount (AR) — domain/model/SocialSecurityAccount.java
+        - ssaId, personId, gestoraCode, contributionRate (12.71% fixed), lastContribution
+        - Invariant: ContributionRate == 0.1271 enforced via VO ✓
+
+B. ENTITIES (2)
+   [OK] HealthProvider — domain/model/HealthProvider.java
+        - providerId, registrationNo, status (ACTIVO/SUSPENDIDO)
+   [OK] TaxForm110 — domain/model/TaxForm110.java
+        - formId, personId, totalDeclared, verifiedCredit, docId, period
+        - Auto-calc: verifiedCredit = totalDeclared * 13% ✓
+
+C. VALUE OBJECTS (7 — all Java 21 records)
+   [OK] LaborCostSplit — splitId, unitId, percentage, effectiveDate
+   [OK] FundingSourceId — typed UUID wrapper
+   [OK] SocialSecurityAccountId — typed UUID wrapper
+   [OK] HealthProviderStatus — enum (ACTIVO, SUSPENDIDO)
+   [OK] ContributionRate — enforces 12.71% invariant at construction
+   [OK] BudgetAmount — non-negative BigDecimal wrapper
+   [OK] TerminationType — enum (DESPIDO_SIN_CAUSA, RENUNCIA_VOLUNTARIA, etc.)
+
+D. DOMAIN EVENTS (7 — all Java 21 records implementing DomainEvent)
+   [OK] FundingSourceValidatedEvent (Sync/Blocking)
+   [OK] FundingSourceProjectExhaustedEvent (Async)
+   [OK] CostCenterSplitAdjustedEvent (Sync)
+   [OK] RcIvaForm110ImportedEvent (Async)
+   [OK] BankAccountSyncedEvent (Async)
+   [OK] LiquidationCalculatedEvent (Sync)
+   [OK] FiniquitoPaymentOverdueEvent (Async)
+
+E. DOMAIN SERVICES (3 — pure, no annotations)
+   [OK] BolivianTaxCalculationService — All localization rules:
+        - Gestora: TG * 0.1271 ✓
+        - INFOCAL SCZ: TG * 0.01 (Retail/Corp only) ✓
+        - RC-IVA: [SN - (2*SMN)] * 0.13 - (1*SMN) * 0.13 - Form110 ✓
+        - Desahucio: 3 * SalariosPromedio ✓
+        - Multa Finiquito: TotalLíquido * 0.30 ✓
+        - Multa Quinquenio: Monto * 0.30 ✓
+        - SMN = Bs 3300 ✓
+   [OK] LaborCostSplitValidator — 100% sum validation
+   [OK] LiquidationCalculationService — P15 average, P17 penalties:
+        - 3-month average salary (P15) ✓
+        - Indemnización (years of service) ✓
+        - Aguinaldo proporcional (8.33%) ✓
+        - Vacaciones pendientes ✓
+        - 15-day overdue detection ✓
+        - 30-day quinquenio overdue detection ✓
+
+F. PRIMARY PORTS (4 interfaces)
+   [OK] BudgetAllocationPort (PI)
+   [OK] SocialSecurityCompliancePort (PI)
+   [OK] TaxCompliancePort (PI)
+   [OK] DispersionPort (PI)
+
+G. SECONDARY PORTS (5 interfaces)
+   [OK] FundingSourceRepositoryPort (PO)
+   [OK] SocialSecurityAccountRepositoryPort (PO)
+   [OK] TaxForm110RepositoryPort (PO)
+   [OK] HealthProviderRepositoryPort (PO)
+   [OK] EventOutboxPort (PO)
+
+H. COMMANDS (6 — all Java 21 records)
+   [OK] ValidateFundingSourceCommand
+   [OK] AdjustCostSplitCommand (with nested SplitEntry record)
+   [OK] ImputeAnalyticCommand
+   [OK] ProcessLiquidationCommand
+   [OK] ImportTaxForm110Command
+   [OK] SyncBankAccountCommand
+
+I. USE CASES (6 — Spring @Service)
+   [OK] ValidateFundingSourceUseCase — implements BudgetAllocationPort (W1 + W2)
+   [OK] ImputeAnalyticTerritorialUseCase — W4 mid-month proration
+   [OK] ProcessLiquidationUseCase — W9 finiquito/offboarding
+   [OK] ImportTaxForm110UseCase — implements TaxCompliancePort
+   [OK] SyncBankAccountUseCase — implements DispersionPort
+   [OK] RegisterSocialSecurityUseCase — implements SocialSecurityCompliancePort
+   [OK] CalculateRcIvaUseCase — standalone RC-IVA calculator
+
+J. EVENT CONSUMERS (3)
+   [OK] PersonMasterCreatedConsumer — consumes PERSON_MASTER_CREATED
+   [OK] RelationshipEndedConsumer — consumes RELATIONSHIP_ENDED → triggers W9
+   [OK] OrgUnitAssignedChangedConsumer — consumes ORG_UNIT_ASSIGNED_CHANGED → triggers W4
+
+K. JPA ENTITIES (5 + 1 outbox)
+   [OK] FundingSourceJpa — extends BaseEntity, tenant filter
+   [OK] LaborCostSplitJpa — extends BaseEntity, @ManyToOne to FundingSource
+   [OK] SocialSecurityAccountJpa — extends BaseEntity
+   [OK] HealthProviderJpa — extends BaseEntity
+   [OK] TaxForm110Jpa — extends BaseEntity, period as year+month
+   [OK] EventOutbox — standalone entity for outbox pattern
+
+L. SPRING DATA REPOSITORIES (7)
+   [OK] FundingSourceRepository
+   [OK] LaborCostSplitRepository
+   [OK] SocialSecurityAccountRepository
+   [OK] HealthProviderRepository
+   [OK] TaxForm110Repository
+   [OK] EventOutboxRepository
+
+M. ADAPTERS (5)
+   [OK] FundingSourceRepositoryAdapter — with event outbox publishing
+   [OK] SocialSecurityAccountRepositoryAdapter
+   [OK] TaxForm110RepositoryAdapter
+   [OK] HealthProviderRepositoryAdapter
+   [OK] FinancialEventOutboxAdapter
+
+N. MAPSTRUCT MAPPERS (4)
+   [OK] FundingSourceMapper — domain↔JPA + event payload serialization
+   [OK] SocialSecurityAccountMapper
+   [OK] TaxForm110Mapper — YearMonth↔int conversion
+   [OK] HealthProviderMapper
+
+================================================================================
+II. WORKFLOW COMPLIANCE
+================================================================================
+
+[OK] W1: ONG Onboarding Budget Check
+     - ValidateFundingSourceUseCase.validateFundingSource()
+     - PersonMasterCreatedConsumer consumes PERSON_MASTER_CREATED
+     - Checks availableBudget >= requiredAmount
+     - Fires FUNDING_SOURCE_VALIDATED (sync) or FUNDING_SOURCE_PROJECT_EXHAUSTED (async)
+
+[OK] W2: Transfer Split Proration
+     - ValidateFundingSourceUseCase.adjustCostSplit()
+     - Enforces 100% invariant
+     - Fires COST_CENTER_SPLIT_ADJUSTED
+
+[OK] W4: Territorial Analytic Imputation (Mid-month)
+     - ImputeAnalyticTerritorialUseCase.execute()
+     - OrgUnitAssignedChangedConsumer consumes ORG_UNIT_ASSIGNED_CHANGED
+     - Calculates oldDays/totalDays and newDays/totalDays
+     - Creates two LaborCostSplit entries summing to 100%
+
+[OK] W9: Finiquito/Liquidación
+     - ProcessLiquidationUseCase.execute()
+     - RelationshipEndedConsumer consumes RELATIONSHIP_ENDED
+     - Calculates: average salary (P15), indemnización, aguinaldo proporcional, vacaciones
+     - Adds Desahucio (3x) if DESPIDO_SIN_CAUSA
+     - Fires LIQUIDATION_CALCULATED
+     - At Day 16: automatic Multa 30% → FINIQUITO_PAYMENT_OVERDUE
+
+================================================================================
+III. INVARIANT COMPLIANCE
+================================================================================
+
+[OK] Consistencia del 100% — FundingSource.adjustCostSplit() validates sum
+[OK] Deducción Laboral Exacta — ContributionRate VO enforces 12.71% at construction
+[OK] SoD — ValidateFundingSourceUseCase.enforceSoD() checks creatorId != approverId
+[OK] Piso Salarial Legal — SMN = Bs 3300 in BolivianTaxCalculationService
+
+================================================================================
+IV. EVENT PRODUCERS (BC5 → Other BCs)
+================================================================================
+
+[OK] BANK_ACCOUNT_SYNCED — SyncBankAccountUseCase
+[OK] FINANCIAL_SOURCE_PROJECT_EXHAUSTED — FundingSource.allocateBudget()
+[OK] COST_CENTER_SPLIT_ADJUSTED — FundingSource.adjustCostSplit()
+
+================================================================================
+V. EVENT CONSUMERS (Other BCs → BC5)
+================================================================================
+
+[OK] PERSON_MASTER_CREATED — PersonMasterCreatedConsumer
+[OK] RELATIONSHIP_ENDED — RelationshipEndedConsumer → W9
+[OK] ORG_UNIT_ASSIGNED_CHANGED — OrgUnitAssignedChangedConsumer → W4
+
+Note: PERSON_DEDUPLICATION_MATCH_FOUND re-entry logic is handled via the
+PersonMasterCreatedConsumer which checks existing FundingSource associations.
+
+================================================================================
+VI. DEVIATIONS & NOTES
+================================================================================
+
+1. Workflow 13 (Suplencias y Reemplazos Temporales) is documented in spec but
+   NOT in the topology_SiMAL directive. Per the directive, only W1, W2, W4, W9
+   were implemented. W13 belongs more to BC Workforce/Accruals domain.
+
+2. TaxForm110Jpa stores YearMonth as separate periodYear/periodMonth columns
+   for DB compatibility (YearMonth has no native JPA mapping).
+
+3. EventOutbox for BC Financial uses a separate table (financial_event_outbox)
+   to maintain BC isolation in the modular monolith.
+
+4. The CalculateRcIvaUseCase provides a standalone calculation independent
+   of the ImportTaxForm110UseCase flow for flexibility.
+
+5. Domain model classes use java.util.ArrayList for internal event tracking
+   (pullDomainEvents pattern) matching the Contract AR pattern from BC Legal.
+
+================================================================================
+VII. DOMAIN PURITY VERIFICATION
+================================================================================
+
+domain.model/ — ZERO infrastructure annotations: ✓ PASS
+  - FundingSource.java: NO @Entity, @Table, @Column, @Service, @Component
+  - SocialSecurityAccount.java: NO infrastructure annotations
+  - HealthProvider.java: NO infrastructure annotations
+  - TaxForm110.java: NO infrastructure annotations
+  - vo/LaborCostSplit.java: Java 21 record ✓
+  - vo/FundingSourceId.java: Java 21 record ✓
+  - vo/SocialSecurityAccountId.java: Java 21 record ✓
+  - vo/ContributionRate.java: Java 21 record ✓
+  - vo/BudgetAmount.java: Java 21 record ✓
+  - vo/HealthProviderStatus.java: enum ✓
+  - vo/TerminationType.java: enum ✓
+
+domain.event/ — ZERO infrastructure annotations: ✓ PASS
+  - All 7 events are Java 21 records implementing DomainEvent
+
+domain.service/ — ZERO infrastructure annotations: ✓ PASS
+  - All 3 services are final utility classes with static methods
+
+TOTAL FILES GENERATED: 62
+================================================================================

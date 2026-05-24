@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: solveria-core-platform-test
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL12Dialect
+        format_sql: true
+
+  datasource:
+    url: jdbc:tc:postgresql:14:///core_hr_test_db
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: postgres
+    password: postgres
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+logging:
+  level:
+    com.solveria: DEBUG
+    org.hibernate.SQL: DEBUG
+
