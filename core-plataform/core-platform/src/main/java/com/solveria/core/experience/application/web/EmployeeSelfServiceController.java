@@ -48,19 +48,20 @@ public class EmployeeSelfServiceController {
 
     return ResponseEntity.status(HttpStatus.CREATED).body(actionId);
   }
-
   @GetMapping("/leaves/balance/{personId}")
   @Operation(
-      summary = "Consultar saldo de vacaciones",
-      description = "Retorna el saldo disponible de días de vacaciones/ausencias para un empleado")
+          summary = "Consultar saldo de vacaciones",
+          description = "Retorna el saldo disponible de días de vacaciones/ausencias para un empleado"
+  )
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Saldo consultado exitosamente"),
-    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
-    @ApiResponse(responseCode = "404", description = "Empleado no encontrado", content = @Content),
-    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+          @ApiResponse(responseCode = "200", description = "Saldo consultado exitosamente"),
+          @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+          @ApiResponse(responseCode = "404", description = "Empleado no encontrado", content = @Content),
+          @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
   })
-  public ResponseEntity<BigDecimal> getLeaveBalance(@PathVariable UUID personId) {
+  public ResponseEntity<BigDecimal> getLeaveBalance(
+          @PathVariable("personId") UUID personId) {
+
     BigDecimal balance = employeeSelfServiceUseCase.getAvailableLeaveBalance(personId);
     return ResponseEntity.ok(balance);
-  }
-}
+  }}

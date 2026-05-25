@@ -56,10 +56,9 @@ public class LeaveController {
     @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
   })
   public ResponseEntity<Page<LeaveTransaction>> list(
-      @RequestParam UUID personId, Pageable pageable) {
+          @RequestParam("personId") UUID personId, Pageable pageable) {
     return ResponseEntity.ok(listEmployeeLeavesUseCase.handle(personId, pageable));
   }
-
   @PostMapping
   @Operation(summary = "Solicitar licencia", description = "Registra una solicitud de licencia")
   @ApiResponses({

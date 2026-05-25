@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RequestLeaveService implements RequestLeaveUseCase {
@@ -26,21 +27,24 @@ public class RequestLeaveService implements RequestLeaveUseCase {
     this.accrualBalanceRepository = accrualBalanceRepository;
     this.benefitsRepository = benefitsRepository;
   }
-
   @Override
+  @Transactional // 👈 AGREGA ESTA ANOTACIÓN AQUÍ
   public AccrualBalance handle(RequestLeaveCommand command) {
     LocalizationPolicy.requireSantaCruz(command.location());
+
     AccrualBalance balance =
-        accrualBalanceRepository
-            .findById(command.balanceId())
-            .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
+            accrualBalanceRepository
+                    .findById(command.balanceId())
+                    .orElseThrow(() -> new AccrualBalanceNotFoundException(command.balanceId()));
 
     LocalDate startDate = command.startDate();
     LocalDate endDate = command.endDate();
     List<HolidayCalendar> holidays = benefitsRepository.findHolidaysBetween(startDate, endDate);
     BigDecimal chargeableDays = HolidayPolicy.calculateChargeableDays(startDate, endDate, holidays);
 
+    // Aquí es donde tronaba, porque requestLeave lee la lista 'leaveTransactions'
     balance.requestLeave(startDate, endDate, chargeableDays);
+
     return accrualBalanceRepository.save(balance);
   }
 }

@@ -1,10 +1,5 @@
 package com.solveria.core.security.context;
 
-/**
- * Contexto de seguridad para identificar al usuario actual.
- *
- * <p>- Thread-safe (ThreadLocal) - No depende de infraestructura - Enterprise ready
- */
 public final class SecurityUserContext {
 
   private static final ThreadLocal<Long> USER_ID = new ThreadLocal<>();
@@ -19,7 +14,6 @@ public final class SecurityUserContext {
     return USER_ID.get();
   }
 
-  /** Identificador semántico del actor. Usado para auditoría y trazabilidad. */
   public static String getUserIdentifier() {
     Long id = USER_ID.get();
     return id != null ? id.toString() : "system";

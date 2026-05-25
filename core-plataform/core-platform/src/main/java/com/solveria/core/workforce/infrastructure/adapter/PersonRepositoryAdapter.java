@@ -63,7 +63,8 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Optional<Person> findByUserId(Long userId) {
-    return personRepository.findByUserId(userId).map(personMapper::toDomain);
-  }
-}
+    return personRepository.findByUserId(userId)
+            .map(personMapper::toDomain);
+  }}

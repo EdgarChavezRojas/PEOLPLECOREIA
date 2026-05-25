@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/payroll-runs")
 @Tag(
-    name = "Payroll Runs",
-    description = "Endpoints para la gestión del ciclo de vida de la planilla")
+        name = "Payroll Runs",
+        description = "Endpoints para la gestión del ciclo de vida de la planilla")
 public class PayrollRunController {
 
   private final GeneratePayrollUseCase generatePayrollUseCase;
@@ -32,11 +32,11 @@ public class PayrollRunController {
   private final GetEmployeePaySlipUseCase getEmployeePaySlipUseCase;
 
   public PayrollRunController(
-      GeneratePayrollUseCase generatePayrollUseCase,
-      ApprovePayrollUseCase approvePayrollUseCase,
-      ClosePayrollUseCase closePayrollUseCase,
-      GetPayrollRunByPeriodUseCase getPayrollRunByPeriodUseCase,
-      GetEmployeePaySlipUseCase getEmployeePaySlipUseCase) {
+          GeneratePayrollUseCase generatePayrollUseCase,
+          ApprovePayrollUseCase approvePayrollUseCase,
+          ClosePayrollUseCase closePayrollUseCase,
+          GetPayrollRunByPeriodUseCase getPayrollRunByPeriodUseCase,
+          GetEmployeePaySlipUseCase getEmployeePaySlipUseCase) {
     this.generatePayrollUseCase = generatePayrollUseCase;
     this.approvePayrollUseCase = approvePayrollUseCase;
     this.closePayrollUseCase = closePayrollUseCase;
@@ -46,10 +46,10 @@ public class PayrollRunController {
 
   @PostMapping
   @Operation(
-      summary = "Crear/Generar borrador de planilla",
-      description = "Genera un nuevo borrador de planilla para un periodo determinado.")
+          summary = "Crear/Generar borrador de planilla",
+          description = "Genera un nuevo borrador de planilla para un periodo determinado.")
   public ResponseEntity<PayrollRunResponse> generateDraft(
-      @RequestBody GeneratePayrollRequest request) {
+          @RequestBody GeneratePayrollRequest request) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     PayrollRunResponse response = generatePayrollUseCase.execute(request, tenantId);
     return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -58,9 +58,9 @@ public class PayrollRunController {
   @PostMapping("/{runId}/approve")
   @Operation(summary = "Aprobar planilla", description = "Aprueba una planilla en estado borrador.")
   public ResponseEntity<Void> approvePayroll(
-      @PathVariable UUID runId,
-      @RequestBody ApprovePayrollRequest request
-      ) {
+          @PathVariable("runId") UUID runId, // 👈 Corregido con el nombre explícito
+          @RequestBody ApprovePayrollRequest request
+  ) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     approvePayrollUseCase.execute(runId, request, tenantId);
     return ResponseEntity.ok().build();
@@ -68,10 +68,10 @@ public class PayrollRunController {
 
   @PostMapping("/{runId}/close")
   @Operation(
-      summary = "Cerrar planilla",
-      description = "Cierra definitivamente una planilla aprobada.")
+          summary = "Cerrar planilla",
+          description = "Cierra definitivamente una planilla aprobada.")
   public ResponseEntity<Void> closePayroll(
-      @PathVariable UUID runId ) {
+          @PathVariable("runId") UUID runId ) { // 👈 Corregido con el nombre explícito
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     closePayrollUseCase.execute(runId, tenantId);
     return ResponseEntity.ok().build();
@@ -79,10 +79,10 @@ public class PayrollRunController {
 
   @GetMapping("/period/{periodId}")
   @Operation(
-      summary = "Obtener planilla completa del período",
-      description = "Recupera los detalles de la planilla por período y tenant.")
+          summary = "Obtener planilla completa del período",
+          description = "Recupera los detalles de la planilla por período y tenant.")
   public ResponseEntity<PayrollRunDetailResponse> getPayrollRunByPeriod(
-      @PathVariable UUID periodId ) {
+          @PathVariable("periodId") UUID periodId ) { // 👈 Corregido con el nombre explícito
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     PayrollRunDetailResponse response = getPayrollRunByPeriodUseCase.execute(periodId, tenantId);
     return ResponseEntity.ok(response);
@@ -90,12 +90,12 @@ public class PayrollRunController {
 
   @GetMapping("/{runId}/employees/{employeeId}/slip")
   @Operation(
-      summary = "Obtener boleta de pago de un empleado",
-      description = "Genera la boleta detallada para un empleado dentro de una planilla.")
+          summary = "Obtener boleta de pago de un empleado",
+          description = "Genera la boleta detallada para un empleado dentro de una planilla.")
   public ResponseEntity<PaySlipResponse> getEmployeePaySlip(
-      @PathVariable UUID runId,
-      @PathVariable UUID employeeId
-      ) {
+          @PathVariable("runId") UUID runId,           // 👈 Corregido con el nombre explícito
+          @PathVariable("employeeId") UUID employeeId   // 👈 Corregido con el nombre explícito
+  ) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     PaySlipResponse response = getEmployeePaySlipUseCase.execute(runId, employeeId, tenantId);
     return ResponseEntity.ok(response);

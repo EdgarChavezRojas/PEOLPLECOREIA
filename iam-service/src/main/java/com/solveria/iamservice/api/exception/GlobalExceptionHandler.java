@@ -2,6 +2,7 @@ package com.solveria.iamservice.api.exception;
 
 import com.solveria.core.shared.exceptions.EntityNotFoundException;
 import com.solveria.core.shared.exceptions.SolverException;
+import com.solveria.core.workforce.application.usecase.PersonNotFoundException;
 import com.solveria.iamservice.api.exception.dto.ApiErrorResponse;
 import com.solveria.iamservice.application.exception.IamServiceException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -121,5 +122,15 @@ public class GlobalExceptionHandler {
             return HttpStatus.NOT_FOUND;
         }
         return HttpStatus.BAD_REQUEST;
+    }
+    @ExceptionHandler(PersonNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePersonNotFound(PersonNotFoundException ex, HttpServletRequest request) {
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse(
+                        "PERSON_NOT_FOUND",
+                        Instant.now(),
+                        request.getRequestURI()
+                ));
     }
 }

@@ -36,24 +36,14 @@ public class PersonController {
   private final GetPersonMeUseCase getPersonMeUseCase;
 
   @GetMapping("/me")
-  @Operation(
-      summary = "Obtener persona del usuario autenticado",
-      description = "Devuelve los datos de la Persona vinculada al usuario autenticado mediante el token JWT.")
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Persona encontrada"),
-    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
-    @ApiResponse(responseCode = "404", description = "Persona no encontrada para el usuario", content = @Content),
-    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
-  })
   public ResponseEntity<PersonMeResponse> me() {
     Long userId = SecurityUserContext.getUserId();
-    if (userId == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+
+    System.out.println("USER ID FROM TOKEN = " + userId);
+
     PersonMeResponse response = getPersonMeUseCase.execute(userId);
     return ResponseEntity.ok(response);
   }
-
   @PostMapping
   @Operation(
       summary = "Crear registro maestro de persona",
