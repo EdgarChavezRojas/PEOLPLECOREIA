@@ -61,8 +61,8 @@ public class GlobalExceptionHandler {
     /**
      * Authentication-related error codes return HTTP 401; everything else stays 500.
      *
-     * <p>Auth codes are prefixed with {@code IAM_AUTH_} by convention (see
-     * {@link com.solveria.iamservice.application.orchestration.AuthOrchestrator}).
+     * <p>Auth codes are prefixed with {@code IAM_AUTH_} by convention (see {@link
+     * com.solveria.iamservice.application.orchestration.AuthOrchestrator}).
      */
     private HttpStatus resolveIamServiceHttpStatus(IamServiceException ex) {
         if (ex.getErrorCode() != null && ex.getErrorCode().startsWith("IAM_AUTH_")) {
@@ -70,7 +70,6 @@ public class GlobalExceptionHandler {
         }
         return HttpStatus.INTERNAL_SERVER_ERROR;
     }
-
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(
@@ -123,14 +122,14 @@ public class GlobalExceptionHandler {
         }
         return HttpStatus.BAD_REQUEST;
     }
+
     @ExceptionHandler(PersonNotFoundException.class)
-    public ResponseEntity<ApiErrorResponse> handlePersonNotFound(PersonNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiErrorResponse> handlePersonNotFound(
+            PersonNotFoundException ex, HttpServletRequest request) {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiErrorResponse(
-                        "PERSON_NOT_FOUND",
-                        Instant.now(),
-                        request.getRequestURI()
-                ));
+                .body(
+                        new ApiErrorResponse(
+                                "PERSON_NOT_FOUND", Instant.now(), request.getRequestURI()));
     }
 }

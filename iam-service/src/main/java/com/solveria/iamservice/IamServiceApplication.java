@@ -13,7 +13,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
-        scanBasePackages = {"com.solveria", " com.solveria.core.accruals"},
+        scanBasePackages = {
+            "com.solveria",
+            " com.solveria.core.accruals",
+            "com.solveria.core.accruals.application.service"
+        },
         exclude = {
             MongoAutoConfiguration.class,
             MongoDataAutoConfiguration.class,
@@ -24,13 +28,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         basePackages = {
             "com.solveria",
         })
-@EntityScan(
-        basePackages = {
-            "com.solveria"
-        })
+@EntityScan(basePackages = {"com.solveria"})
 @EnableConfigurationProperties(JwtProperties.class)
 @EnableScheduling
-
 public class IamServiceApplication {
 
     public static void main(String[] args) {

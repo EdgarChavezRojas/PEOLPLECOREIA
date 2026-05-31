@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SqlDialectMappings">
-    <file url="file://$PROJECT_DIR$/core-plataform/core-platform/src/main/resources/db/migration/core/core.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/core-plataform/core-platform/src/main/resources/db/migration/payroll/payroll.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/core-plataform/core-platform/src/main/resources/db/migration/scheduling/scheduling.sql" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/core-plataform/core-platform/src/main/resources/db/migration/timeAndBearing/time.sql" dialect="GenericSQL" />
-  </component>
-</project>

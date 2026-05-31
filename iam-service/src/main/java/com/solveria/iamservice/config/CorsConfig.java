@@ -20,7 +20,6 @@ public class CorsConfig {
     @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:3001}")
     private String[] allowedOrigins;
 
-
     @Value("${cors.allowed-methods:GET,POST,PUT,DELETE,PATCH,OPTIONS}")
     private String[] allowedMethods;
 

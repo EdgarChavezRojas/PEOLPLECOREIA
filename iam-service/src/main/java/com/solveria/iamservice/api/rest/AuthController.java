@@ -90,11 +90,8 @@ public class AuthController {
                                                             }
                                                             """)))
             })
-    public ResponseEntity<AuthResponse> login(
-            @RequestBody @Valid LoginRequest request) {
-        log.debug(
-                "event=IAM_AUTH_LOGIN_HTTP_REQUEST_RECEIVED identifier={}",
-                request.identifier());
+    public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
+        log.debug("event=IAM_AUTH_LOGIN_HTTP_REQUEST_RECEIVED identifier={}", request.identifier());
 
         AuthResponse response = authOrchestrator.login(request.identifier(), request.password());
         return ResponseEntity.ok(response);

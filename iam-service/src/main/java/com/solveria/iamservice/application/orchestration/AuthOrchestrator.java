@@ -69,7 +69,10 @@ public class AuthOrchestrator {
         String token =
                 jwtService.generateToken(user.getId(), user.getTenantId(), user.getRoleIds());
 
-        log.info("event=IAM_AUTH_LOGIN_SUCCESS userId={} tenantId={}", user.getId(), user.getTenantId());
+        log.info(
+                "event=IAM_AUTH_LOGIN_SUCCESS userId={} tenantId={}",
+                user.getId(),
+                user.getTenantId());
         return new AuthResponse(token);
     }
 
@@ -141,9 +144,7 @@ public class AuthOrchestrator {
                             () ->
                                     userRepositoryPort
                                             .findByUsername(identifier)
-                                            .orElseThrow(
-                                                    () ->
-                                                            credentialsException(identifier)));
+                                            .orElseThrow(() -> credentialsException(identifier)));
         } else {
             return userRepositoryPort
                     .findByUsername(identifier)
@@ -151,9 +152,7 @@ public class AuthOrchestrator {
                             () ->
                                     userRepositoryPort
                                             .findByEmail(identifier)
-                                            .orElseThrow(
-                                                    () ->
-                                                            credentialsException(identifier)));
+                                            .orElseThrow(() -> credentialsException(identifier)));
         }
     }
 

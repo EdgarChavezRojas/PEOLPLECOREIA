@@ -9,10 +9,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>When enabled=true, the service requires JWT authentication for /api/** endpoints. When
  * enabled=false (default), all endpoints are accessible without authentication (DEV mode).
  *
- * <p>JWT signing uses asymmetric RSA keys loaded from the paths below:
- * - security.jwt.public-key-path  : classpath or file path to the RSA public key (PEM)
- * - security.jwt.private-key-path : classpath or file path to the RSA private key (PEM)
- * - security.jwt.expiration       : token validity duration (default 1h)
+ * <p>JWT signing uses asymmetric RSA keys loaded from the paths below: -
+ * security.jwt.public-key-path : classpath or file path to the RSA public key (PEM) -
+ * security.jwt.private-key-path : classpath or file path to the RSA private key (PEM) -
+ * security.jwt.expiration : token validity duration (default 1h)
  */
 @ConfigurationProperties(prefix = "security.jwt")
 public record JwtProperties(
@@ -32,4 +32,3 @@ public record JwtProperties(
         return expiration != null ? expiration : Duration.ofHours(1);
     }
 }
-

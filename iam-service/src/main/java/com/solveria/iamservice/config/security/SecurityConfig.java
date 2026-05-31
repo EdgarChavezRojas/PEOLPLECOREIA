@@ -40,7 +40,10 @@ public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-    public SecurityConfig(JwtProperties jwtProperties) {
+    private final ObjectMapper objectMapper;
+
+    public SecurityConfig(JwtProperties jwtProperties, ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
         if (jwtProperties.enabled()) {
             log.info("event=SECURITY_CONFIG_JWT_ENABLED enabled=true");
         } else {
@@ -108,8 +111,7 @@ public class SecurityConfig {
 
                 // JWT context extraction filter runs before Spring's own auth filter.
                 // Validation is fully stateless (RSA public key only — no DB calls).
-                .addFilterBefore(
-                        securityContextFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(securityContextFilter, UsernamePasswordAuthenticationFilter.class)
 
                 // Configure exception handling to return consistent ApiErrorResponse
                 .exceptionHandling(
@@ -198,7 +200,6 @@ public class SecurityConfig {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

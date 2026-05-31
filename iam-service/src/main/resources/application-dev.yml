@@ -27,11 +27,12 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-
+  config:
+    import: "classpath:application/application-dev.yml"
 # JWT Security Configuration (DEV mode: disabled by default)
 security:
   jwt:
-    enabled: false
+    enabled: true
     # RSA keys for token signing/validation (loaded from classpath in DEV)
     # Generate with: openssl genrsa -out private.pem 2048 && openssl rsa -in private.pem -pubout -out public.pem
     public-key-path: classpath:keys/public_key.pem
@@ -76,3 +77,4 @@ legal:
   policies:
     smn:
       id: "REEMPLAZA_CON_UUID_REAL"
+

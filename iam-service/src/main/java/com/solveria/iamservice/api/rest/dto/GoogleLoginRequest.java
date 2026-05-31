@@ -7,7 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 @Schema(description = "Google OAuth2 ID token login request")
 public record GoogleLoginRequest(
         @Schema(
-                        description = "Google ID token obtained from the client-side Google Sign-In flow",
+                        description =
+                                "Google ID token obtained from the client-side Google Sign-In flow",
                         requiredMode = Schema.RequiredMode.REQUIRED)
                 @NotBlank(message = "idToken must not be blank")
                 String idToken) {}

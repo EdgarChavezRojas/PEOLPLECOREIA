@@ -68,9 +68,9 @@ public class JwtService {
     /**
      * Generates a signed RS256 JWT for the given user.
      *
-     * @param userId   the user's database ID
+     * @param userId the user's database ID
      * @param tenantId the tenant UUID this user belongs to
-     * @param roleIds  the set of role IDs assigned to the user
+     * @param roleIds the set of role IDs assigned to the user
      * @return a compact serialized signed JWT string
      */
     public String generateToken(Long userId, UUID tenantId, Set<Long> roleIds) {
@@ -131,7 +131,8 @@ public class JwtService {
 
             return claims;
         } catch (ParseException | JOSEException e) {
-            throw new InvalidJwtException("JWT parsing or verification error: " + e.getMessage(), e);
+            throw new InvalidJwtException(
+                    "JWT parsing or verification error: " + e.getMessage(), e);
         }
     }
 
@@ -175,7 +176,8 @@ public class JwtService {
 
     private RSAPrivateKey loadPrivateKey(String resourcePath) throws IOException {
         try (InputStream is = resolveResource(resourcePath).getInputStream();
-             PEMParser parser = new PEMParser(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                PEMParser parser =
+                        new PEMParser(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
             Object parsed = parser.readObject();
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
@@ -190,22 +192,21 @@ public class JwtService {
             }
 
             throw new IOException(
-                    "Unsupported PEM object type for private key: "
-                            + parsed.getClass().getName());
+                    "Unsupported PEM object type for private key: " + parsed.getClass().getName());
         }
     }
 
     private RSAPublicKey loadPublicKey(String resourcePath) throws IOException {
         try (InputStream is = resolveResource(resourcePath).getInputStream();
-                PEMParser parser = new PEMParser(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                PEMParser parser =
+                        new PEMParser(new InputStreamReader(is, StandardCharsets.UTF_8))) {
 
             Object parsed = parser.readObject();
             if (parsed instanceof org.bouncycastle.asn1.x509.SubjectPublicKeyInfo spki) {
                 return (RSAPublicKey) new JcaPEMKeyConverter().getPublicKey(spki);
             }
             throw new IOException(
-                    "Unsupported PEM object type for public key: "
-                            + parsed.getClass().getName());
+                    "Unsupported PEM object type for public key: " + parsed.getClass().getName());
         }
     }
 

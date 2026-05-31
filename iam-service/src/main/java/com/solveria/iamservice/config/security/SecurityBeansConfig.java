@@ -1,7 +1,7 @@
 package com.solveria.iamservice.config.security;
 
-import com.solveria.core.security.filter.SecurityContextFilter;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.solveria.core.security.filter.SecurityContextFilter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * Wires the security infrastructure beans that are shared across both filter chains.
  *
  * <p>Responsibilities:
+ *
  * <ul>
  *   <li>Registers {@link JwtService} as a Spring bean (loaded once at startup).
  *   <li>Registers {@link BCryptPasswordEncoder} as the application's {@link PasswordEncoder}.
@@ -50,21 +51,23 @@ public class SecurityBeansConfig {
     }
 
     /**
-     * Security context filter that reads the JWT bearer token, validates it, and injects
-     * {@code tenantId} / {@code userId} into thread-local contexts.
+     * Security context filter that reads the JWT bearer token, validates it, and injects {@code
+     * tenantId} / {@code userId} into thread-local contexts.
      *
-     * <p>The lambda adapter bridges the {@code core-platform} {@link SecurityContextFilter.JwtClaimsExtractor}
-     * interface to the concrete {@link JwtService} without creating a compile-time dependency from
-     * {@code core-platform} on the Nimbus-JOSE library.
+     * <p>The lambda adapter bridges the {@code core-platform} {@link
+     * SecurityContextFilter.JwtClaimsExtractor} interface to the concrete {@link JwtService}
+     * without creating a compile-time dependency from {@code core-platform} on the Nimbus-JOSE
+     * library.
      */
     @Bean
     public SecurityContextFilter securityContextFilter(JwtService jwtService) {
-        SecurityContextFilter.JwtClaimsExtractor extractor = token -> {
-            JWTClaimsSet claims = jwtService.validateAndExtractClaims(token);
-            String tenantId = jwtService.extractTenantId(claims);
-            Long userId = jwtService.extractUserId(claims);
-            return new SecurityContextFilter.Claims(tenantId, userId);
-        };
+        SecurityContextFilter.JwtClaimsExtractor extractor =
+                token -> {
+                    JWTClaimsSet claims = jwtService.validateAndExtractClaims(token);
+                    String tenantId = jwtService.extractTenantId(claims);
+                    Long userId = jwtService.extractUserId(claims);
+                    return new SecurityContextFilter.Claims(tenantId, userId);
+                };
         return new SecurityContextFilter(extractor);
     }
 
@@ -75,13 +78,15 @@ public class SecurityBeansConfig {
      * validate Google sign-in tokens without any database access.
      */
     @Bean
-    public com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier googleIdTokenVerifier() {
+    public com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier
+            googleIdTokenVerifier() {
         return new com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier.Builder(
                         new com.google.api.client.http.javanet.NetHttpTransport(),
                         new com.google.api.client.json.gson.GsonFactory())
                 .setAudience(java.util.List.of(googleProperties.clientId()))
                 .build();
     }
+
     public static void main(String[] args) {
         System.out.println(new BCryptPasswordEncoder().encode("password"));
     }
