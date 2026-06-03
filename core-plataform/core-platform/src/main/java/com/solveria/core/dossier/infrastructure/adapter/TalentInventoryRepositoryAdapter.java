@@ -26,8 +26,19 @@ public class TalentInventoryRepositoryAdapter implements TalentInventoryReposito
   @Override
   @Transactional
   public TalentInventory save(TalentInventory inventory) {
+    // Idempotency: one TalentInventory per relationship — upsert to avoid duplicates on retries
+    TalentInventoryJpa jpa =
+        talentInventoryRepository
+            .findByRelationshipIdAndTenantId(inventory.getRelationshipId(), inventory.getTenantId())
+            .map(
+                existing -> {
+                  // Replace entire JPA content with latest domain state
+                  TalentInventoryJpa updated = talentInventoryMapper.toJpa(inventory);
+                  updated.setInventoryId(existing.getInventoryId()); // keep original PK
+                  return updated;
+                })
+            .orElseGet(() -> talentInventoryMapper.toJpa(inventory));
 
-    TalentInventoryJpa jpa = talentInventoryMapper.toJpa(inventory);
     TalentInventoryJpa savedJpa = talentInventoryRepository.save(jpa);
     TalentInventory saved = talentInventoryMapper.toDomain(savedJpa);
 

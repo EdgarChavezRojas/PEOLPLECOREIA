@@ -50,6 +50,18 @@ public class CreateOrgUnitUseCase {
     CostCenter costCenter = CostCenter.create(request.getCostCode(), request.getCostDescription());
     OrgUnit.OrgUnitType unitType = OrgUnit.OrgUnitType.valueOf(request.getUnitType().toUpperCase());
 
+    // Unicidad de negocio: evita crear dos unidades con el mismo nombre y tipo en el mismo tenant
+    if (orgUnitRepositoryPort.existsByNameAndUnitTypeAndTenantId(
+        request.getName(), unitType, tenantId)) {
+      throw new com.solveria.core.workforce.domain.exception.SolverException(
+          "ORG_UNIT_ALREADY_EXISTS",
+          "Ya existe una unidad organizativa con el nombre '"
+              + request.getName()
+              + "' y tipo '"
+              + unitType
+              + "' en este tenant");
+    }
+
     OrgUnit orgUnit =
         (parentId == null)
             ? OrgUnit.createRoot(tenantId, request.getName(), unitType, costCenter)

@@ -123,8 +123,8 @@ public class SharedOutboxMessageJpaEntity {
   }
 
   /**
-   * Incrementa el contador de reintentos y registra el error.
-   * El estado se mantiene en PENDING para que el relay lo recoja de nuevo.
+   * Incrementa el contador de reintentos y registra el error. El estado se mantiene en PENDING para
+   * que el relay lo recoja de nuevo.
    */
   public void incrementRetry(LocalDateTime processedAt, String errorLog) {
     this.retryCount++;
@@ -132,9 +132,7 @@ public class SharedOutboxMessageJpaEntity {
     this.errorLog = errorLog;
   }
 
-  /**
-   * Marca el evento como FAILED definitivo (no se reintentará más).
-   */
+  /** Marca el evento como FAILED definitivo (no se reintentará más). */
   public void markFailed(LocalDateTime processedAt, String errorLog) {
     this.state = OutboxState.FAILED;
     this.processedAt = processedAt;

@@ -64,10 +64,7 @@ public class PositionJpa extends BaseEntity {
   @Embedded private HeadcountPlan headcountPlan;
 
   @ElementCollection(fetch = FetchType.LAZY)
-  @CollectionTable(
-      name = "position_occupant",
-      joinColumns = @JoinColumn(name = "position_id")
-  )
+  @CollectionTable(name = "position_occupant", joinColumns = @JoinColumn(name = "position_id"))
   @Column(name = "person_id")
   @Builder.Default
   private List<UUID> occupantPersonIds = new ArrayList<>();

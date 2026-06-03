@@ -12,7 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Outbox Relay — procesa los eventos de dominio persistidos en la tabla {@code shared_event_outbox}.
+ * Outbox Relay — procesa los eventos de dominio persistidos en la tabla {@code
+ * shared_event_outbox}.
  *
  * <h3>Diseño Actual</h3>
  *

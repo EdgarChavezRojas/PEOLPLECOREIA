@@ -20,6 +20,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -37,6 +40,19 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
 
   @Override
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "persons", key = "#result.personId", condition = "#result != null"),
+        @CacheEvict(value = "personsByCi", key = "#result.DNI", condition = "#result != null"),
+        @CacheEvict(
+            value = "personsByGlobalId",
+            key = "#result.globalId",
+            condition = "#result != null"),
+        @CacheEvict(
+            value = "personsByUserId",
+            key = "#result.userId",
+            condition = "#result != null")
+      })
   public Person save(Person person) {
     PersonJpa personJpa =
         personRepository
@@ -59,6 +75,7 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "personsByGlobalId", key = "#globalId", unless = "#result == null")
   public Optional<Person> findByGlobalId(String globalId) {
     return personRepository.findByGlobalId(globalId).map(personMapper::toDomain);
   }
@@ -71,12 +88,14 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "persons", key = "#personId", unless = "#result == null")
   public Optional<Person> findByPersonId(UUID personId) {
     return personRepository.findById(personId).map(personMapper::toDomain);
   }
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "personsByCi", key = "#DNI", unless = "#result == null")
   public Optional<Person> findByCi(String DNI) {
     return personRepository.findByDNI(DNI).map(personMapper::toDomain);
   }
@@ -89,6 +108,7 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "personsByUserId", key = "#userId", unless = "#result == null")
   public Optional<Person> findByUserId(Long userId) {
     return personRepository.findByUserId(userId).map(personMapper::toDomain);
   }
@@ -118,17 +138,23 @@ public class PersonRepositoryAdapter implements PersonRepositoryPort {
       } else {
         target.setIdType(identifier.getIdType() != null ? identifier.getIdType().name() : null);
         target.setIdNumber(identifier.getIdNumber());
-        target.setExtension(identifier.getExtension() != null ? (identifier.getExtension() == Extension.SCZ ? "SC" : identifier.getExtension().name()) : null);
+        target.setExtension(
+            identifier.getExtension() != null
+                ? (identifier.getExtension() == Extension.SCZ
+                    ? "SC"
+                    : identifier.getExtension().name())
+                : null);
         target.setIssueDate(identifier.getIssueDate());
         target.setExpiryDate(identifier.getExpiryDate());
         target.setPerson(existing);
       }
     }
 
-    Set<UUID> domainIds = person.getIdentifiers().stream()
-        .map(PartyIdentifier::getIdentifierId)
-        .filter(Objects::nonNull)
-        .collect(Collectors.toSet());
+    Set<UUID> domainIds =
+        person.getIdentifiers().stream()
+            .map(PartyIdentifier::getIdentifierId)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
     existing.getIdentifiers().removeIf(id -> !domainIds.contains(id.getIdentifierId()));
   }
 }

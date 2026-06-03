@@ -2,6 +2,7 @@ package com.solveria.core.workforce.application.usecase;
 
 import com.solveria.core.iam.application.port.UserRepositoryPort;
 import com.solveria.core.iam.domain.model.User;
+import com.solveria.core.security.context.SecurityUserContext;
 import com.solveria.core.workforce.application.dto.CreatePersonRequest;
 import com.solveria.core.workforce.application.dto.PersonResponse;
 import com.solveria.core.workforce.application.port.PersonRepositoryPort;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -27,23 +29,28 @@ public class CreatePersonUseCase {
   private final UserRepositoryPort userRepositoryPort;
   private final PasswordEncoder passwordEncoder;
 
-  @Transactional
+  // SERIALIZABLE isolation: prevents two simultaneous requests from both passing the
+  // existsByGlobalId / findByCi checks before either has committed. The DB unique
+  // constraints on global_id and DNI remain the ultimate safety net.
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public PersonResponse execute(CreatePersonRequest request) {
     if (personRepositoryPort.existsByGlobalId(request.getGlobalId())) {
       throw new PersonAlreadyExistsException("PersonID ya existe: " + request.getGlobalId());
     }
     if (personRepositoryPort.findByCi(request.getDNI()).isPresent()) {
-      throw new PersonAlreadyExistsException("La persona con DNI/CI " + request.getDNI() + " ya existe.");
+      throw new PersonAlreadyExistsException(
+          "La persona con DNI/CI " + request.getDNI() + " ya existe.");
     }
 
-    // Generate formatted email and username based on first and last names (handling multiple words/lastnames)
+    // Generate formatted email and username based on first and last names (handling multiple
+    // words/lastnames)
     String cleanFirst = sanitize(request.getFirstName());
     String cleanLast = sanitize(request.getLastName());
-    
+
     String emailPartFirst = cleanFirst.replaceAll("\\s+", ".");
     String emailPartLast = cleanLast.replaceAll("\\s+", ".");
     String baseEmail = emailPartFirst + "." + emailPartLast;
-    
+
     String userPartFirst = cleanFirst.replaceAll("\\s+", "_");
     String userPartLast = cleanLast.replaceAll("\\s+", "_");
     String baseUsername = userPartFirst + "_" + userPartLast;
@@ -66,27 +73,33 @@ public class CreatePersonUseCase {
     String rawPassword = generateSecurePassword();
     String hashedPassword = passwordEncoder.encode(rawPassword);
 
-    // TODO: En el futuro, cuando existan más roles en RRHH, podemos pasar una lista dinámica de roles desde
-    // el request (ej. request.getRoleIds()) en lugar de fijar por defecto el rol de Empleado (ID 2).
-    User newUser = new User(
-        null,
-        username,
-        email,
-        hashedPassword,
-        true,
-        java.util.Set.of(2L), // Rol por defecto: 2 (EMPLOYEE)
-        request.getTenantId(),
-        null,
-        java.time.Instant.now(),
-        "SYSTEM",
-        null,
-        null
-    );
+    // TODO: En el futuro, cuando existan más roles en RRHH, podemos pasar una lista dinámica de
+    // roles desde
+    // el request (ej. request.getRoleIds()) en lugar de fijar por defecto el rol de Empleado (ID
+    // 2).
+    // createdAt y los campos de auditoría se dejan a null: JPA Auditing (@CreatedDate,
+    // @LastModifiedDate)
+    // los poblará automáticamente al persistir. createdBy toma el usuario real del contexto JWT.
+    String createdBy = SecurityUserContext.getUserIdentifier();
+    User newUser =
+        new User(
+            null,
+            username,
+            email,
+            hashedPassword,
+            true,
+            java.util.Set.of(2L), // Rol por defecto: 2 (EMPLOYEE)
+            request.getTenantId(),
+            null,
+            null, // createdAt → @CreatedDate lo puebla JPA Auditing
+            createdBy, // createdBy → usuario real del JWT (o "system" como fallback)
+            null, // lastModifiedAt → @LastModifiedDate lo puebla JPA Auditing
+            null // lastModifiedBy → @LastModifiedBy lo puebla JPA Auditing
+            );
     User savedUser = userRepositoryPort.save(newUser);
 
     // Create and save Person
-    ContactPoint contact =
-        ContactPoint.create(email, request.getPhone(), request.getAddress());
+    ContactPoint contact = ContactPoint.create(email, request.getPhone(), request.getAddress());
 
     Gender gender = Gender.valueOf(request.getGender().toUpperCase());
     MaritalStatus maritalStatus =

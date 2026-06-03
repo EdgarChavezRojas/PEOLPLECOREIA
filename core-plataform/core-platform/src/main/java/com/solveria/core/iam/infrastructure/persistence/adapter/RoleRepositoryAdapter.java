@@ -7,6 +7,8 @@ import com.solveria.core.iam.infrastructure.persistence.repository.RoleJpaReposi
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -21,6 +23,7 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
   }
 
   @Override
+  @CacheEvict(value = "roles", key = "#result.id", condition = "#result != null")
   public Role save(Role role) {
     var entity = mapper.toEntity(role);
     var saved = roleJpaRepository.save(entity);
@@ -28,6 +31,7 @@ public class RoleRepositoryAdapter implements RoleRepositoryPort {
   }
 
   @Override
+  @Cacheable(value = "roles", key = "#id", unless = "#result == null")
   public Optional<Role> findById(Long id) {
     return roleJpaRepository.findById(id).map(mapper::toDomain);
   }

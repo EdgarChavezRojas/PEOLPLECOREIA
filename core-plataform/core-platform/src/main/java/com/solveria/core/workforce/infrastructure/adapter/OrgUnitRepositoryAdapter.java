@@ -5,6 +5,7 @@ import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import com.solveria.core.shared.pagination.PageUtils;
 import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
 import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.OrgUnit.OrgUnitType;
 import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
 import com.solveria.core.workforce.infrastructure.mapper.OrgUnitMapper;
 import com.solveria.core.workforce.infrastructure.repository.OrgUnitRepository;
@@ -79,5 +80,15 @@ public class OrgUnitRepositoryAdapter implements OrgUnitRepositoryPort {
             .map(orgUnitMapper::toDomain)
             .toList();
     return PageUtils.slice(orgUnits, pageable);
+  }
+
+  @Override
+  public boolean existsByNameAndUnitTypeAndTenantId(
+      String name, OrgUnitType unitType, UUID tenantId) {
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    if (!currentTenantId.equals(tenantId)) {
+      return false;
+    }
+    return orgUnitRepository.existsByNameAndUnitTypeAndTenantId(name, unitType, currentTenantId);
   }
 }

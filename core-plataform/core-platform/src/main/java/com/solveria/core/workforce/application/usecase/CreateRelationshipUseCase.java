@@ -43,11 +43,15 @@ public class CreateRelationshipUseCase {
 
     RelationshipType relType = RelationshipType.valueOf(request.relationType().toUpperCase());
 
-    if (RelationshipType.LABOR.equals(relType)
-        && relationshipRepositoryPort.existsPrimaryRelationshipForPersonInTenant(
-            request.personId(), tenantId)) {
-      throw new IllegalStateException(
-          "Invariante violada: un colaborador no puede tener dos vinculos primarios activos en el tenant");
+    // Unicidad de negocio: ningún tipo de relación puede duplicarse en estado ACTIVE o DRAFT
+    // para la misma persona en el mismo tenant (evita doble-click y reintentos)
+    if (relationshipRepositoryPort.existsActiveRelationshipForPersonAndType(
+        request.personId(), relType, tenantId)) {
+      throw new com.solveria.core.workforce.domain.exception.SolverException(
+          "RELATIONSHIP_ALREADY_EXISTS",
+          "Invariante violada: ya existe una relación '"
+              + relType
+              + "' activa o en borrador para esta persona en el tenant");
     }
 
     Relationship relationship =

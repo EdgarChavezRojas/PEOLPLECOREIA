@@ -15,4 +15,7 @@ public interface AssignedAssetRepository extends JpaRepository<AssignedAssetJpa,
 
   boolean existsByWorkerIdAndTenantIdAndStatusIn(
       UUID workerId, UUID tenantId, List<AssetStatus> statuses);
+
+  boolean existsByWorkerIdAndTenantIdAndAssetTagAndStatus(
+      UUID workerId, UUID tenantId, String assetTag, AssetStatus status);
 }

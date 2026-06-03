@@ -61,4 +61,18 @@ public interface PositionRepository extends JpaRepository<PositionJpa, UUID> {
       nativeQuery = true)
   List<PositionJpa> findByTenantIdAndStatus(
       @Param("tenantId") UUID tenantId, @Param("status") PositionStatus status);
+
+  @Query(
+      value =
+          """
+            select count(*) > 0
+            from position p
+            join org_unit ou on ou.unit_id = p.unit_id
+            where p.unit_id = :unitId
+              and p.job_id = :jobId
+              and ou.tenant_id = :tenantId
+            """,
+      nativeQuery = true)
+  boolean existsByUnitIdAndJobIdAndTenantId(
+      @Param("unitId") UUID unitId, @Param("jobId") UUID jobId, @Param("tenantId") UUID tenantId);
 }

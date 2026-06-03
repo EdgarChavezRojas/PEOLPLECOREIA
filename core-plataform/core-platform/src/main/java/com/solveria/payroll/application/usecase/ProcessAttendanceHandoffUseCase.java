@@ -74,7 +74,7 @@ public class ProcessAttendanceHandoffUseCase implements AttendanceHandoffUseCase
     // al mes/año del TimesheetPeriod. Sus UUIDs son distintos y la FK de
     // prl_deduction_record / prl_income_record apunta a prl_payroll_period.
     int month = period.getPeriodBoundary().periodStart().getMonthValue();
-    int year  = period.getPeriodBoundary().periodStart().getYear();
+    int year = period.getPeriodBoundary().periodStart().getYear();
     PayrollPeriod payrollPeriod =
         payrollPeriodRepository
             .findByMonthAndYear(month, year, tenantId)
@@ -119,7 +119,7 @@ public class ProcessAttendanceHandoffUseCase implements AttendanceHandoffUseCase
     // El event.periodId() es el UUID del timesheet_period (BC-TM), distinto al
     // UUID de prl_payroll_period que exige la FK de income/deduction records.
     int month = event.periodBoundary().periodStart().getMonthValue();
-    int year  = event.periodBoundary().periodStart().getYear();
+    int year = event.periodBoundary().periodStart().getYear();
     PayrollPeriod payrollPeriod =
         payrollPeriodRepository
             .findByMonthAndYear(month, year, tenantId)
@@ -146,9 +146,9 @@ public class ProcessAttendanceHandoffUseCase implements AttendanceHandoffUseCase
    * Procesa el resumen de un empleado individual, generando los registros de ingresos y egresos
    * automáticos correspondientes.
    *
-   * <p><b>Idempotencia:</b> Antes de persistir cada registro verifica si ya existe uno
-   * automático del mismo tipo para el empleado y período. Si existe, omite la inserción y
-   * registra un log de SKIP. Esto permite reinvocar el endpoint sin generar duplicados.
+   * <p><b>Idempotencia:</b> Antes de persistir cada registro verifica si ya existe uno automático
+   * del mismo tipo para el empleado y período. Si existe, omite la inserción y registra un log de
+   * SKIP. Esto permite reinvocar el endpoint sin generar duplicados.
    */
   private void processEmployeeHandoff(EmployeeHandoffRecord record, UUID periodRef, UUID tenantId) {
 

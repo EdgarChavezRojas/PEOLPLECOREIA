@@ -34,8 +34,21 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   private final EventOutboxPort eventOutboxPort;
 
   @Override
+  @Transactional
   public HolidayCalendar saveHoliday(HolidayCalendar holiday) {
-    HolidayCalendarJpa saved = holidayCalendarRepository.save(benefitsMapper.toJpa(holiday));
+    // Idempotency: JpaRepository.save() performs merge by PK (UUID holidayId);
+    // if the same holidayId is sent twice it updates the existing record instead of inserting.
+    HolidayCalendarJpa jpa =
+        holidayCalendarRepository
+            .findById(holiday.getHolidayId())
+            .map(
+                existing -> {
+                  existing.setHolidayDate(holiday.getHolidayDate());
+                  existing.setScope(holiday.getScope());
+                  return existing;
+                })
+            .orElseGet(() -> benefitsMapper.toJpa(holiday));
+    HolidayCalendarJpa saved = holidayCalendarRepository.save(jpa);
     return benefitsMapper.toDomain(saved);
   }
 
@@ -58,8 +71,25 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   @Transactional
   public QuinquenioProvision saveQuinquenio(QuinquenioProvision provision) {
     List<DomainEvent> events = provision.pullDomainEvents();
-    QuinquenioProvisionJpa savedJpa =
-        quinquenioProvisionRepository.save(benefitsMapper.toJpa(provision));
+    // Idempotency: one QuinquenioProvision per relationship — upsert by relationshipId + tenantId
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    Optional<QuinquenioProvisionJpa> existing =
+        (tenantStr != null && !tenantStr.isBlank())
+            ? quinquenioProvisionRepository.findByRelationshipIdAndTenantId(
+                provision.getRelationshipId(), UUID.fromString(tenantStr))
+            : quinquenioProvisionRepository.findByRelationshipId(provision.getRelationshipId());
+
+    QuinquenioProvisionJpa jpa =
+        existing
+            .map(
+                e -> {
+                  e.setTotalAccumulated(provision.getTotalAccumulated());
+                  e.setPenaltyActive(provision.isPenaltyActive());
+                  return e;
+                })
+            .orElseGet(() -> benefitsMapper.toJpa(provision));
+
+    QuinquenioProvisionJpa savedJpa = quinquenioProvisionRepository.save(jpa);
     QuinquenioProvision saved = benefitsMapper.toDomain(savedJpa);
 
     eventOutboxPort.publish(events);
@@ -86,17 +116,39 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   }
 
   @Override
+  @Transactional
   public BenefitAccrual saveBenefitAccrual(BenefitAccrual accrual) {
-    BenefitAccrualJpa saved = benefitAccrualRepository.save(benefitsMapper.toJpa(accrual));
+    // Idempotency: upsert by natural key (relationshipId + benefitType + fiscalYear + tenantId)
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    Optional<BenefitAccrualJpa> existing =
+        (tenantStr != null && !tenantStr.isBlank())
+            ? benefitAccrualRepository.findByRelationshipIdAndBenefitTypeAndFiscalYearAndTenantId(
+                accrual.getRelationshipId(),
+                accrual.getBenefitType(),
+                accrual.getFiscalYear(),
+                UUID.fromString(tenantStr))
+            : benefitAccrualRepository.findByRelationshipIdAndBenefitTypeAndFiscalYear(
+                accrual.getRelationshipId(), accrual.getBenefitType(), accrual.getFiscalYear());
+
+    BenefitAccrualJpa jpa =
+        existing
+            .map(
+                e -> {
+                  e.setAccruedAmount(accrual.getAccruedAmount());
+                  return e;
+                })
+            .orElseGet(() -> benefitsMapper.toJpa(accrual));
+
+    BenefitAccrualJpa saved = benefitAccrualRepository.save(jpa);
     return benefitsMapper.toDomain(saved);
   }
 
   @Override
   @Transactional
   public List<BenefitAccrual> saveBenefitAccrualBatch(List<BenefitAccrual> accruals) {
-    List<BenefitAccrualJpa> saved =
-        benefitAccrualRepository.saveAll(accruals.stream().map(benefitsMapper::toJpa).toList());
-    return saved.stream().map(benefitsMapper::toDomain).toList();
+    // Idempotency: each accrual in the batch goes through the upsert logic individually
+    // This prevents full batch duplication on retry/timeout scenarios
+    return accruals.stream().map(this::saveBenefitAccrual).toList();
   }
 
   @Override

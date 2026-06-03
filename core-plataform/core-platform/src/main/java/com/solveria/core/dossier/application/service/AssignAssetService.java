@@ -21,13 +21,25 @@ public class AssignAssetService implements AssignAssetUseCase {
   @Override
   public AssignedAsset handle(AssignAssetCommand command) {
     LocalizationPolicy.requireSantaCruz(command.location());
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+    // Unicidad de negocio: evita asignar el mismo activo (assetTag) dos veces al mismo colaborador
+    if (assignedAssetRepository.existsActiveAssignmentForWorkerAndTag(
+        command.workerId(), command.assetTag(), tenantId)) {
+      throw new com.solveria.core.shared.exceptions.BusinessRuleViolationException(
+          "El activo '"
+              + command.assetTag()
+              + "' ya está asignado activamente al colaborador "
+              + command.workerId());
+    }
+
     AssignedAsset asset =
         AssignedAsset.assign(
             command.workerId(),
             command.assetTag(),
             command.descriptor(),
             command.assignedAt(),
-            UUID.fromString(SecurityTenantContext.getCurrentTenantId()));
+            tenantId);
     if (command.currentLocation() != null
         && command.targetLocation() != null
         && !command.currentLocation().equalsIgnoreCase(command.targetLocation())) {

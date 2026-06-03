@@ -10,6 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +32,13 @@ public class PayrollPeriodRepositoryAdapter implements PayrollPeriodRepositoryPo
 
   @Override
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(value = "payrollPeriods", key = "#period.periodId + '-' + #period.tenantId"),
+        @CacheEvict(
+            value = "payrollPeriodsByMonthYear",
+            key = "#period.month + '-' + #period.year + '-' + #period.tenantId")
+      })
   public void save(PayrollPeriod period) {
     log.info(
         "event=PRL_PAYROLL_PERIOD_SAVE periodId={} tenantId={}",
@@ -39,6 +49,10 @@ public class PayrollPeriodRepositoryAdapter implements PayrollPeriodRepositoryPo
   }
 
   @Override
+  @Cacheable(
+      value = "payrollPeriods",
+      key = "#periodId + '-' + #tenantId",
+      unless = "#result == null")
   public Optional<PayrollPeriod> findById(UUID periodId, UUID tenantId) {
     return springRepository.findByPeriodIdAndTenantId(periodId, tenantId).map(mapper::toDomain);
   }
@@ -49,6 +63,10 @@ public class PayrollPeriodRepositoryAdapter implements PayrollPeriodRepositoryPo
   }
 
   @Override
+  @Cacheable(
+      value = "payrollPeriodsByMonthYear",
+      key = "#month + '-' + #year + '-' + #tenantId",
+      unless = "#result == null")
   public Optional<PayrollPeriod> findByMonthAndYear(int month, int year, UUID tenantId) {
     return springRepository
         .findByMonthAndYearAndTenantId(month, year, tenantId)

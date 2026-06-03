@@ -20,6 +20,10 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.solveria.core.shared.pagination.PageUtils;
+import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +43,7 @@ public class RelationshipController {
   private final ReactivateRelationshipUseCase reactivateRelationshipUseCase;
   private final ListRelationshipByPersonUseCase listRelationshipByPersonUseCase;
   private final UpdateRelationshipStatusUseCase updateRelationshipStatusUseCase;
+  private final ListRelationshipsByTenantUseCase listRelationshipsByTenantUseCase;
 
   @PostMapping
   @Operation(
@@ -149,5 +154,19 @@ public class RelationshipController {
     updateRelationshipStatusUseCase.execute(
         relationshipId, UpdateRelationshipStatusRequest.builder().status(status).build());
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping
+  @Operation(
+      summary = "Listar relaciones laborales/académicas del tenant",
+      description = "Obtiene una lista paginada de todas las relaciones del tenant actual.")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Listado paginado obtenido exitosamente"),
+    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+  })
+  public ResponseEntity<Page<RelationshipResponse>> list(Pageable pageable) {
+    Pageable sanitized = PageUtils.sanitize(pageable, RelationshipJpa.class);
+    return ResponseEntity.ok(listRelationshipsByTenantUseCase.execute(sanitized));
   }
 }

@@ -29,7 +29,23 @@ public class DocumentRecordRepositoryAdapter implements DocumentRecordRepository
   @Override
   @Transactional
   public DocumentRecord save(DocumentRecord record) {
-    DocumentRecordJpa jpa = documentRecordMapper.toJpa(record);
+    // Idempotency: find existing record before creating a new one to avoid duplicates on retries
+    DocumentRecordJpa jpa =
+        documentRecordRepository
+            .findByDocIdAndTenantId(record.getDocId(), record.getTenantId())
+            .map(
+                existing -> {
+                  existing.setDocCategory(record.getDocCategory());
+                  existing.setDocType(record.getDocType());
+                  existing.setCritical(record.isCritical());
+                  existing.setValidationStatus(
+                      documentRecordMapper.toEmbeddable(record.getValidationStatus()));
+                  existing.setMetadata(documentRecordMapper.toEmbeddable(record.getMetadata()));
+                  existing.setExpirationWarningSent(record.isExpirationWarningSent());
+                  return existing;
+                })
+            .orElseGet(() -> documentRecordMapper.toJpa(record));
+
     DocumentRecordJpa savedJpa = documentRecordRepository.save(jpa);
     DocumentRecord saved = documentRecordMapper.toDomain(savedJpa);
 
@@ -67,5 +83,12 @@ public class DocumentRecordRepositoryAdapter implements DocumentRecordRepository
     String tenantId = SecurityTenantContext.getCurrentTenantId();
     return documentRecordRepository.countByRelationshipIdAndDocCategoryAndTenantId(
         employeeId, DocumentCategory.DISCIPLINARY, UUID.fromString(tenantId));
+  }
+
+  @Override
+  public long countByRelationshipIdAndDocCategoryAndTenantId(
+      UUID workerId, DocumentCategory category, UUID tenantId) {
+    return documentRecordRepository.countByRelationshipIdAndDocCategoryAndTenantId(
+        workerId, category, tenantId);
   }
 }

@@ -39,6 +39,14 @@ public class CreateDocumentRequirementsService implements CreateDocumentRequirem
       throw new IllegalArgumentException(DossierErrorCode.COMMAND_INVALID.name());
     }
 
+    // Evita duplicar requerimientos documentales si ya fueron creados previamente
+    long existingHealth =
+        documentRecordRepository.countByRelationshipIdAndDocCategoryAndTenantId(
+            command.workerId(), DocumentCategory.HEALTH, command.tenantId());
+    if (existingHealth > 0) {
+      return List.of();
+    }
+
     List<DocumentRecord> baseRequirements =
         List.of(
             createPending(

@@ -34,7 +34,8 @@ public class Position extends DomainRoot {
     this.status = status;
     this.isBudgeted = isBudgeted;
     this.headcountPlan = headcountPlan;
-    this.occupantPersonIds = occupantPersonIds != null ? occupantPersonIds : new java.util.ArrayList<>();
+    this.occupantPersonIds =
+        occupantPersonIds != null ? occupantPersonIds : new java.util.ArrayList<>();
   }
 
   public UUID getPositionId() {
@@ -64,11 +65,14 @@ public class Position extends DomainRoot {
   public PositionStatus getStatus() {
     if (headcountPlan != null && occupantPersonIds != null) {
       headcountPlan.setCurrentSlots(occupantPersonIds.size());
-      if (PositionStatus.OCCUPIED.equals(status) && headcountPlan.getCurrentSlots().equals(headcountPlan.getMaxSlots())) {
+      if (PositionStatus.OCCUPIED.equals(status)
+          && headcountPlan.getCurrentSlots().equals(headcountPlan.getMaxSlots())) {
         this.status = PositionStatus.FILLED;
-      } else if (PositionStatus.FILLED.equals(status) && headcountPlan.getCurrentSlots() < headcountPlan.getMaxSlots()) {
+      } else if (PositionStatus.FILLED.equals(status)
+          && headcountPlan.getCurrentSlots() < headcountPlan.getMaxSlots()) {
         this.status = PositionStatus.OCCUPIED;
-      } else if (headcountPlan.getCurrentSlots() == 0 && (PositionStatus.OCCUPIED.equals(status) || PositionStatus.FILLED.equals(status))) {
+      } else if (headcountPlan.getCurrentSlots() == 0
+          && (PositionStatus.OCCUPIED.equals(status) || PositionStatus.FILLED.equals(status))) {
         this.status = PositionStatus.VACANT;
       }
     }
@@ -103,7 +107,8 @@ public class Position extends DomainRoot {
   }
 
   public void setOccupantPersonIds(java.util.List<UUID> occupantPersonIds) {
-    this.occupantPersonIds = occupantPersonIds != null ? occupantPersonIds : new java.util.ArrayList<>();
+    this.occupantPersonIds =
+        occupantPersonIds != null ? occupantPersonIds : new java.util.ArrayList<>();
   }
 
   public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {

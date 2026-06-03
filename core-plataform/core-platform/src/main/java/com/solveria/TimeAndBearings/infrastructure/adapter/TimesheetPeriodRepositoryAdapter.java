@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +68,17 @@ public class TimesheetPeriodRepositoryAdapter
    * entidad persistida.
    */
   @Override
+  @Caching(
+      evict = {
+        @CacheEvict(
+            value = "timesheetPeriods",
+            key = "#result.periodId",
+            condition = "#result != null"),
+        @CacheEvict(
+            value = "timesheetPeriodsByOrgUnit",
+            key = "#result.orgUnitId",
+            condition = "#result != null")
+      })
   public TimesheetPeriod save(TimesheetPeriod period) {
     TimesheetPeriodJpa jpa = mapper.toJpa(period);
     // Para upsert: si ya existe en BD (por period_id), buscamos y actualizamos
@@ -81,6 +95,7 @@ public class TimesheetPeriodRepositoryAdapter
   /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "timesheetPeriods", key = "#periodId", unless = "#result == null")
   public Optional<TimesheetPeriod> findById(UUID periodId) {
     return springRepository.findByPeriodId(periodId).map(mapper::toDomain);
   }
@@ -88,6 +103,7 @@ public class TimesheetPeriodRepositoryAdapter
   /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "timesheetPeriodsByOrgUnit", key = "#orgUnitId", unless = "#result == null")
   public List<TimesheetPeriod> findActiveByOrgUnit(UUID orgUnitId) {
     return springRepository.findActiveByOrgUnit(orgUnitId).stream().map(mapper::toDomain).toList();
   }

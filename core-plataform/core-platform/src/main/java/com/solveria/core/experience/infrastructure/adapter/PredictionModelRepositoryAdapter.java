@@ -30,7 +30,26 @@ public class PredictionModelRepositoryAdapter implements PredictionModelPO {
   @Transactional
   public void save(PredictionModel model) {
     List<DomainEvent> events = model.pullDomainEvents();
-    PredictionModelJpa jpa = mapper.toJpa(model);
+    // Idempotency: one PredictionModel per tenant — upsert by modelId + tenantId
+    PredictionModelJpa jpa =
+        repository
+            .findByModelIdAndTenantId(model.getModelId(), model.getTenantId())
+            .map(
+                existing -> {
+                  existing.setModelType(model.getModelType());
+                  existing.setVersion(model.getVersion());
+                  existing.setLastExecution(model.getLastExecution());
+                  try {
+                    existing.setAlerts(
+                        new com.fasterxml.jackson.databind.ObjectMapper()
+                            .writeValueAsString(model.getAlerts()));
+                  } catch (Exception e) {
+                    existing.setAlerts("[]");
+                  }
+                  return existing;
+                })
+            .orElseGet(() -> mapper.toJpa(model));
+
     repository.save(jpa);
     eventOutboxPort.publish(events);
   }

@@ -36,12 +36,22 @@ public class CreatePositionUseCase {
         .orElseThrow(
             () ->
                 new OrgUnitNotFoundException("OrgUnit no encontrado o no pertenece a este tenant"));
+
     Job job =
         jobRepositoryPort
             .findByJobIdAndTenantId(request.getJobId(), tenantId)
             .orElseThrow(() -> new JobNotFoundException(request.getJobId().toString()));
-    if (!jobRepositoryPort.existsByJobIdAndTenantId(request.getJobId(), tenantId)) {
-      throw new JobNotFoundException("Cargo (Job) no encontrado: " + request.getJobId());
+
+    // Unicidad de negocio: un mismo cargo (job) no puede tener dos posiciones en la misma unidad
+    if (positionRepositoryPort.existsByUnitIdAndJobIdAndTenantId(
+        request.getUnitId(), request.getJobId(), tenantId)) {
+      throw new com.solveria.core.workforce.domain.exception.SolverException(
+          "POSITION_ALREADY_EXISTS",
+          "Ya existe una posición para el cargo '"
+              + job.getJobId()
+              + "' en la unidad '"
+              + request.getUnitId()
+              + "'");
     }
 
     Position position =

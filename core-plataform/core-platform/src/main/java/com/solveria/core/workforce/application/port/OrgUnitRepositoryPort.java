@@ -1,6 +1,7 @@
 package com.solveria.core.workforce.application.port;
 
 import com.solveria.core.workforce.domain.model.OrgUnit;
+import com.solveria.core.workforce.domain.model.OrgUnit.OrgUnitType;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -40,4 +41,9 @@ public interface OrgUnitRepositoryPort {
 
   /** Lista unidades organizativas por tenant con paginacion */
   Page<OrgUnit> findByTenantId(UUID tenantId, Pageable pageable);
+
+  /**
+   * Verifica si ya existe una unidad con el mismo nombre y tipo en el tenant (unicidad de negocio)
+   */
+  boolean existsByNameAndUnitTypeAndTenantId(String name, OrgUnitType unitType, UUID tenantId);
 }

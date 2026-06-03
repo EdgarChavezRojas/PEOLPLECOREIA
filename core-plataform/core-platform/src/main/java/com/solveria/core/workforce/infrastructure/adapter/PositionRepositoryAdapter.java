@@ -16,6 +16,8 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -33,6 +35,10 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
 
   @Override
   @Transactional
+  @CacheEvict(
+      value = "positions",
+      key = "#result.positionId + '-' + #result.tenantId",
+      condition = "#result != null")
   public Position save(Position position) {
     PositionJpa positionJpa =
         positionRepository
@@ -41,23 +47,34 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
                 existing -> {
                   positionMapper.updateJpa(position, existing);
                   if (position.getJobId() != null) {
-                    JobJpa jobJpa = jobRepository.findById(position.getJobId())
-                        .orElseThrow(() -> new IllegalArgumentException("Job not found: " + position.getJobId()));
+                    JobJpa jobJpa =
+                        jobRepository
+                            .findById(position.getJobId())
+                            .orElseThrow(
+                                () ->
+                                    new IllegalArgumentException(
+                                        "Job not found: " + position.getJobId()));
                     existing.setJob(jobJpa);
                   }
                   return existing;
                 })
-            .orElseGet(() -> {
-              PositionJpa jpa = positionMapper.toJpa(position);
-              UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
-              jpa.setTenantId(tenantId);
-              if (position.getJobId() != null) {
-                JobJpa jobJpa = jobRepository.findById(position.getJobId())
-                    .orElseThrow(() -> new IllegalArgumentException("Job not found: " + position.getJobId()));
-                jpa.setJob(jobJpa);
-              }
-              return jpa;
-            });
+            .orElseGet(
+                () -> {
+                  PositionJpa jpa = positionMapper.toJpa(position);
+                  UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+                  jpa.setTenantId(tenantId);
+                  if (position.getJobId() != null) {
+                    JobJpa jobJpa =
+                        jobRepository
+                            .findById(position.getJobId())
+                            .orElseThrow(
+                                () ->
+                                    new IllegalArgumentException(
+                                        "Job not found: " + position.getJobId()));
+                    jpa.setJob(jobJpa);
+                  }
+                  return jpa;
+                });
 
     PositionJpa savedPositionJpa = positionRepository.save(positionJpa);
     Position savedPosition = positionMapper.toDomain(savedPositionJpa);
@@ -69,6 +86,7 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
 
   @Override
   @Transactional(readOnly = true)
+  @Cacheable(value = "positions", key = "#positionId + '-' + #tenantId", unless = "#result == null")
   public Optional<Position> findByPositionIdAndTenantId(UUID positionId, UUID tenantId) {
     UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     if (!currentTenantId.equals(tenantId)) {
@@ -116,5 +134,15 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
             .map(positionMapper::toDomain)
             .toList();
     return PageUtils.slice(positions, pageable);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean existsByUnitIdAndJobIdAndTenantId(UUID unitId, UUID jobId, UUID tenantId) {
+    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    if (!currentTenantId.equals(tenantId)) {
+      return false;
+    }
+    return positionRepository.existsByUnitIdAndJobIdAndTenantId(unitId, jobId, currentTenantId);
   }
 }

@@ -28,7 +28,23 @@ public class AssignedAssetRepositoryAdapter implements AssignedAssetRepositoryPo
   @Override
   @Transactional
   public AssignedAsset save(AssignedAsset asset) {
-    AssignedAssetJpa jpa = assignedAssetMapper.toJpa(asset);
+    // Idempotency: find existing assignment before creating a new one to avoid duplicates on
+    // retries
+    AssignedAssetJpa jpa =
+        assignedAssetRepository
+            .findByAssignmentIdAndTenantId(asset.getAssignmentId(), asset.getTenantId())
+            .map(
+                existing -> {
+                  existing.setWorkerId(asset.getWorkerId());
+                  existing.setAssetTag(asset.getAssetTag());
+                  existing.setStatus(asset.getStatus());
+                  existing.setAssignedAt(asset.getAssignedAt());
+                  existing.setReturnedAt(asset.getReturnedAt());
+                  existing.setDescriptor(assignedAssetMapper.toEmbeddable(asset.getDescriptor()));
+                  return existing;
+                })
+            .orElseGet(() -> assignedAssetMapper.toJpa(asset));
+
     AssignedAssetJpa savedJpa = assignedAssetRepository.save(jpa);
     AssignedAsset saved = assignedAssetMapper.toDomain(savedJpa);
 
@@ -56,4 +72,11 @@ public class AssignedAssetRepositoryAdapter implements AssignedAssetRepositoryPo
   public List<UUID> findPendingAssetIds(UUID workerId) {
     return List.of();
   } // pendiente a revisar para que sirve esta funcionalidad
+
+  @Override
+  public boolean existsActiveAssignmentForWorkerAndTag(
+      UUID workerId, String assetTag, UUID tenantId) {
+    return assignedAssetRepository.existsByWorkerIdAndTenantIdAndAssetTagAndStatus(
+        workerId, tenantId, assetTag, AssetStatus.CUSTODY);
+  }
 }

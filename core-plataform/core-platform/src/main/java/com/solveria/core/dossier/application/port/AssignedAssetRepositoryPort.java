@@ -14,4 +14,9 @@ public interface AssignedAssetRepositoryPort {
   boolean hasPendingAssets(UUID workerId);
 
   List<UUID> findPendingAssetIds(UUID workerId);
+
+  /**
+   * Verifica si el activo (por assetTag) ya está asignado a ese worker en estado ASSIGNED/CUSTODY
+   */
+  boolean existsActiveAssignmentForWorkerAndTag(UUID workerId, String assetTag, UUID tenantId);
 }

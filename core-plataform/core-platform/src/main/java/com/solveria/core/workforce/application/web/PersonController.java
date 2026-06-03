@@ -1,11 +1,13 @@
 package com.solveria.core.workforce.application.web;
 
 import com.solveria.core.security.context.SecurityUserContext;
+import com.solveria.core.shared.pagination.PageUtils;
 import com.solveria.core.workforce.application.dto.*;
 import com.solveria.core.workforce.application.dto.GetPersonByDNIResponse;
 import com.solveria.core.workforce.application.usecase.*;
 import com.solveria.core.workforce.domain.model.vo.ContactPoint;
 import com.solveria.core.workforce.domain.model.vo.MaritalStatus;
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,8 +17,6 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import com.solveria.core.shared.pagination.PageUtils;
-import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

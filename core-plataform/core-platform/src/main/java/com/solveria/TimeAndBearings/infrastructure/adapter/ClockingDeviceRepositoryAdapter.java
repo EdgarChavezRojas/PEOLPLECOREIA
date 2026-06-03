@@ -16,6 +16,9 @@ import com.solveria.TimeAndBearings.infrastructure.repository.ClockingDeviceSpri
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,6 +54,13 @@ public class ClockingDeviceRepositoryAdapter implements ClockingDeviceRepository
   // ─────────────────────────────────────────────────────────────────────────
 
   @Override
+  @Caching(
+      evict = {
+        @CacheEvict(value = "clockingDevices", key = "#device.deviceId + '-' + #device.tenantId"),
+        @CacheEvict(
+            value = "clockingDevicesByOrgUnit",
+            key = "#device.orgUnitId + '-' + #device.tenantId")
+      })
   public void save(ClockingDevice device) {
     ClockingDeviceJpa jpa =
         springRepository
@@ -82,6 +92,10 @@ public class ClockingDeviceRepositoryAdapter implements ClockingDeviceRepository
   // ─────────────────────────────────────────────────────────────────────────
 
   @Override
+  @Cacheable(
+      value = "clockingDevices",
+      key = "#deviceId + '-' + #tenantId",
+      unless = "#result == null")
   public Optional<ClockingDevice> findByDeviceId(UUID deviceId, UUID tenantId) {
     return springRepository.findByDeviceIdAndTenantId(deviceId, tenantId).map(this::reconstitute);
   }
@@ -93,6 +107,10 @@ public class ClockingDeviceRepositoryAdapter implements ClockingDeviceRepository
   }
 
   @Override
+  @Cacheable(
+      value = "clockingDevicesByOrgUnit",
+      key = "#orgUnitId + '-' + #tenantId",
+      unless = "#result == null")
   public List<ClockingDevice> findActiveByOrgUnit(UUID orgUnitId, UUID tenantId) {
     return springRepository
         .findByOrgUnitIdAndStatusAndTenantId(orgUnitId, DeviceStatus.ACTIVE, tenantId)

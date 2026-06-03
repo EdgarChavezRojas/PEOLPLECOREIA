@@ -38,6 +38,16 @@ public class DraftContractUseCase {
     // revisar porque puede generar fallo
     UUID contractId = request.contractId() != null ? request.contractId() : UUID.randomUUID();
     String createdBy = SecurityUserContext.getUserIdentifier();
+
+    // Unicidad de negocio: evita crear un segundo contrato en DRAFT o ACTIVE para la misma relación
+    // Si el cliente no pasa contractId, cada retry genera un UUID nuevo — este guard lo frena
+    if (request.contractId() == null
+        && contractRepositoryPort.findByRelationshipId(request.relationshipId()).isPresent()) {
+      throw new com.solveria.core.shared.exceptions.BusinessRuleViolationException(
+          "Ya existe un contrato en curso para la relación '"
+              + request.relationshipId()
+              + "'. Use el contractId existente para actualizar.");
+    }
     EmploymentCondition empCond =
         request.employmentCond() != null
             ? EmploymentCondition.valueOf(request.employmentCond().name())

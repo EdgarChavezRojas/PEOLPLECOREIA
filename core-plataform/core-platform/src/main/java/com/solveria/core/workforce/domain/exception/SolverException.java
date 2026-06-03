@@ -10,7 +10,7 @@ import lombok.Getter;
  * de errores.
  */
 @Getter
-public class SolverException extends RuntimeException {
+public class SolverException extends com.solveria.core.shared.exceptions.SolverException {
   @Serial private static final long serialVersionUID = 1L;
   private final String errorCode;
 
@@ -20,12 +20,13 @@ public class SolverException extends RuntimeException {
   }
 
   public SolverException(String errorCode, String message) {
-    super(message);
+    super(errorCode, java.util.Collections.emptyMap(), message);
     this.errorCode = errorCode;
   }
 
   public SolverException(String errorCode, String message, Throwable cause) {
-    super(message, cause);
+    super(errorCode, java.util.Collections.emptyMap(), message);
     this.errorCode = errorCode;
+    this.initCause(cause);
   }
 }

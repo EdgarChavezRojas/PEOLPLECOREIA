@@ -27,6 +27,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.solveria.core.shared.pagination.PageUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +50,17 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
 
   @Override
   @Transactional
+  @Caching(
+      evict = {
+        @CacheEvict(
+            value = "relationships",
+            key = "#result.relationshipId + '-' + #result.tenantId",
+            condition = "#result != null"),
+        @CacheEvict(
+            value = "relationshipsByPerson",
+            key = "#result.personId",
+            condition = "#result != null")
+      })
   public Relationship save(Relationship relationship) {
     RelationshipJpa relationshipJpa =
         relationshipRepository
@@ -66,6 +83,10 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
   }
 
   @Override
+  @Cacheable(
+      value = "relationships",
+      key = "#relationshipId + '-' + #tenantId",
+      unless = "#result == null")
   public Optional<Relationship> findByRelationshipIdAndTenantId(
       UUID relationshipId, UUID tenantId) {
     String currentTenantIdStr = SecurityTenantContext.getCurrentTenantId();
@@ -102,6 +123,7 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
   }
 
   @Override
+  @Cacheable(value = "relationshipsByPerson", key = "#personId", unless = "#result == null")
   public List<Relationship> findByPersonId(UUID personId) {
     List<RelationshipJpa> jpaEntities = relationshipRepository.findByPersonId(personId);
 
@@ -117,6 +139,44 @@ public class RelationshipRepositoryAdapter implements RelationshipRepositoryPort
     return jpaEntities.stream()
         .map(relationshipMapper::toDomain) // Transforma cada JPA a Modelo de Dominio
         .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<Relationship> findByTenantId(UUID tenantId, Pageable pageable) {
+    String currentTenantIdStr = SecurityTenantContext.getCurrentTenantId();
+    UUID currentTenantId;
+    if (currentTenantIdStr == null || currentTenantIdStr.isBlank()) {
+      currentTenantId = tenantId;
+    } else {
+      currentTenantId = UUID.fromString(currentTenantIdStr);
+      if (!currentTenantId.equals(tenantId)) {
+        return Page.empty(pageable);
+      }
+    }
+    List<Relationship> relationships =
+        relationshipRepository.findByTenantId(currentTenantId).stream()
+            .map(relationshipMapper::toDomain)
+            .toList();
+    return PageUtils.slice(relationships, pageable);
+  }
+
+  @Override
+  public boolean existsActiveRelationshipForPersonAndType(
+      UUID personId, RelationshipType relationType, UUID tenantId) {
+    String currentTenantIdStr = SecurityTenantContext.getCurrentTenantId();
+    UUID currentTenantId =
+        (currentTenantIdStr == null || currentTenantIdStr.isBlank())
+            ? tenantId
+            : UUID.fromString(currentTenantIdStr);
+    if (!currentTenantId.equals(tenantId)) {
+      return false;
+    }
+    // Considera tanto vínculos ACTIVOS como en DRAFT para bloquear duplicados en proceso
+    return relationshipRepository.existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+            personId, currentTenantId, relationType, RelationshipStatus.ACTIVE)
+        || relationshipRepository.existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
+            personId, currentTenantId, relationType, RelationshipStatus.DRAFT);
   }
 
   private void mergeAcademicProfile(Relationship relationship, RelationshipJpa existing) {

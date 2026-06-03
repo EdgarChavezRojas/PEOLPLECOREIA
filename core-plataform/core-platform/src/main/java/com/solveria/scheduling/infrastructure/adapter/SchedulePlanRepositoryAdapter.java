@@ -8,6 +8,8 @@ import com.solveria.scheduling.infrastructure.repository.SchedulePlanJpaReposito
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,6 +20,7 @@ public class SchedulePlanRepositoryAdapter implements SchedulePlanRepositoryPort
   private final SchedulePlanMapper schedulePlanMapper;
 
   @Override
+  @CacheEvict(value = "schedulePlans", key = "#result.planId", condition = "#result != null")
   public SchedulePlan save(SchedulePlan plan) {
     SchedulePlanJpa jpa = schedulePlanMapper.toJpa(plan);
     SchedulePlanJpa saved = schedulePlanJpaRepository.save(jpa);
@@ -25,6 +28,7 @@ public class SchedulePlanRepositoryAdapter implements SchedulePlanRepositoryPort
   }
 
   @Override
+  @Cacheable(value = "schedulePlans", key = "#planId", unless = "#result == null")
   public Optional<SchedulePlan> findById(UUID planId) {
     return schedulePlanJpaRepository.findByPlanId(planId).map(schedulePlanMapper::toDomain);
   }

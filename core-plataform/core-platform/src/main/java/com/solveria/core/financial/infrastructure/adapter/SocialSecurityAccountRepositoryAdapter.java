@@ -2,6 +2,7 @@ package com.solveria.core.financial.infrastructure.adapter;
 
 import com.solveria.core.financial.application.port.SocialSecurityAccountRepositoryPort;
 import com.solveria.core.financial.domain.model.SocialSecurityAccount;
+import com.solveria.core.financial.infrastructure.jpa.SocialSecurityAccountJpa;
 import com.solveria.core.financial.infrastructure.mapper.SocialSecurityAccountMapper;
 import com.solveria.core.financial.infrastructure.repository.SocialSecurityAccountRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
@@ -24,7 +25,21 @@ public class SocialSecurityAccountRepositoryAdapter implements SocialSecurityAcc
   @Override
   @Transactional
   public void save(SocialSecurityAccount account) {
-    ssaRepository.save(ssaMapper.toJpa(account));
+    // Idempotency: upsert by ssaId + tenantId to avoid duplicate accounts for the same person
+    SocialSecurityAccountJpa jpa =
+        ssaRepository
+            .findBySsaIdAndTenantId(account.getSsaId(), account.getTenantId())
+            .map(
+                existing -> {
+                  existing.setGestoraCode(account.getGestoraCode());
+                  existing.setContributionRate(account.getContributionRateValue());
+                  existing.setLastContribution(account.getLastContribution());
+                  existing.setCreatedByUser(account.getCreatedBy());
+                  return existing;
+                })
+            .orElseGet(() -> ssaMapper.toJpa(account));
+
+    ssaRepository.save(jpa);
   }
 
   @Override

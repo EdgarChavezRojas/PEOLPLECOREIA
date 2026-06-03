@@ -2,9 +2,11 @@ package com.solveria.core.financial.infrastructure.adapter;
 
 import com.solveria.core.financial.application.port.FundingSourceRepositoryPort;
 import com.solveria.core.financial.domain.model.FundingSource;
+import com.solveria.core.financial.infrastructure.jpa.FundingSourceJpa;
 import com.solveria.core.financial.infrastructure.mapper.FundingSourceMapper;
 import com.solveria.core.financial.infrastructure.repository.FundingSourceRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +32,28 @@ public class FundingSourceRepositoryAdapter implements FundingSourceRepositoryPo
   @Override
   @Transactional
   public void save(FundingSource fundingSource) {
-    fundingSource.pullDomainEvents();
-    fundingSourceMapper.toJpa(fundingSource);
+    // Capture events FIRST before any domain operation clears them
+    List<DomainEvent> events = fundingSource.pullDomainEvents();
 
-    eventOutboxPort.publish(fundingSource.pullDomainEvents());
+    // Idempotency: upsert by sourceId + tenantId to avoid duplicates on retries
+    FundingSourceJpa jpa =
+        fundingSourceRepository
+            .findBySourceIdAndTenantId(fundingSource.getSourceId(), fundingSource.getTenantId())
+            .map(
+                existing -> {
+                  existing.setProjectCode(fundingSource.getProjectCode());
+                  existing.setTotalBudget(fundingSource.getTotalBudget());
+                  existing.setAvailableBudget(fundingSource.getAvailableBudget());
+                  existing.setBurnRate(fundingSource.getBurnRate());
+                  existing.setCreatedByUser(fundingSource.getCreatedBy());
+                  return existing;
+                })
+            .orElseGet(() -> fundingSourceMapper.toJpa(fundingSource));
+
+    // FIX: persist to DB (this line was missing — entity was never saved before)
+    fundingSourceRepository.save(jpa);
+
+    eventOutboxPort.publish(events);
   }
 
   @Override

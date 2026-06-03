@@ -1,5 +1,6 @@
 package com.solveria.core.workforce.infrastructure.repository;
 
+import com.solveria.core.workforce.domain.model.OrgUnit.OrgUnitType;
 import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +25,7 @@ public interface OrgUnitRepository extends JpaRepository<OrgUnitJpa, UUID> {
    */
   @EntityGraph(attributePaths = {"orgHierarchies"})
   Optional<OrgUnitJpa> findByUnitIdAndTenantId(UUID unitId, UUID tenantId);
+
+  /** Verifica unicidad de nombre+tipo dentro de un tenant para evitar duplicados de negocio */
+  boolean existsByNameAndUnitTypeAndTenantId(String name, OrgUnitType unitType, UUID tenantId);
 }

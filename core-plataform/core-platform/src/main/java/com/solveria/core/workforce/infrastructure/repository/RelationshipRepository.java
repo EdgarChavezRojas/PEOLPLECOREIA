@@ -18,6 +18,8 @@ public interface RelationshipRepository extends JpaRepository<RelationshipJpa, U
 
   Optional<RelationshipJpa> findByRelationshipIdAndTenantId(UUID relationshipId, UUID tenantId);
 
+  List<RelationshipJpa> findByTenantId(UUID tenantId);
+
   boolean existsByPersonIdAndTenantIdAndRelationTypeAndCurrentStatus(
       UUID personId,
       UUID tenantId,

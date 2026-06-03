@@ -24,4 +24,7 @@ public interface PositionRepositoryPort {
 
   /** Lista posiciones por tenant y status */
   Page<Position> findByTenantIdAndStatus(UUID tenantId, PositionStatus status, Pageable pageable);
+
+  /** Verifica si ya existe una posición para el mismo cargo (jobId) en la misma unidad (unitId) */
+  boolean existsByUnitIdAndJobIdAndTenantId(UUID unitId, UUID jobId, UUID tenantId);
 }

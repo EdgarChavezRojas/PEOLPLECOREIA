@@ -15,4 +15,10 @@ public interface DocumentRecordRepositoryPort {
   List<DocumentRecord> findExpiringOrExpired(LocalDate maxExpiryDate);
 
   long countDisciplinaryMemos(UUID employeeId);
+
+  /** Cuenta cuántos documentos de una categoría ya existen para un worker en el tenant */
+  long countByRelationshipIdAndDocCategoryAndTenantId(
+      UUID workerId,
+      com.solveria.core.dossier.domain.model.vo.DocumentCategory category,
+      UUID tenantId);
 }

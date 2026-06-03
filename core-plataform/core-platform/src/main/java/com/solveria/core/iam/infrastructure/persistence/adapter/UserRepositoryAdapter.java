@@ -9,6 +9,9 @@ import com.solveria.core.iam.infrastructure.persistence.repository.UserJpaReposi
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,21 +31,33 @@ public class UserRepositoryAdapter implements UserRepositoryPort {
   }
 
   @Override
+  @Cacheable(value = "users", key = "#id", unless = "#result == null")
   public Optional<User> findById(Long id) {
     return userJpaRepository.findById(id).map(mapper::toDomain);
   }
 
   @Override
+  @Cacheable(value = "usersByEmail", key = "#email", unless = "#result == null")
   public Optional<User> findByEmail(String email) {
     return userJpaRepository.findByEmail(email).map(mapper::toDomain);
   }
 
   @Override
+  @Cacheable(value = "usersByUsername", key = "#username", unless = "#result == null")
   public Optional<User> findByUsername(String username) {
     return userJpaRepository.findByUsername(username).map(mapper::toDomain);
   }
 
   @Override
+  @Caching(
+      evict = {
+        @CacheEvict(value = "users", key = "#result.id", condition = "#result != null"),
+        @CacheEvict(value = "usersByEmail", key = "#result.email", condition = "#result != null"),
+        @CacheEvict(
+            value = "usersByUsername",
+            key = "#result.username",
+            condition = "#result != null")
+      })
   public User save(User user) {
     // Load RoleJpaEntity entities from IDs
     Set<RoleJpaEntity> roles =
