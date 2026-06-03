@@ -1,6 +1,7 @@
 package com.solveria.iamservice.api.exception;
 
 import com.solveria.core.shared.exceptions.EntityNotFoundException;
+import com.solveria.core.shared.exceptions.PermissionDeniedException;
 import com.solveria.core.shared.exceptions.SolverException;
 import com.solveria.core.workforce.domain.exception.PersonNotFoundException;
 import com.solveria.iamservice.api.exception.dto.ApiErrorResponse;
@@ -117,8 +118,13 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus determineHttpStatus(SolverException ex) {
-        if (ex instanceof EntityNotFoundException) {
+        if (ex instanceof EntityNotFoundException
+                || ex.getClass().getSimpleName().endsWith("NotFoundException")) {
             return HttpStatus.NOT_FOUND;
+        }
+        if (ex instanceof PermissionDeniedException
+                || ex.getClass().getSimpleName().equals("PermissionDeniedException")) {
+            return HttpStatus.FORBIDDEN;
         }
         return HttpStatus.BAD_REQUEST;
     }

@@ -13,6 +13,20 @@ spring:
         format_sql: true
         show-sql: true
     open-in-view: false
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      timeout: 6000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000ms
+  cache:
+    type: redis
   flyway:
     enabled: true
     locations: >

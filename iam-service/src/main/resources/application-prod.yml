@@ -38,3 +38,39 @@ logging:
     root: INFO
     com.solveria: INFO
     org.springframework.security: WARN
+
+# ===================================================================
+# REDIS CACHE & LETTUCE CONNECTION POOLING (PRODUCTION CONFIGURATION)
+# ===================================================================
+# To activate Redis Cache and Connection Pooling in production:
+# 
+# 1. Uncomment the following configuration block.
+# 2. Make sure environment variables (SPRING_REDIS_HOST, SPRING_REDIS_PORT, SPRING_REDIS_PASSWORD)
+#    are set in the deployment environment.
+# 3. For secure setups (highly recommended in production), ensure ssl.enabled: true is active.
+# 4. If utilising Sentinel or Cluster architectures, uncomment and configure those sections.
+#
+# spring:
+#   cache:
+#     type: redis
+#   data:
+#     redis:
+#       host: ${SPRING_REDIS_HOST:redis-prod.internal}
+#       port: ${SPRING_REDIS_PORT:6379}
+#       password: ${SPRING_REDIS_PASSWORD}
+#       timeout: 3000ms
+#       ssl:
+#         enabled: true # Enable TLS/SSL to encrypt cache traffic in transit
+#       lettuce:
+#         pool:
+#           max-active: 32  # Scale connection pool size for production load
+#           max-idle: 16
+#           min-idle: 8
+#           max-wait: 3000ms
+#       # For Sentinel:
+#       # sentinel:
+#       #   master: mymaster
+#       #   nodes: host1:26379,host2:26379
+#       # For Cluster:
+#       # cluster:
+#       #   nodes: node1:6379,node2:6379
