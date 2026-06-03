@@ -2,7 +2,7 @@ package com.solveria.iamservice.api.exception;
 
 import com.solveria.core.shared.exceptions.EntityNotFoundException;
 import com.solveria.core.shared.exceptions.SolverException;
-import com.solveria.core.workforce.application.usecase.PersonNotFoundException;
+import com.solveria.core.workforce.domain.exception.PersonNotFoundException;
 import com.solveria.iamservice.api.exception.dto.ApiErrorResponse;
 import com.solveria.iamservice.application.exception.IamServiceException;
 import jakarta.servlet.http.HttpServletRequest;
