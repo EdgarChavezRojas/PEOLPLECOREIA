@@ -6,7 +6,9 @@ import com.solveria.core.accruals.application.usecase.EvaluateQuinquenioPenaltyU
 import com.solveria.core.accruals.domain.exception.QuinquenioProvisionNotFoundException;
 import com.solveria.core.accruals.domain.model.QuinquenioProvision;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
+import com.solveria.core.security.context.SecurityTenantContext;
 import java.time.LocalDate;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,13 +22,14 @@ public class EvaluateQuinquenioPenaltyService implements EvaluateQuinquenioPenal
 
   @Override
   public QuinquenioProvision handle(EvaluateQuinquenioPenaltyCommand command) {
+    UUID tenantId = UUID.fromString(SecurityTenantContext.getTenantId());
     LocalizationPolicy.requireSantaCruz(command.location());
     QuinquenioProvision provision =
         benefitsRepository
             .findQuinquenioByRelationshipId(command.relationshipId())
             .orElseThrow(() -> new QuinquenioProvisionNotFoundException(command.relationshipId()));
     LocalDate today = command.today() != null ? command.today() : LocalDate.now();
-    provision.evaluatePenalty(command.requestDate(), today, command.paymentDate());
+    provision.evaluatePenalty(command.requestDate(), today, command.paymentDate(), tenantId);
     return benefitsRepository.saveQuinquenio(provision);
   }
 }

@@ -40,10 +40,15 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   }
 
   @Override
-  public List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate) {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
+  public List<HolidayCalendar> findHolidaysBetween(
+      LocalDate startDate, LocalDate endDate, UUID tenantId) {
+    if (tenantId == null) {
+      String tenantIdStr = SecurityTenantContext.getCurrentTenantId();
+      tenantId =
+          (tenantIdStr != null && !tenantIdStr.isBlank()) ? UUID.fromString(tenantIdStr) : null;
+    }
     return holidayCalendarRepository
-        .findByHolidayDateBetweenAndTenantId(startDate, endDate, UUID.fromString(tenantId))
+        .findByHolidayDateBetweenAndTenantId(startDate, endDate, tenantId)
         .stream()
         .map(benefitsMapper::toDomain)
         .toList();
@@ -65,6 +70,11 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   @Override
   public Optional<QuinquenioProvision> findQuinquenioByRelationshipId(UUID relationshipId) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
+    if (tenantId == null || tenantId.isBlank()) {
+      return quinquenioProvisionRepository
+          .findByRelationshipId(relationshipId)
+          .map(benefitsMapper::toDomain);
+    }
     return quinquenioProvisionRepository
         .findByRelationshipIdAndTenantId(relationshipId, UUID.fromString(tenantId))
         .map(benefitsMapper::toDomain);
@@ -93,6 +103,11 @@ public class BenefitsRepositoryAdapter implements BenefitsRepositoryPort {
   public Optional<BenefitAccrual> findBenefitAccrual(
       UUID relationshipId, BenefitType benefitType, int fiscalYear) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
+    if (tenantId == null || tenantId.isBlank()) {
+      return benefitAccrualRepository
+          .findByRelationshipIdAndBenefitTypeAndFiscalYear(relationshipId, benefitType, fiscalYear)
+          .map(benefitsMapper::toDomain);
+    }
     return benefitAccrualRepository
         .findByRelationshipIdAndBenefitTypeAndFiscalYearAndTenantId(
             relationshipId, benefitType, fiscalYear, UUID.fromString(tenantId))

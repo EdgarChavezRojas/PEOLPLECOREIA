@@ -7,9 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * DTO de respuesta para representar los detalles individuales de un turno asignado.
- */
+/** DTO de respuesta para representar los detalles individuales de un turno asignado. */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

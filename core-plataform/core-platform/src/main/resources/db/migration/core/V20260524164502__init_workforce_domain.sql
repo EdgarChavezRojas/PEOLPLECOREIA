@@ -196,3 +196,15 @@ CREATE TABLE position (
 );
 CREATE INDEX idx_position_unit_id ON position (unit_id);
 CREATE INDEX idx_position_status ON position (pos_status);
+
+CREATE TABLE tenant (
+                        tenant_id UUID NOT NULL PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        status VARCHAR(50) NOT NULL,
+                        description TEXT,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Índice único en name (coincide con unique = true y nombre de índice solicitado)
+CREATE UNIQUE INDEX idx_tenant_name ON tenant (name);

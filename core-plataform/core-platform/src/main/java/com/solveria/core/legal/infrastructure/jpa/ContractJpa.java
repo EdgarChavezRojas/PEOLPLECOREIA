@@ -5,7 +5,6 @@ import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.domain.model.vo.EmploymentCondition;
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;

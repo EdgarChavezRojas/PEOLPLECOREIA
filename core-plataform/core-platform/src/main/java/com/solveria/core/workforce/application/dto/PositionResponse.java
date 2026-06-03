@@ -20,4 +20,5 @@ public class PositionResponse {
   private Integer maxSlots;
   private Integer currentSlots;
   private Integer availableSlots;
+  private java.util.List<UUID> occupantPersonIds;
 }

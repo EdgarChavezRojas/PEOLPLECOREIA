@@ -4,11 +4,14 @@ import com.solveria.core.accruals.domain.model.vo.LeaveStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import lombok.Getter;
 
+@Getter
 public class LeaveTransaction {
 
   private UUID transactionId;
   private UUID balanceId;
+  private UUID tenantId;
   private LocalDate startDate;
   private LocalDate endDate;
   private BigDecimal daysRequested;
@@ -16,34 +19,30 @@ public class LeaveTransaction {
 
   public LeaveTransaction() {}
 
+  // Este constructor estaba mal porque declaraste tenantId localmente y no lo usas
+
+  // Este constructor es el correcto ahora
   public LeaveTransaction(
       UUID transactionId,
       UUID balanceId,
-      LocalDate startDate,
-      LocalDate endDate,
-      BigDecimal daysRequested,
+      UUID tenantId,
+      LocalDate start,
+      LocalDate end,
+      BigDecimal days,
       LeaveStatus status) {
     this.transactionId = transactionId;
     this.balanceId = balanceId;
-    this.startDate = startDate;
-    this.endDate = endDate;
-    this.daysRequested = daysRequested;
+    this.tenantId = tenantId;
+    this.startDate = start;
+    this.endDate = end;
+    this.daysRequested = days;
     this.status = status;
   }
 
   public static LeaveTransaction pending(
-      UUID balanceId, LocalDate startDate, LocalDate endDate, BigDecimal daysRequested) {
-    if (balanceId == null) {
-      throw new IllegalArgumentException("balanceId is required");
-    }
-    if (startDate == null || endDate == null) {
-      throw new IllegalArgumentException("startDate and endDate are required");
-    }
-    if (daysRequested == null || daysRequested.signum() <= 0) {
-      throw new IllegalArgumentException("daysRequested must be positive");
-    }
+      UUID balanceId, UUID tenantId, LocalDate start, LocalDate end, BigDecimal days) {
     return new LeaveTransaction(
-        UUID.randomUUID(), balanceId, startDate, endDate, daysRequested, LeaveStatus.PENDING);
+        UUID.randomUUID(), balanceId, tenantId, start, end, days, LeaveStatus.PENDING);
   }
 
   public void approve() {
@@ -52,30 +51,5 @@ public class LeaveTransaction {
 
   public void reject() {
     status = LeaveStatus.REJECTED;
-  }
-
-  // Getters
-  public UUID getTransactionId() {
-    return transactionId;
-  }
-
-  public UUID getBalanceId() {
-    return balanceId;
-  }
-
-  public LocalDate getStartDate() {
-    return startDate;
-  }
-
-  public LocalDate getEndDate() {
-    return endDate;
-  }
-
-  public BigDecimal getDaysRequested() {
-    return daysRequested;
-  }
-
-  public LeaveStatus getStatus() {
-    return status;
   }
 }

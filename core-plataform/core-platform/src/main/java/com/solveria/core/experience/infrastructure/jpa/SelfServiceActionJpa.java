@@ -30,7 +30,6 @@ public class SelfServiceActionJpa extends BaseEntity {
   @Column(name = "payload", columnDefinition = "TEXT")
   private String payload;
 
-
   // Certificate payload fields (W14)
   @Column(name = "cert_type", length = 50)
   private String certType;

@@ -4,9 +4,7 @@ import com.solveria.scheduling.application.dto.response.ScheduleEmployeeResponse
 import java.time.LocalDate;
 import java.util.UUID;
 
-/**
- * Puerto de entrada (interfaz) para el caso de uso de consulta de horarios de empleados.
- */
+/** Puerto de entrada (interfaz) para el caso de uso de consulta de horarios de empleados. */
 public interface ScheduleQueryUseCase {
 
   /**

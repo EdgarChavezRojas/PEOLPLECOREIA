@@ -42,6 +42,7 @@ class DocumentRecordTest {
 
   @Test
   void evaluateExpirationEmitsWarning() {
+    UUID tenantId = UUID.randomUUID();
     DocumentMetadata metadata =
         new DocumentMetadata(
             UUID.randomUUID(), "archivo.pdf", "b".repeat(64), LocalDate.now().plusDays(5));
@@ -54,7 +55,7 @@ class DocumentRecordTest {
             metadata,
             UUID.randomUUID());
 
-    record.evaluateExpiration(LocalDate.now());
+    record.evaluateExpiration(LocalDate.now(), tenantId);
 
     boolean hasWarning =
         record.pullDomainEvents().stream()

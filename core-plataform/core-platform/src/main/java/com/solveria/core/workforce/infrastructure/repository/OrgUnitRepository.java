@@ -4,6 +4,7 @@ import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,11 +15,13 @@ public interface OrgUnitRepository extends JpaRepository<OrgUnitJpa, UUID> {
 
   List<OrgUnitJpa> findByTenantIdAndIsRootTrue(UUID tenantId);
 
+  @EntityGraph(attributePaths = {"orgHierarchies"})
   List<OrgUnitJpa> findByTenantId(UUID tenantId);
 
   /**
    * Busca una OrgUnit validando que pertenezca al tenant correcto. Crítico para evitar escalada de
    * privilegios entre tenants.
    */
+  @EntityGraph(attributePaths = {"orgHierarchies"})
   Optional<OrgUnitJpa> findByUnitIdAndTenantId(UUID unitId, UUID tenantId);
 }

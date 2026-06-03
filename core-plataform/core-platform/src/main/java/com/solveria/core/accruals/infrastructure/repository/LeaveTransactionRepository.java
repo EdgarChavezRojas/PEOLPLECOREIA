@@ -1,5 +1,6 @@
 package com.solveria.core.accruals.infrastructure.repository;
 
+import com.solveria.core.accruals.domain.model.vo.LeaveStatus;
 import com.solveria.core.accruals.infrastructure.jpa.LeaveTransactionJpa;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -12,4 +13,9 @@ public interface LeaveTransactionRepository extends JpaRepository<LeaveTransacti
 
   Page<LeaveTransactionJpa> findByBalanceRelationshipIdAndBalanceTenantId(
       UUID relationshipId, UUID tenantId, Pageable pageable);
+
+  Page<LeaveTransactionJpa> findByTenantId(UUID tenantId, Pageable pageable);
+
+  Page<LeaveTransactionJpa> findByTenantIdAndStatus(
+      UUID tenantId, LeaveStatus status, Pageable pageable);
 }

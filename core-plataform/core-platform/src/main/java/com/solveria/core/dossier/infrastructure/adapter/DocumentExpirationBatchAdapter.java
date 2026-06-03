@@ -3,6 +3,8 @@ package com.solveria.core.dossier.infrastructure.adapter;
 import com.solveria.core.dossier.application.command.EvaluateDocumentExpirationsCommand;
 import com.solveria.core.dossier.application.usecase.EvaluateDocumentExpirationsUseCase;
 import java.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Component;
 public class DocumentExpirationBatchAdapter {
 
   private final EvaluateDocumentExpirationsUseCase evaluateDocumentExpirationsUseCase;
+  private static final Logger log = LoggerFactory.getLogger(DocumentExpirationBatchAdapter.class);
 
   public DocumentExpirationBatchAdapter(
       EvaluateDocumentExpirationsUseCase evaluateDocumentExpirationsUseCase) {
@@ -22,10 +25,15 @@ public class DocumentExpirationBatchAdapter {
    * token JWT ni un usuario logueado. Por lo tanto, el SecurityTenantContext estará vacío. Este
    * comando lanza una evaluación global para todos los tenants del sistema.
    */
-  @Scheduled(cron = /*DossierCronProperties.DOCUMENT_EXPIRATION_CRON*/ "0 0 0 * * ?")
+  @Scheduled(cron = "${dossier.cron.document-expiration}")
   public void run() {
+    log.info(
+        "event=DOSSIER_DOC_EXPIRATION_BATCH_START cron={} today={}",
+        "${dossier.cron.document-expiration}",
+        LocalDate.now());
     EvaluateDocumentExpirationsCommand command =
-        new EvaluateDocumentExpirationsCommand(LocalDate.now(), null);
+        new EvaluateDocumentExpirationsCommand(LocalDate.now());
     evaluateDocumentExpirationsUseCase.handle(command);
+    log.info("event=DOSSIER_DOC_EXPIRATION_BATCH_END");
   }
 }

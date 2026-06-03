@@ -3,6 +3,7 @@ package com.solveria.ai.infrastructure.llm.stub;
 import com.solveria.ai.application.dto.ChatResultDto;
 import com.solveria.ai.application.port.out.LlmChatPort;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Profile({"dev", "test"})
+@ConditionalOnProperty(
+        name = "ai.stub.enabled",
+        havingValue = "true",
+        matchIfMissing = false
+)
 @ConditionalOnMissingBean(LlmChatPort.class)
 public class StubLlmChatAdapter implements LlmChatPort {
 

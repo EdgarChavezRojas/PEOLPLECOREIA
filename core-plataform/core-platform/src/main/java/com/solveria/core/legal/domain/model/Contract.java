@@ -161,6 +161,21 @@ public class Contract extends DomainRoot {
     if (status != ContractStatus.DRAFT) {
       throw new InvalidContractStatusException(status, ContractStatus.DRAFT);
     }
+    if (addendums == null || addendums.isEmpty()) {
+      throw new IllegalStateException(
+          "No se puede aprobar un contrato sin al menos una adenda propuesta");
+    }
+
+    // Al aprobar el contrato, se aprueban automáticamente todas sus adendas iniciales propuestas
+    for (ContractAddendum addendum : addendums) {
+      if (addendum.getStatus() == AddendumStatus.PENDING_APPROVAL) {
+        addendum.approve(approvedBy);
+        registerEvent(
+            new AddendumSalaryAdjustmentApprovedEvent(
+                contractId, addendum.getAddendumId(), Instant.now()));
+      }
+    }
+
     status = ContractStatus.APPROVED;
     registerEvent(new ContractApprovedEvent(contractId, tenantId));
   }
@@ -205,7 +220,7 @@ public class Contract extends DomainRoot {
 
     validateSegregationOfDuties(createdBy, approvedBy);
     status = ContractStatus.TERMINATED;
-    registerEvent(new ContractTerminatedEvent(contractId, Instant.now()));
+    registerEvent(new ContractTerminatedEvent(contractId, tenantId, Instant.now()));
   }
 
   public void markTacitaReconduccionRisk() {

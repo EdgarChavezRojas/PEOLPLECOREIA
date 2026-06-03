@@ -13,9 +13,10 @@ import com.solveria.TimeAndBearings.domain.model.enums.PunchType;
 import com.solveria.TimeAndBearings.domain.model.vo.GeoValidationSnapshot;
 import com.solveria.TimeAndBearings.domain.model.vo.PunchContext;
 import com.solveria.core.shared.events.DomainEvent;
-
 import java.time.*;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Use Case: Real-Time Clocking (WF-TM01).
@@ -61,17 +62,24 @@ public class RealTimeClockingUseCase implements RealTimeClockingPort {
 
     // ── Step 5: Resolve or create the AttendanceLedger for today ──────────
     LocalDate workDate = serverNtpNow.atZone(ZoneOffset.UTC).toLocalDate();
+    UUID orgUnitId = Objects.requireNonNull(cmd.orgUnitId(), "orgUnitId es requerido");
     AttendanceLedger ledger =
         ledgerRepository
             .findByRelationshipAndDate(cmd.tenantId(), cmd.relationshipId(), workDate)
             .orElseGet(
                 () ->
                     AttendanceLedger.open(
-                        cmd.tenantId(), cmd.relationshipId(), workDate, null, serverNtpNow));
+                        cmd.tenantId(),
+                        cmd.relationshipId(),
+                        orgUnitId,
+                        workDate,
+                        null,
+                        serverNtpNow));
 
     // ── Step 3 (P-TM27): Anti-Double-Punch Idempotency ───────────────────
     PunchType resolvedPunchType = resolvePunchType(ledger);
-    TimeEntry existingIdempotent = findIdempotentEntry(ledger, resolvedPunchType, LocalDateTime.from(serverNtpNow));
+    TimeEntry existingIdempotent =
+        findIdempotentEntry(ledger, resolvedPunchType, LocalDateTime.from(serverNtpNow));
     if (existingIdempotent != null) {
       // Return original entry — idempotent response, device stays operational
       return existingIdempotent;
@@ -86,7 +94,8 @@ public class RealTimeClockingUseCase implements RealTimeClockingPort {
 
     // ── Delegate to AR (enforces all 4 invariants) ───────────────────────
     TimeEntry entry =
-        ledger.recordPunch(LocalDateTime.from(serverNtpNow),
+        ledger.recordPunch(
+            LocalDateTime.from(serverNtpNow),
             resolvedPunchType,
             punchContext,
             geoSnapshot,
@@ -209,7 +218,8 @@ public class RealTimeClockingUseCase implements RealTimeClockingPort {
     if (entry.getPunchType() == PunchType.PUNCH_IN && ledger.getShiftId() != null) {
       int minutesLate = entry.getPunchTime().getMinute(); // real impl: vs expected_start
       if (minutesLate > LATE_IN_THRESHOLD_MINUTES) {
-        ledger.registerDeviation(DeviationType.LATE_IN, minutesLate, LocalDateTime.from(serverNtpNow));
+        ledger.registerDeviation(
+            DeviationType.LATE_IN, minutesLate, LocalDateTime.from(serverNtpNow));
       }
     }
   }

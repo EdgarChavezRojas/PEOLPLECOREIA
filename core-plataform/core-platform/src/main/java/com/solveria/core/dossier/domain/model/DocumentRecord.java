@@ -107,13 +107,13 @@ public class DocumentRecord extends DomainRoot {
     }
   }
 
-  public void reject(UUID reviewerId, String reason, LocalDateTime reviewDate) {
+  public void reject(UUID reviewerId, String reason, LocalDateTime reviewDate, UUID tenantId) {
     this.validationStatus =
         validationStatus.withState(ValidationState.REJECTED, reviewerId, reviewDate, reason);
-    registerEvent(DocumentValidationRejectedEvent.now(docId, relationshipId, reason));
+    registerEvent(DocumentValidationRejectedEvent.now(docId, relationshipId, reason, tenantId));
   }
 
-  public void evaluateExpiration(LocalDate today) {
+  public void evaluateExpiration(LocalDate today, UUID tenantId) {
     if (metadata == null || metadata.expiryDate() == null || today == null) {
       return;
     }
@@ -122,7 +122,7 @@ public class DocumentRecord extends DomainRoot {
         this.validationStatus =
             validationStatus.withState(ValidationState.EXPIRED, null, null, null);
         if (critical) {
-          registerEvent(EligibilitySuspendedByComplianceEvent.now(relationshipId));
+          registerEvent(EligibilitySuspendedByComplianceEvent.now(relationshipId, tenantId));
         }
       }
     } else if (DocumentCompliancePolicy.isHealthCardExpiringSoon(

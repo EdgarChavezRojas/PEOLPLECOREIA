@@ -7,8 +7,8 @@ import java.util.UUID;
  * Puerto Primario (Inbound): Aplica ajustes de nómina derivados de solicitudes de ausencia/vacación
  * aprobadas.
  *
- * <p>Este caso de uso es invocado desde el Bounded Context Financial cuando se recibe un evento
- * de aprobación gerencial de vacaciones ({@code LeaveRequestManagerApprovedEvent}).
+ * <p>Este caso de uso es invocado desde el Bounded Context Financial cuando se recibe un evento de
+ * aprobación gerencial de vacaciones ({@code LeaveRequestManagerApprovedEvent}).
  */
 public interface ApplyLeaveAdjustmentsUseCase {
 

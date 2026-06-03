@@ -1,5 +1,6 @@
 package com.solveria.payroll.application.usecase;
 
+import com.solveria.payroll.application.dto.request.EligibleEmployee;
 import com.solveria.payroll.application.dto.request.GeneratePayrollRequest;
 import com.solveria.payroll.application.dto.response.PayrollRunResponse;
 import com.solveria.payroll.application.port.inbound.GeneratePayrollUseCase;
@@ -9,7 +10,6 @@ import com.solveria.payroll.application.port.outbound.IncomeRecordRepositoryPort
 import com.solveria.payroll.application.port.outbound.PayrollRunRepositoryPort;
 import com.solveria.payroll.application.port.outbound.TenantProfilePort;
 import com.solveria.payroll.domain.model.ar.DeductionRecord;
-import com.solveria.payroll.application.dto.request.EligibleEmployee;
 import com.solveria.payroll.domain.model.ar.IncomeRecord;
 import com.solveria.payroll.domain.model.ar.PayrollRun;
 import com.solveria.payroll.domain.model.entity.PayrollLine;

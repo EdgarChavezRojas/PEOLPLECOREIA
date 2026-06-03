@@ -2,7 +2,6 @@ package com.solveria.TimeAndBearings.infrastructure.jpa;
 
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

@@ -23,32 +23,37 @@ public class SecurityConfig {
         boolean dev = Arrays.asList(env.getActiveProfiles()).contains("dev");
 
         http.csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         a -> {
+                            a.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll();
                             a.requestMatchers(
-                                    "/actuator/health/**",
-                                    "/actuator/info/**",
-                                    "/api/auth/login",
-                                    "/api/auth/google"
-                            ).permitAll();
+                                            "/actuator/health/**",
+                                            "/actuator/info/**",
+                                            "/api/auth/login",
+                                            "/api/auth/google")
+                                    .permitAll();
                             if (dev) {
                                 a.requestMatchers(
                                                 "/v3/api-docs/**",
+                                                "/api/v1/ai/**",
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html")
                                         .permitAll();
+                                a.anyRequest().permitAll();
+                            } else {
+                                a.anyRequest().authenticated();
                             }
-
-                            a.anyRequest().authenticated();
                         })
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-                .formLogin(AbstractHttpConfigurer::disable)
-                .exceptionHandling(
-                        e ->
-                                e.authenticationEntryPoint(
-                                                new BearerTokenAuthenticationEntryPoint())
-                                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler()));
+                .formLogin(AbstractHttpConfigurer::disable);
+
+        if (!dev) {
+            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                    .exceptionHandling(
+                            e -> e.authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
+                                    .accessDeniedHandler(new BearerTokenAccessDeniedHandler()));
+        }
 
         return http.build();
     }

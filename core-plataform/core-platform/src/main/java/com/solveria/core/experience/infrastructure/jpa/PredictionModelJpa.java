@@ -27,11 +27,8 @@ public class PredictionModelJpa extends BaseEntity {
   @Enumerated(EnumType.STRING)
   private com.solveria.core.experience.domain.model.vo.ModelType modelType;
 
-
-
   @Column(name = "last_execution")
   private Instant lastExecution;
-
 
   /** RiskAlerts serializadas como JSON array. */
   @Column(name = "alerts", columnDefinition = "TEXT")

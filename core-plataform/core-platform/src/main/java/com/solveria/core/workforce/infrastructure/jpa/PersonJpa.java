@@ -6,6 +6,7 @@ import com.solveria.core.workforce.domain.model.vo.Gender;
 import com.solveria.core.workforce.domain.model.vo.MaritalStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -51,7 +52,7 @@ public class PersonJpa extends BaseEntity {
   @Column(name = "birth_date", nullable = false)
   private LocalDate birthDate;
 
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = GenderConverter.class)
   @Column(name = "gender")
   private Gender gender;
 
@@ -80,7 +81,6 @@ public class PersonJpa extends BaseEntity {
       fetch = FetchType.LAZY)
   @Builder.Default
   private List<PartyIdentifierJpa> identifiers = new ArrayList<>();
-
 
   @Override
   public final boolean equals(Object o) {

@@ -12,7 +12,8 @@ public record LeaveRequestSubmittedEvent(
     LocalDate startDate,
     LocalDate endDate,
     BigDecimal chargeableDays,
-    Instant occurredAt)
+    Instant occurredAt,
+    UUID tenantId)
     implements DomainEvent {
 
   public LeaveRequestSubmittedEvent {
@@ -41,8 +42,9 @@ public record LeaveRequestSubmittedEvent(
       UUID transactionId,
       LocalDate startDate,
       LocalDate endDate,
-      BigDecimal chargeableDays) {
+      BigDecimal chargeableDays,
+      UUID tenantId) {
     return new LeaveRequestSubmittedEvent(
-        balanceId, transactionId, startDate, endDate, chargeableDays, Instant.now());
+        balanceId, transactionId, startDate, endDate, chargeableDays, Instant.now(), tenantId);
   }
 }

@@ -2,12 +2,10 @@ package com.solveria.ai.infrastructure.llm.springai;
 
 import com.solveria.ai.application.dto.ChatResultDto;
 import com.solveria.ai.application.port.out.LlmChatPort;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,34 +13,35 @@ import org.springframework.stereotype.Component;
  * key is configured and ChatClient.Builder is available.
  */
 @Component
-@Profile("!test")
-@ConditionalOnBean(ChatClient.Builder.class)
-@ConditionalOnProperty(prefix = "spring.ai.openai", name = "api-key")
+@Primary
+//@ConditionalOnProperty(prefix = "spring.ai.google.genai", name = "api-key")
 public class SpringAiLlmChatAdapter implements LlmChatPort {
 
-    private final ChatClient chatClient;
+    private final ChatModel chatModel;
 
-    public SpringAiLlmChatAdapter(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
+    public SpringAiLlmChatAdapter(ChatModel chatModel) {
+        this.chatModel = chatModel;
     }
 
     @Override
     public ChatResultDto chat(String prompt) {
-        ChatResponse response = chatClient.prompt().user(prompt).call().chatResponse();
-        String answer =
-                response.getResult() != null && response.getResult().getOutput() != null
-                        ? response.getResult().getOutput().getText()
-                        : "";
-        Usage usage =
-                response.getMetadata() != null && response.getMetadata().getUsage() != null
-                        ? response.getMetadata().getUsage()
-                        : null;
-        int promptTokens =
-                usage != null ? (usage.getPromptTokens() != null ? usage.getPromptTokens() : 0) : 0;
-        int completionTokens =
-                usage != null
-                        ? (usage.getCompletionTokens() != null ? usage.getCompletionTokens() : 0)
-                        : 0;
-        return new ChatResultDto(answer, promptTokens, completionTokens);
+        try {
+            // Llamada real al modelo de Google Gemini a través de internet
+            System.out.println("\n=== ENVIANDO ESTE PROMPT REAL A GEMINI ===\n" + prompt + "\n=========================================\n");
+            ChatResponse response = chatModel.call(new Prompt(prompt));
+
+            String answer = response.getResult().getOutput().getText();
+
+            // Intentar extraer los tokens reales si el proveedor los expone en la metadata
+            int promptTokens = response.getMetadata().getUsage() != null ?
+                    (int) response.getMetadata().getUsage().getPromptTokens() : 100;
+            int completionTokens = response.getMetadata().getUsage() != null ?
+                    (int) response.getMetadata().getUsage().getTotalTokens() : 100;
+
+            return new ChatResultDto(answer, promptTokens, completionTokens);
+        } catch (Exception e) {
+            // Salvaguarda en caso de caída de conexión de red para que veas el error real en tu consola
+            return new ChatResultDto("[ERROR REAL GEMINI] Falló la llamada HTTP: " + e.getMessage(), 0, 0);
+        }
     }
 }

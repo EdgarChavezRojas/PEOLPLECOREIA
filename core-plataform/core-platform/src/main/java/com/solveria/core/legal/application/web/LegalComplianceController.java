@@ -6,6 +6,7 @@ import com.solveria.core.legal.application.usecase.GenerateContractEvidenceUseCa
 import com.solveria.core.legal.application.usecase.ScanExpiringContractsUseCase;
 import com.solveria.core.legal.application.usecase.UpdateLegalThresholdUseCase;
 import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.security.context.SecurityUserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -71,7 +72,8 @@ public class LegalComplianceController {
       @Parameter(description = "ID de la regla legal a actualizar", required = true) @RequestBody
           UpdateLegalThresholdWebDto request) {
     UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
-    updateLegalThresholdUseCase.execute(request.toCommand(tenantUuid));
+    String userId = SecurityUserContext.getUserIdentifier();
+    updateLegalThresholdUseCase.execute(request.toCommand(tenantUuid, userId));
     return ResponseEntity.ok().build();
   }
 

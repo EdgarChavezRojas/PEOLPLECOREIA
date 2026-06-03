@@ -19,7 +19,6 @@ import com.solveria.TimeAndBearings.domain.model.vo.GeoValidationSnapshot;
 import com.solveria.TimeAndBearings.domain.model.vo.PunchContext;
 import com.solveria.TimeAndBearings.domain.model.vo.WorkedHoursSummary;
 import com.solveria.core.shared.events.DomainEvent;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +26,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -61,6 +61,11 @@ public class AttendanceLedger {
   private UUID relationshipId;
   private LocalDate workDate;
   private UUID shiftId;
+  // orgUnitId se persiste de forma denormalizada para soportar consultas de consolidacion/cierre
+  // (P-TM33, CRON) directamente sobre AttendanceLedger, evitando joins con BC-01 y manteniendo
+  // el aislamiento entre bounded contexts. Esto permite filtrar por unidad organizativa en rangos
+  // de fechas sin depender de tablas externas; por eso no es un dato operativo del flujo de
+  // marcacion, sino un dato de particion para lectura y reportes.
   private UUID orgUnitId;
   private LedgerStatus status;
   private boolean finalized;
@@ -78,6 +83,7 @@ public class AttendanceLedger {
   public static AttendanceLedger open(
       UUID tenantId,
       UUID relationshipId,
+      UUID orgUnitId,
       LocalDate workDate,
       UUID shiftId,
       Instant serverNtpNow) {
@@ -86,6 +92,7 @@ public class AttendanceLedger {
         UUID.randomUUID(),
         tenantId,
         relationshipId,
+        orgUnitId,
         workDate,
         shiftId,
         LedgerStatus.OPEN,
@@ -100,6 +107,7 @@ public class AttendanceLedger {
       UUID ledgerId,
       UUID tenantId,
       UUID relationshipId,
+      UUID orgUnitId,
       LocalDate workDate,
       UUID shiftId,
       LedgerStatus status,
@@ -112,6 +120,7 @@ public class AttendanceLedger {
     this.ledgerId = ledgerId;
     this.tenantId = tenantId;
     this.relationshipId = relationshipId;
+    this.orgUnitId = Objects.requireNonNull(orgUnitId, "orgUnitId es requerido");
     this.workDate = workDate;
     this.shiftId = shiftId;
     this.status = status;

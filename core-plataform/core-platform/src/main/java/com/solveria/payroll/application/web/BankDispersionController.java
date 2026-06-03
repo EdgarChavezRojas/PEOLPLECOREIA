@@ -26,9 +26,7 @@ public class BankDispersionController {
       summary = "Generar archivo de dispersión",
       description = "Genera el archivo del banco para una planilla cerrada.")
   public ResponseEntity<Void> generateDispersionFile(
-      @PathVariable UUID runId,
-      @RequestParam UUID bankEntityRef
-     ) {
+      @PathVariable UUID runId, @RequestParam UUID bankEntityRef) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     generateDispersionFileUseCase.execute(runId, bankEntityRef, tenantId);
     return ResponseEntity.ok().build();

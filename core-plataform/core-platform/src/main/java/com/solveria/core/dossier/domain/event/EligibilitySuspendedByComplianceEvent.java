@@ -4,8 +4,8 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.time.Instant;
 import java.util.UUID;
 
-public record EligibilitySuspendedByComplianceEvent(UUID relationshipId, Instant occurredAt)
-    implements DomainEvent {
+public record EligibilitySuspendedByComplianceEvent(
+    UUID relationshipId, UUID tenantId, Instant occurredAt) implements DomainEvent {
 
   public EligibilitySuspendedByComplianceEvent {
     if (relationshipId == null || occurredAt == null) {
@@ -13,7 +13,7 @@ public record EligibilitySuspendedByComplianceEvent(UUID relationshipId, Instant
     }
   }
 
-  public static EligibilitySuspendedByComplianceEvent now(UUID relationshipId) {
-    return new EligibilitySuspendedByComplianceEvent(relationshipId, Instant.now());
+  public static EligibilitySuspendedByComplianceEvent now(UUID relationshipId, UUID tenantId) {
+    return new EligibilitySuspendedByComplianceEvent(relationshipId, tenantId, Instant.now());
   }
 }

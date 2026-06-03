@@ -4,6 +4,7 @@ import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.workforce.application.port.PositionRepositoryPort;
 import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.Position;
+import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ public class UpdatePositionBudgetUseCase {
 
   private final PositionRepositoryPort positionRepositoryPort;
 
+  @Transactional
   public void execute(UUID positionId, boolean isBudgeted) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     Position position =

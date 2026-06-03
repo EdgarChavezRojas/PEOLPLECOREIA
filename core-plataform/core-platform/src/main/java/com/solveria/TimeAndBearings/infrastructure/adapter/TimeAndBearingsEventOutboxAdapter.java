@@ -65,7 +65,8 @@ public class TimeAndBearingsEventOutboxAdapter implements EventOutboxPort {
         OutboxState.PENDING,
         createdAt,
         null,
-        null);
+        null,
+        0);
   }
 
   private Optional<UUID> resolveEventId(DomainEvent event) {

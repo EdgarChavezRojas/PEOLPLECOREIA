@@ -40,5 +40,4 @@ public class QuinquenioProvisionJpa extends BaseEntity {
 
   @Column(name = "penalty_active", nullable = false)
   private Boolean penaltyActive;
-
 }

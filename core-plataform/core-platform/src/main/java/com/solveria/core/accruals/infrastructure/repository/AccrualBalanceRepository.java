@@ -12,6 +12,5 @@ public interface AccrualBalanceRepository extends JpaRepository<AccrualBalanceJp
 
   List<AccrualBalanceJpa> findByRelationshipId(UUID relationshipId);
 
-  List<AccrualBalanceJpa> findByRelationshipIdAndTenantId(UUID relationshipId, UUID tenantId)
-          ;
+  List<AccrualBalanceJpa> findByRelationshipIdAndTenantId(UUID relationshipId, UUID tenantId);
 }

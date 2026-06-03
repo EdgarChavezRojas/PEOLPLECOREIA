@@ -28,8 +28,7 @@ public class PredictionModel extends DomainRoot {
 
   public static PredictionModel create(ModelType modelType, Long version, UUID tenantId) {
     if (modelType == null) throw new IllegalArgumentException("modelType requerido");
-    if (version == null )
-      throw new IllegalArgumentException("version requerida");
+    if (version == null) throw new IllegalArgumentException("version requerida");
 
     PredictionModel m = new PredictionModel();
     m.modelId = UUID.randomUUID();

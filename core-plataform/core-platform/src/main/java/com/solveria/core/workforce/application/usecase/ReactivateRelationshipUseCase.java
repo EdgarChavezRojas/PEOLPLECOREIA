@@ -6,6 +6,7 @@ import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.domain.model.StatusLog;
 import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
+import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,15 +21,35 @@ public class ReactivateRelationshipUseCase {
 
   private final RelationshipRepositoryPort relationshipRepositoryPort;
 
+  @Transactional
   public void execute(UUID relationshipId) {
-    UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    UUID tenantId = tenantStr != null && !tenantStr.isBlank() ? UUID.fromString(tenantStr) : null;
+    execute(relationshipId, tenantId);
+  }
+
+  @Transactional
+  public void execute(UUID relationshipId, UUID tenantId) {
+    if (tenantId == null) {
+      String tenantStr = SecurityTenantContext.getCurrentTenantId();
+      if (tenantStr == null || tenantStr.isBlank()) {
+        throw new IllegalStateException(
+            "Tenant ID not found in context and not provided as parameter");
+      }
+      tenantId = UUID.fromString(tenantStr);
+    }
+
     Relationship relationship =
         relationshipRepositoryPort
             .findByRelationshipIdAndTenantId(relationshipId, tenantId)
             .orElseThrow(() -> new SolverException(RELATIONSHIP_NOT_FOUND));
 
     RelationshipStatus previousStatus = relationship.getCurrentStatus();
-    relationship.reactivate();
+    if (RelationshipStatus.DRAFT.equals(previousStatus)) {
+      relationship.activate();
+    } else {
+      relationship.reactivate();
+    }
     relationship.addStatusLog(
         StatusLog.create(relationshipId, previousStatus, RelationshipStatus.ACTIVE, null, null));
 

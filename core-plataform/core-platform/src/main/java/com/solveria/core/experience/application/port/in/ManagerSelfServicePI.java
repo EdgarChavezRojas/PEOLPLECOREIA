@@ -9,8 +9,8 @@ import java.util.UUID;
 public interface ManagerSelfServicePI {
 
   /** W11: Aprobar solicitud de cambio de datos. */
-  void approveDataChange(UUID actionId, UUID approvedBy, String tenantId);
+  void approveDataChange(UUID actionId, Long userId, String tenantId);
 
   /** W11: Rechazar solicitud de cambio de datos. */
-  void rejectDataChange(UUID actionId, UUID rejectedBy, String rejectionReason, String tenantId);
+  void rejectDataChange(UUID actionId, Long userId, String rejectionReason, String tenantId);
 }

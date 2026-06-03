@@ -3,7 +3,6 @@ package com.solveria.core.legal.infrastructure.jpa;
 import com.solveria.core.legal.domain.model.vo.AddendumStatus;
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 import java.util.UUID;
 import lombok.AllArgsConstructor;

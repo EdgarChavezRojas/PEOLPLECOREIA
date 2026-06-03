@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record CreateRelationshipRequest(
     UUID personId,
-    UUID tenantId, // 100% aislado y seguro
+    UUID tenantId,
     String relationType,
     LocalDate hireDate,
     String employeeNo,

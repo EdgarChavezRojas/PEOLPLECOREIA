@@ -20,14 +20,11 @@ public class PayrollApprovalJpa extends BaseEntity {
   @Column(name = "status", nullable = false)
   private String status;
 
-  @Column(name = "creator_ref", nullable = false)
-  private UUID creatorRef;
-
   @Column(name = "reviewer_ref")
-  private UUID reviewerRef;
+  private Long reviewerRef;
 
   @Column(name = "approver_ref")
-  private UUID approverRef;
+  private Long approverRef;
 
   @Column(name = "sod_violation_flag", nullable = false)
   private Boolean sodViolationFlag;
@@ -67,27 +64,19 @@ public class PayrollApprovalJpa extends BaseEntity {
     this.status = status;
   }
 
-  public UUID getCreatorRef() {
-    return creatorRef;
-  }
-
-  public void setCreatorRef(UUID creatorRef) {
-    this.creatorRef = creatorRef;
-  }
-
-  public UUID getReviewerRef() {
+  public Long getReviewerRef() {
     return reviewerRef;
   }
 
-  public void setReviewerRef(UUID reviewerRef) {
+  public void setReviewerRef(Long reviewerRef) {
     this.reviewerRef = reviewerRef;
   }
 
-  public UUID getApproverRef() {
+  public Long getApproverRef() {
     return approverRef;
   }
 
-  public void setApproverRef(UUID approverRef) {
+  public void setApproverRef(Long approverRef) {
     this.approverRef = approverRef;
   }
 

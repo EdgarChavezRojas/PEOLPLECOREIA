@@ -1,9 +1,9 @@
 package com.solveria.core.experience.application.web;
 
-import com.solveria.core.experience.application.dto.ApproveDataChangeRequest;
 import com.solveria.core.experience.application.dto.RejectDataChangeRequest;
 import com.solveria.core.experience.application.usecase.ManagerSelfServiceUseCase;
 import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.security.context.SecurityUserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -36,10 +36,10 @@ public class ManagerSelfServiceController {
     @ApiResponse(responseCode = "404", description = "Solicitud no encontrada", content = @Content),
     @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
   })
-  public ResponseEntity<Void> approveAction(
-      @PathVariable UUID actionId, @Valid @RequestBody ApproveDataChangeRequest request) {
+  public ResponseEntity<Void> approveAction(@PathVariable UUID actionId) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
-    managerSelfServiceUseCase.approveDataChange(actionId, request.approvedBy(), tenantId);
+    Long userId = SecurityUserContext.getUserId();
+    managerSelfServiceUseCase.approveDataChange(actionId, userId, tenantId);
     return ResponseEntity.ok().build();
   }
 
@@ -55,8 +55,9 @@ public class ManagerSelfServiceController {
   public ResponseEntity<Void> rejectAction(
       @PathVariable UUID actionId, @Valid @RequestBody RejectDataChangeRequest request) {
     String tenantId = SecurityTenantContext.getCurrentTenantId();
+    Long userId = SecurityUserContext.getUserId();
     managerSelfServiceUseCase.rejectDataChange(
-        actionId, request.rejectedBy(), request.rejectionReason(), tenantId);
+        actionId, userId, request.rejectionReason(), tenantId);
     return ResponseEntity.ok().build();
   }
 }

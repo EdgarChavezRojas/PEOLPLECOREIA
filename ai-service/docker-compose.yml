@@ -19,13 +19,13 @@ services:
 
     volumes:
       # Volumen persistente (montado en el "root" data dir, PGDATA cuelga debajo)
-      - ai_service_pgdata:/var/lib/postgresql/data
+      - ai_service_pgdata:/var/lib/postgresql/datay
       # Scripts de inicialización (se ejecutan SOLO en el primer init del volumen)
       - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
 
-
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U iam_user -d peoplecore_db" ]
+      # Healthcheck correcto dentro del contenedor
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h localhost -p 5432"]
       interval: 5s
       timeout: 5s
       retries: 30

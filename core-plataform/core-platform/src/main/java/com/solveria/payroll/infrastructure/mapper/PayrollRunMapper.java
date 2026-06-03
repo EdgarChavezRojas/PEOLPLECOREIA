@@ -14,6 +14,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PayrollRunMapper {
 
+  @Mapping(target = "payrollRunId", source = "id")
   PayrollRunJpa toJpa(PayrollRun domain);
 
   @Mapping(target = "lineId", source = "id")

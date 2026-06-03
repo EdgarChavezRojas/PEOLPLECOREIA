@@ -29,7 +29,6 @@ public interface ClockingDeviceMapper {
 
   // ── ClockingDevice AR ↔ JPA ───────────────────────────────────────────────
 
-
   @Mapping(target = "version", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -82,7 +81,6 @@ public interface ClockingDeviceMapper {
 
   // ── BiometricEnrollment Entity ↔ JPA ─────────────────────────────────────
 
-
   @Mapping(target = "version", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "createdBy", ignore = true)
@@ -95,7 +93,6 @@ public interface ClockingDeviceMapper {
   List<BiometricEnrollment> toEnrollmentDomainList(List<BiometricEnrollmentJpa> jpaList);
 
   // ── PunchAttemptLog Entity ↔ JPA ─────────────────────────────────────────
-
 
   @Mapping(target = "version", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
@@ -110,7 +107,6 @@ public interface ClockingDeviceMapper {
 
   // ── DeviceAuditLog Entity ↔ JPA ──────────────────────────────────────────
 
-  
   @Mapping(target = "version", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "createdBy", ignore = true)

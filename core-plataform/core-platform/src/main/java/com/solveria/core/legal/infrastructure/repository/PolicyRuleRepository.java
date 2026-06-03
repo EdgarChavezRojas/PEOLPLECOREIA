@@ -9,5 +9,9 @@ public interface PolicyRuleRepository extends JpaRepository<PolicyRuleJpa, Long>
 
   Optional<PolicyRuleJpa> findByPolicyIdAndTenantId(UUID policyId, UUID tenantId);
 
+  Optional<PolicyRuleJpa> findByPolicyId(UUID policyId);
+
   Optional<PolicyRuleJpa> findByPolicyNameAndTenantId(String policyName, UUID tenantId);
+
+  Optional<PolicyRuleJpa> findByPolicyName(String policyName);
 }

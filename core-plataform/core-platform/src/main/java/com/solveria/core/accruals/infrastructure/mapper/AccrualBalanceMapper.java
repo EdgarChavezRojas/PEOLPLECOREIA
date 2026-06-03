@@ -14,25 +14,27 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface AccrualBalanceMapper {
 
+  @Mapping(target = "tenantId", source = "tenantId")
   AccrualBalanceJpa toJpa(AccrualBalance balance);
 
+  // Mapeo limpio: eliminamos los targets que ya no existen como campos en Jpa
+  @Mapping(target = "tenantId", source = "tenantId")
   @Mapping(target = "balance", ignore = true)
-  @Mapping(target = "balanceId", ignore = true)
   LeaveTransactionJpa toJpa(LeaveTransaction transaction);
 
   SeniorityMilestoneJpa toJpa(SeniorityMilestone milestone);
 
   default AccrualBalance toDomain(AccrualBalanceJpa jpa) {
-    if (jpa == null) {
-      return null;
-    }
+    if (jpa == null) return null;
+
     List<LeaveTransaction> transactions =
         jpa.getLeaveTransactions() == null
             ? List.of()
             : jpa.getLeaveTransactions().stream().map(this::toDomain).toList();
+
     List<SeniorityMilestone> milestones =
         jpa.getSeniorityMilestones() == null
             ? List.of()
@@ -54,12 +56,11 @@ public interface AccrualBalanceMapper {
   }
 
   default LeaveTransaction toDomain(LeaveTransactionJpa jpa) {
-    if (jpa == null) {
-      return null;
-    }
+    if (jpa == null) return null;
     return new LeaveTransaction(
         jpa.getTransactionId(),
-        jpa.getBalanceId(),
+        jpa.getBalanceId(), // Usa el método puente de tu entidad Jpa
+        jpa.getTenantId(),
         jpa.getStartDate(),
         jpa.getEndDate(),
         jpa.getDaysRequested(),
@@ -67,40 +68,39 @@ public interface AccrualBalanceMapper {
   }
 
   default SeniorityMilestone toDomain(SeniorityMilestoneJpa jpa) {
-    if (jpa == null) {
-      return null;
-    }
+    if (jpa == null) return null;
     return new SeniorityMilestone(
         jpa.getMilestoneId(), jpa.getMonthsCompleted(), jpa.getBaseSmnType());
   }
 
   @AfterMapping
   default void setBackReferences(@MappingTarget AccrualBalanceJpa jpa, AccrualBalance balance) {
-    if (jpa == null) {
-      return;
-    }
+    if (jpa == null) return;
+
     if (jpa.getLeaveTransactions() != null) {
       for (LeaveTransactionJpa transaction : jpa.getLeaveTransactions()) {
-        transaction.setBalance(jpa);
-        transaction.setBalanceId(jpa.getBalanceId());
+        transaction.setBalance(jpa); // Esto conecta el @ManyToOne y soluciona el NULL en BD
+        transaction.setTenantId(jpa.getTenantId());
       }
     }
     if (jpa.getSeniorityMilestones() != null) {
       for (SeniorityMilestoneJpa milestone : jpa.getSeniorityMilestones()) {
         milestone.setBalance(jpa);
-        milestone.setBalanceId(jpa.getBalanceId());
       }
     }
   }
 
   default String toEventPayload(AccrualBalance balance, DomainEvent event) {
-    if (balance == null || event == null) {
-      return "{}";
-    }
+    if (balance == null || event == null) return "{}";
     try {
       return new ObjectMapper().writeValueAsString(event);
     } catch (Exception e) {
       throw new RuntimeException("Error serializing AccrualBalance event payload", e);
     }
   }
+
+  // Mapeo limpio para actualizaciones
+  @Mapping(target = "balance", ignore = true)
+  @Mapping(target = "tenantId", source = "tenantId")
+  void updateJpa(LeaveTransaction domain, @MappingTarget LeaveTransactionJpa jpa);
 }

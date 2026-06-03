@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 /** Spring Data JPA Repository: TaxForm110. */
 @Repository
-public interface TaxForm110Repository extends JpaRepository<TaxForm110Jpa, Long> {
+public interface TaxForm110Repository extends JpaRepository<TaxForm110Jpa, UUID> {
 
   Optional<TaxForm110Jpa> findByFormIdAndTenantId(UUID formId, UUID tenantId);
 

@@ -4,8 +4,8 @@ import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.scheduling.application.dto.response.AssignedShiftResponseDto;
 import com.solveria.scheduling.application.dto.response.ScheduleEmployeeResponseDto;
 import com.solveria.scheduling.application.port.inbound.ScheduleQueryUseCase;
-import com.solveria.scheduling.domain.exception.EmployeeNotActiveException;
 import com.solveria.scheduling.application.port.outbound.CoreHrPort;
+import com.solveria.scheduling.domain.exception.EmployeeNotActiveException;
 import com.solveria.scheduling.infrastructure.jpa.AssignedShiftJpa;
 import com.solveria.scheduling.infrastructure.repository.AssignedShiftJpaRepository;
 import java.time.LocalDate;
@@ -31,7 +31,7 @@ public class ScheduleQueryUseCaseImpl implements ScheduleQueryUseCase {
   @Transactional(readOnly = true)
   public ScheduleEmployeeResponseDto getEmployeeSchedule(
       UUID relationshipId, LocalDate startDate, LocalDate endDate) {
-    
+
     // 1. Obtener tenantId desde el contexto de seguridad para aislamiento multi-tenant
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
 

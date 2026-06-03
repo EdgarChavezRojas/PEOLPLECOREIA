@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import lombok.Setter;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -20,7 +19,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 @Setter
 @MappedSuperclass
 public abstract class BaseEntity implements Serializable {
-
 
   @Version private Long version;
 
@@ -46,7 +44,6 @@ public abstract class BaseEntity implements Serializable {
   protected BaseEntity() {
     // Constructor protegido requerido por JPA
   }
-
 
   public Long getVersion() {
     return version;

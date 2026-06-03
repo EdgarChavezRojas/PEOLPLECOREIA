@@ -40,4 +40,9 @@ public class PredictionModelRepositoryAdapter implements PredictionModelPO {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     return repository.findByModelIdAndTenantId(modelId, tenantId).map(mapper::toDomain);
   }
+
+  @Override
+  public Optional<PredictionModel> findByTenantId(UUID tenantId) {
+    return repository.findByTenantId(tenantId).map(mapper::toDomain);
+  }
 }

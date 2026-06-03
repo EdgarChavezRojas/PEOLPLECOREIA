@@ -5,6 +5,7 @@ import com.solveria.core.workforce.domain.model.vo.AcademicRank;
 import com.solveria.core.workforce.infrastructure.jpa.AcademicProfileJpa;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
@@ -27,4 +28,8 @@ public interface AcademicProfileMapper {
   default AcademicRank toRankEnum(String value) {
     return value != null ? AcademicRank.valueOf(value) : null;
   }
+
+  @Mapping(target = "relationship", ignore = true)
+  @Mapping(target = "currentRank", source = "currentRank", qualifiedByName = "toRank")
+  void updateJpa(AcademicProfile academicProfile, @MappingTarget AcademicProfileJpa target);
 }

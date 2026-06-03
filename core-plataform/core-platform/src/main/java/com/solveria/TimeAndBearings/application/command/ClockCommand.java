@@ -10,6 +10,7 @@ import java.util.UUID;
  *
  * @param tenantId Multi-tenant partition.
  * @param relationshipId BC-01 Relationship reference (opaque UUID, verified active by ACL).
+ * @param orgUnitId FK opaca a la OrgUnit (BC-01), requerida para crear el ledger.
  * @param source Origin channel (determines auth level per P-TM29).
  * @param deviceId FK to ClockingDevice. NULL if source=MANUAL/WEB.
  * @param deviceSignature Cryptographic device signature. NOT NULL for KIOSK/BIOMETRIC_READER.
@@ -25,6 +26,7 @@ import java.util.UUID;
 public record ClockCommand(
     UUID tenantId,
     UUID relationshipId,
+    UUID orgUnitId,
     PunchSource source,
     UUID deviceId,
     String deviceSignature,

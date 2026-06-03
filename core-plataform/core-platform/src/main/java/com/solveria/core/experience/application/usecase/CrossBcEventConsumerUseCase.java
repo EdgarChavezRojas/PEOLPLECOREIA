@@ -28,8 +28,7 @@ public class CrossBcEventConsumerUseCase {
 
   /** Consumer: QUINQUENIO_PAYMENT_OVERDUE -> CRITICAL RiskAlert */
   @Transactional
-  public void handleQuinquenioPaymentOverdue(
-      UUID modelId, UUID personId, BigDecimal amount, String tenantId) {
+  public void handleQuinquenioPaymentOverdue(UUID modelId, UUID personId, BigDecimal amount) {
     log.info("event=CONSUME_QUINQUENIO_PAYMENT_OVERDUE personId={} amount={}", personId, amount);
 
     PredictionModel model =
@@ -74,8 +73,7 @@ public class CrossBcEventConsumerUseCase {
 
   /** Consumer: ELIGIBILITY_SUSPENDED_BY_COMPLIANCE -> Alert for Store Manager */
   @Transactional
-  public void handleEligibilitySuspended(
-      UUID modelId, UUID personId, String reason, UUID tenantId) {
+  public void handleEligibilitySuspended(UUID modelId, UUID personId, String reason) {
     log.info("event=CONSUME_ELIGIBILITY_SUSPENDED personId={} reason={}", personId, reason);
 
     PredictionModel model =

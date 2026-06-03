@@ -5,18 +5,22 @@ import com.solveria.core.workforce.domain.model.OrgUnit;
 import com.solveria.core.workforce.infrastructure.jpa.OrgHierarchyJpa;
 import com.solveria.core.workforce.infrastructure.jpa.OrgUnitJpa;
 import org.mapstruct.AfterMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(
     componentModel = "spring",
+    builder = @Builder(disableBuilder = true),
     uses = {OrgHierarchyMapper.class})
 public interface OrgUnitMapper {
 
+  @Mapping(target = "tenantId", source = "tenantId")
   @Mapping(target = "orgHierarchies", source = "hierarchies")
   OrgUnitJpa toJpa(OrgUnit orgUnit);
 
+  @Mapping(target = "tenantId", source = "tenantId")
   @Mapping(target = "hierarchies", source = "orgHierarchies")
   OrgUnit toDomain(OrgUnitJpa jpa);
 
@@ -27,6 +31,10 @@ public interface OrgUnitMapper {
   @Mapping(target = "costDescription", source = "costCenter.description")
   OrgUnitResponse toResponse(OrgUnit orgUnit);
 
+  @Mapping(target = "tenantId", source = "tenantId")
+  @Mapping(target = "orgHierarchies", ignore = true)
+  void updateJpa(OrgUnit orgUnit, @MappingTarget OrgUnitJpa orgUnitJpa);
+
   @AfterMapping
   default void setBackReference(@MappingTarget OrgUnitJpa orgUnitJpa) {
     if (orgUnitJpa.getOrgHierarchies() == null) {
@@ -34,6 +42,7 @@ public interface OrgUnitMapper {
     }
     for (OrgHierarchyJpa hierarchy : orgUnitJpa.getOrgHierarchies()) {
       hierarchy.setChildUnit(orgUnitJpa);
+      hierarchy.setTenantId(orgUnitJpa.getTenantId());
     }
   }
 

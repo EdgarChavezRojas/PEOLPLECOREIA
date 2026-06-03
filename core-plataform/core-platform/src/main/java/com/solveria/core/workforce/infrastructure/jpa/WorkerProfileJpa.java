@@ -9,7 +9,6 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -54,7 +53,6 @@ public class WorkerProfileJpa extends BaseEntity {
 
   @Column(name = "job_title")
   private String jobTitle;
-
 
   @Override
   public final boolean equals(Object o) {

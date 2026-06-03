@@ -29,7 +29,16 @@ public class NotificationRepositoryAdapter implements NotificationPO {
   @Transactional
   public void save(Notification notification) {
 
-    NotificationJpa jpa = mapper.toJpa(notification);
+    NotificationJpa jpa =
+        repository
+            .findById(notification.getNotificationId())
+            .map(
+                existing -> {
+                  mapper.updateJpa(existing, notification);
+                  return existing;
+                })
+            .orElseGet(() -> mapper.toJpa(notification));
+
     repository.save(jpa);
     eventOutboxPort.publish(notification.pullDomainEvents());
   }

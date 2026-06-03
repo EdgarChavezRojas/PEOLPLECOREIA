@@ -40,6 +40,7 @@ public interface AttendanceLedgerMapper {
   // ─── AttendanceLedger ────────────────────────────────────────────────────
 
   @Mapping(target = "tenantId", source = "tenantId", qualifiedByName = "uuidToString")
+  @Mapping(target = "orgUnitId", source = "orgUnitId")
   @Mapping(target = "workedHoursSummary", ignore = true) // set manually by adapter
   @Mapping(target = "timeEntries", ignore = true) // children managed by adapter
   @Mapping(target = "deviations", ignore = true)

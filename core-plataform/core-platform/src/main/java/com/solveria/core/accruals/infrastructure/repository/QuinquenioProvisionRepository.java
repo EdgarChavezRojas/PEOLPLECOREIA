@@ -9,4 +9,6 @@ public interface QuinquenioProvisionRepository extends JpaRepository<QuinquenioP
 
   Optional<QuinquenioProvisionJpa> findByRelationshipIdAndTenantId(
       UUID relationshipId, UUID tenantId);
+
+  Optional<QuinquenioProvisionJpa> findByRelationshipId(UUID relationshipId);
 }

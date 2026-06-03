@@ -3,6 +3,7 @@ package com.solveria.core.workforce.application.usecase;
 import com.solveria.core.workforce.application.port.PositionRepositoryPort;
 import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.Position;
+import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ public class AssignPersonToPositionUseCase {
 
   private final PositionRepositoryPort positionRepositoryPort;
 
+  @Transactional
   public void execute(UUID positionId, UUID tenantId, UUID personId) {
     Position position =
         positionRepositoryPort

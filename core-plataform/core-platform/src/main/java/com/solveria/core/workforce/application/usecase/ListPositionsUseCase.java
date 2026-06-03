@@ -5,6 +5,7 @@ import com.solveria.core.workforce.application.dto.PositionResponse;
 import com.solveria.core.workforce.application.port.PositionRepositoryPort;
 import com.solveria.core.workforce.domain.model.vo.PositionStatus;
 import com.solveria.core.workforce.infrastructure.mapper.PositionMapper;
+import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,7 @@ public class ListPositionsUseCase {
   private final PositionRepositoryPort positionRepositoryPort;
   private final PositionMapper positionMapper;
 
+  @Transactional
   public Page<PositionResponse> execute(Pageable pageable, PositionStatus status) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     Page<com.solveria.core.workforce.domain.model.Position> positions =

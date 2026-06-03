@@ -54,5 +54,4 @@ public class AssignedAssetJpa extends BaseEntity {
   private LocalDateTime returnedAt;
 
   @Embedded private AssetDescriptorEmbeddable descriptor;
-
 }

@@ -1,7 +1,6 @@
 package com.solveria.core.iam.infrastructure.persistence.entity;
 
 import com.solveria.core.shared.base.BaseEntity;
-import com.solveria.core.workforce.domain.model.Relationship;
 import jakarta.persistence.*;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,9 +35,9 @@ public class UserJpaEntity extends BaseEntity {
 
   @ManyToMany(fetch = FetchType.EAGER)
   @JoinTable(
-          name = "iam_user_roles",
-          joinColumns = @JoinColumn(name = "user_id"),
-          inverseJoinColumns = @JoinColumn(name = "role_id"))
+      name = "iam_user_roles",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<RoleJpaEntity> roles = new HashSet<>();
 
   protected UserJpaEntity() {

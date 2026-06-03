@@ -51,7 +51,6 @@ public class AcademicProfileJpa extends BaseEntity {
   @Column(name = "teaching_load")
   private Integer teachingLoad;
 
-
   @Override
   public final boolean equals(Object o) {
     if (this == o) return true;

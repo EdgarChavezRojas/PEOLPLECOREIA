@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 /** Spring Data JPA Repository: HealthProvider. */
 @Repository
-public interface HealthProviderRepository extends JpaRepository<HealthProviderJpa, Long> {
+public interface HealthProviderRepository extends JpaRepository<HealthProviderJpa, UUID> {
 
   Optional<HealthProviderJpa> findByProviderIdAndTenantId(UUID providerId, UUID tenantId);
 }

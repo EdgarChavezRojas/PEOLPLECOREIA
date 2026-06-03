@@ -13,7 +13,7 @@ public interface BenefitsRepositoryPort {
 
   HolidayCalendar saveHoliday(HolidayCalendar holiday);
 
-  List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate);
+  List<HolidayCalendar> findHolidaysBetween(LocalDate startDate, LocalDate endDate, UUID tenantId);
 
   QuinquenioProvision saveQuinquenio(QuinquenioProvision provision);
 

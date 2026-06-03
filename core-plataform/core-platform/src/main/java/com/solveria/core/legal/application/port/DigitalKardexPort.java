@@ -5,5 +5,6 @@ import java.util.UUID;
 
 public interface DigitalKardexPort {
 
-  String storeEvidence(UUID contractId, UUID tenantId, byte[] fileContent, Instant generatedAt);
+  String storeEvidence(
+      UUID contractId, UUID relationshipId, UUID tenantId, byte[] fileContent, Instant generatedAt);
 }

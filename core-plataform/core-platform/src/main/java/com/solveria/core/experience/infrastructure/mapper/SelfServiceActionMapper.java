@@ -22,6 +22,9 @@ public interface SelfServiceActionMapper {
   @Mapping(target = "approvalWorkflow", ignore = true)
   SelfServiceActionJpa toJpa(SelfServiceAction action);
 
+  @Mapping(target = "approvalWorkflow", ignore = true)
+  void updateJpa(@MappingTarget SelfServiceActionJpa jpa, SelfServiceAction action);
+
   @AfterMapping
   default void enrichJpa(@MappingTarget SelfServiceActionJpa jpa, SelfServiceAction action) {
     if (jpa == null) return;
@@ -35,14 +38,26 @@ public interface SelfServiceActionMapper {
       jpa.setCertSha256Hash(cert.sha256Hash());
       jpa.setCertQrUrl(cert.qrValidationUrl());
       jpa.setCertGeneratedAt(cert.generatedAt());
+    } else {
+      jpa.setCertType(null);
+      jpa.setCertPdfContent(null);
+      jpa.setCertSha256Hash(null);
+      jpa.setCertQrUrl(null);
+      jpa.setCertGeneratedAt(null);
     }
 
     // Map approval workflow
     ApprovalWorkflow wf = action.getApprovalWorkflow();
     if (wf != null) {
-      ApprovalWorkflowJpa wfJpa = new ApprovalWorkflowJpa();
+      ApprovalWorkflowJpa wfJpa = jpa.getApprovalWorkflow();
+      if (wfJpa == null) {
+        wfJpa = new ApprovalWorkflowJpa();
+        wfJpa.setSelfServiceAction(jpa);
+        wfJpa.setTenantId(action.getTenantId());
+      } else if (wfJpa.getTenantId() == null) {
+        wfJpa.setTenantId(action.getTenantId());
+      }
       wfJpa.setWorkflowId(wf.getWorkflowId());
-      wfJpa.setSelfServiceAction(jpa);
       wfJpa.setCurrentStep(wf.getCurrentStep());
       wfJpa.setStatus(wf.getStatus());
       wfJpa.setCreatedAt(wf.getCreatedAt());
@@ -52,6 +67,8 @@ public interface SelfServiceActionMapper {
         wfJpa.setHistory("[]");
       }
       jpa.setApprovalWorkflow(wfJpa);
+    } else {
+      jpa.setApprovalWorkflow(null);
     }
   }
 

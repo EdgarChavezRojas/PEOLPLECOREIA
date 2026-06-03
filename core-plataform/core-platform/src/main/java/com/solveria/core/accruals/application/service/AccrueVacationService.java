@@ -7,6 +7,7 @@ import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundExcepti
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccrueVacationService implements AccrueVacationUseCase {
@@ -18,6 +19,7 @@ public class AccrueVacationService implements AccrueVacationUseCase {
   }
 
   @Override
+  @Transactional
   public AccrualBalance handle(AccrueVacationCommand command) {
     LocalizationPolicy.requireSantaCruz(command.location());
     AccrualBalance balance =

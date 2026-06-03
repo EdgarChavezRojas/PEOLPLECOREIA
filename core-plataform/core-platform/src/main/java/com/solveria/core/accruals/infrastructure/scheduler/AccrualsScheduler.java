@@ -42,7 +42,7 @@ public class AccrualsScheduler {
    * antigüedad (SeniorityMilestone) necesarios para activar los multiplicadores del Bono de
    * Antigüedad.
    */
-  @Scheduled(cron = "0 0 0 1 * ?")
+  @Scheduled(cron = "${accruals.cron.monthly-vacation-seniority}")
   @Transactional
   public void runMonthlyVacationAndSeniority() {
     LocalDate today = LocalDate.now();
@@ -100,7 +100,7 @@ public class AccrualsScheduler {
    * Quinquenio y Beneficios (Aguinaldo, Prima). Garantiza el fondeo progresivo de los pasivos
    * laborales (típicamente sumando el 8.33% mensual).
    */
-  @Scheduled(cron = "0 5 0 1 * ?")
+  @Scheduled(cron = "${accruals.cron.monthly-financial-provisions}")
   @Transactional
   public void runMonthlyFinancialProvisions() {
     List<QuinquenioProvision> quinquenioProvisions =
@@ -148,7 +148,7 @@ public class AccrualsScheduler {
    * que han pasado más de 30 días calendario sin registro de desembolso, activa irreversiblemente
    * la multa del 30% (P8 de la normativa).
    */
-  @Scheduled(cron = "0 0 0 * * ?")
+  @Scheduled(cron = "${accruals.cron.daily-legal-audit}")
   @Transactional
   public void runDailyLegalAudit() {
     LocalDate today = LocalDate.now();
@@ -167,7 +167,8 @@ public class AccrualsScheduler {
                   provision.getTenantId());
               return;
             }
-            provision.evaluatePenalty(requestDate.get(), today, paymentDate.orElse(null));
+            provision.evaluatePenalty(
+                requestDate.get(), today, paymentDate.orElse(null), provision.getTenantId());
             benefitsRepository.saveQuinquenio(provision);
           });
     }

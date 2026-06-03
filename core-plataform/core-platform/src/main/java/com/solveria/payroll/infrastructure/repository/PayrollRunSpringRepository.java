@@ -1,6 +1,7 @@
 package com.solveria.payroll.infrastructure.repository;
 
 import com.solveria.payroll.infrastructure.jpa.PayrollRunJpa;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +17,9 @@ public interface PayrollRunSpringRepository extends JpaRepository<PayrollRunJpa,
 
   @Query(
       "SELECT r FROM PayrollRunJpa r LEFT JOIN FETCH r.lines WHERE r.periodRef = :periodRef AND r.tenantId = :tenantId")
-  Optional<PayrollRunJpa> findByPeriodAndTenant(
+  List<PayrollRunJpa> findByPeriodAndTenant(
       @Param("periodRef") UUID periodRef, @Param("tenantId") UUID tenantId);
+
+  @Query("SELECT r FROM PayrollRunJpa r WHERE r.tenantId = :tenantId ORDER BY r.createdAt DESC")
+  List<PayrollRunJpa> findAllByTenantId(@Param("tenantId") UUID tenantId);
 }

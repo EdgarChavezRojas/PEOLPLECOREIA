@@ -32,6 +32,7 @@ public class Person extends DomainRoot {
   private LocalDate updatedAt;
   private String DNI;
   private Long userId;
+  private UUID tenantId;
   private static final int MINIMUM_AGE = 18;
 
   public Person() {}
@@ -51,7 +52,8 @@ public class Person extends DomainRoot {
       String mergedIntoGlobalId,
       Instant createdAt,
       LocalDate updatedAt,
-      String DNI) {
+      String DNI,
+      UUID tenantId) {
     this.personId = personId;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -67,6 +69,7 @@ public class Person extends DomainRoot {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.DNI = DNI;
+    this.tenantId = tenantId;
   }
 
   public Person(
@@ -85,7 +88,8 @@ public class Person extends DomainRoot {
       Instant createdAt,
       LocalDate updatedAt,
       String DNI,
-      Long userId) {
+      Long userId,
+      UUID tenantId) {
     this.personId = personId;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -102,6 +106,7 @@ public class Person extends DomainRoot {
     this.updatedAt = updatedAt;
     this.DNI = DNI;
     this.userId = userId;
+    this.tenantId = tenantId;
   }
 
   // Getters y Setters
@@ -228,7 +233,8 @@ public class Person extends DomainRoot {
       String professionTitle,
       String globalId,
       ContactPoint contactPoint,
-      String DNI) {
+      String DNI,
+      UUID tenantId) {
     Period age = Period.between(birthDate, LocalDate.now());
     if (age.getYears() < MINIMUM_AGE) {
       throw new IllegalArgumentException("La persona debe tener minimo " + MINIMUM_AGE + " anos");
@@ -258,7 +264,9 @@ public class Person extends DomainRoot {
             null,
             Instant.now(),
             LocalDate.now(),
-            DNI    );
+            DNI,
+            null, // userId
+            tenantId);
     person.registerEvent(
         new PersonCreatedEvent(person.getPersonId(), person.getGlobalId(), Instant.now()));
     return person;
@@ -335,9 +343,11 @@ public class Person extends DomainRoot {
   public String getFullName() {
     return firstName + " " + lastName;
   }
+
   public String getDNI() {
     return DNI;
   }
+
   public void setDNI(String DNI) {
     this.DNI = DNI;
   }
@@ -348,5 +358,13 @@ public class Person extends DomainRoot {
 
   public void setUserId(Long userId) {
     this.userId = userId;
+  }
+
+  public UUID getTenantId() {
+    return tenantId;
+  }
+
+  public void setTenantId(UUID tenantId) {
+    this.tenantId = tenantId;
   }
 }

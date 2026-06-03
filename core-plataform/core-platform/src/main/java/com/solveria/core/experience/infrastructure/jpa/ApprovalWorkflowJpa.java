@@ -2,7 +2,6 @@ package com.solveria.core.experience.infrastructure.jpa;
 
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.Instant;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,5 +39,4 @@ public class ApprovalWorkflowJpa extends BaseEntity {
   /** Invariante SoD: historial serializado como JSON (Quién/Cuándo). */
   @Column(name = "history", columnDefinition = "TEXT")
   private String history;
-
 }

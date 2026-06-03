@@ -4,4 +4,9 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.time.Instant;
 import java.util.UUID;
 
-public record ContractTerminatedEvent(UUID contractId, Instant occurredAt) implements DomainEvent {}
+public record ContractTerminatedEvent(UUID contractId, UUID tenantId, Instant occurredAt)
+    implements DomainEvent {
+  public ContractTerminatedEvent(UUID contractId, Instant occurredAt) {
+    this(contractId, null, occurredAt);
+  }
+}

@@ -28,7 +28,7 @@ public class SharedOutboxMessageJpaEntity {
   @Column(name = "aggregate_id")
   private UUID aggregateId;
 
-  @Column(name = "type", length = 100, nullable = false)
+  @Column(name = "type", length = 255, nullable = false)
   private String type;
 
   @Column(name = "payload", columnDefinition = "TEXT", nullable = false)
@@ -47,6 +47,10 @@ public class SharedOutboxMessageJpaEntity {
   @Column(name = "error_log", columnDefinition = "TEXT")
   private String errorLog;
 
+  @Column(name = "retry_count", nullable = false)
+  @Builder.Default
+  private int retryCount = 0;
+
   protected SharedOutboxMessageJpaEntity() {}
 
   public SharedOutboxMessageJpaEntity(
@@ -58,7 +62,8 @@ public class SharedOutboxMessageJpaEntity {
       OutboxState state,
       LocalDateTime createdAt,
       LocalDateTime processedAt,
-      String errorLog) {
+      String errorLog,
+      int retryCount) {
     this.eventId = eventId;
     this.aggregateType = aggregateType;
     this.aggregateId = aggregateId;
@@ -68,6 +73,7 @@ public class SharedOutboxMessageJpaEntity {
     this.createdAt = createdAt;
     this.processedAt = processedAt;
     this.errorLog = errorLog;
+    this.retryCount = retryCount;
   }
 
   public UUID getEventId() {
@@ -106,12 +112,29 @@ public class SharedOutboxMessageJpaEntity {
     return errorLog;
   }
 
+  public int getRetryCount() {
+    return retryCount;
+  }
+
   public void markProcessed(LocalDateTime processedAt) {
     this.state = OutboxState.PROCESSED;
     this.processedAt = processedAt;
     this.errorLog = null;
   }
 
+  /**
+   * Incrementa el contador de reintentos y registra el error.
+   * El estado se mantiene en PENDING para que el relay lo recoja de nuevo.
+   */
+  public void incrementRetry(LocalDateTime processedAt, String errorLog) {
+    this.retryCount++;
+    this.processedAt = processedAt;
+    this.errorLog = errorLog;
+  }
+
+  /**
+   * Marca el evento como FAILED definitivo (no se reintentará más).
+   */
   public void markFailed(LocalDateTime processedAt, String errorLog) {
     this.state = OutboxState.FAILED;
     this.processedAt = processedAt;

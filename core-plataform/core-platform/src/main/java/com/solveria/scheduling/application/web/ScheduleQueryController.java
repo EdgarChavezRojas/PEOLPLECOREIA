@@ -15,13 +15,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Controlador REST para consultas asociadas a planificación de horarios y turnos.
- */
+/** Controlador REST para consultas asociadas a planificación de horarios y turnos. */
 @RestController
 @RequestMapping("/api/v1/schedules")
 @RequiredArgsConstructor
-@Tag(name = "Schedule Queries", description = "Endpoints para consultas de horarios de trabajadores")
+@Tag(
+    name = "Schedule Queries",
+    description = "Endpoints para consultas de horarios de trabajadores")
 public class ScheduleQueryController {
 
   private final ScheduleQueryUseCase scheduleQueryUseCase;
@@ -37,20 +37,30 @@ public class ScheduleQueryController {
   @GetMapping("/employees/{relationshipId}")
   @Operation(
       summary = "Obtener el horario/turnos de un empleado en un rango de fechas",
-      description = "Retorna una lista con todos los turnos asignados y activos de un empleado específico en un rango de fechas determinado.")
+      description =
+          "Retorna una lista con todos los turnos asignados y activos de un empleado específico en un rango de fechas determinado.")
   @ApiResponses({
     @ApiResponse(
         responseCode = "200",
         description = "Horario recuperado exitosamente",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ScheduleEmployeeResponseDto.class))),
-    @ApiResponse(responseCode = "400", description = "Solicitud inválida o empleado inactivo", content = @Content),
+        content =
+            @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ScheduleEmployeeResponseDto.class))),
+    @ApiResponse(
+        responseCode = "400",
+        description = "Solicitud inválida o empleado inactivo",
+        content = @Content),
     @ApiResponse(responseCode = "404", description = "Recurso no encontrado", content = @Content),
-    @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = @Content)
+    @ApiResponse(
+        responseCode = "500",
+        description = "Error interno del servidor",
+        content = @Content)
   })
   public ResponseEntity<ScheduleEmployeeResponseDto> getEmployeeSchedule(
-      @PathVariable UUID relationshipId,
-      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+      @PathVariable("relationshipId") UUID relationshipId,
+      @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
     ScheduleEmployeeResponseDto response =
         scheduleQueryUseCase.getEmployeeSchedule(relationshipId, startDate, endDate);

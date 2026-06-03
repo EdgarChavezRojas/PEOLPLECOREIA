@@ -15,6 +15,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import com.solveria.core.shared.pagination.PageUtils;
+import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -44,6 +46,7 @@ public class PersonController {
     PersonMeResponse response = getPersonMeUseCase.execute(userId);
     return ResponseEntity.ok(response);
   }
+
   @PostMapping
   @Operation(
       summary = "Crear registro maestro de persona",
@@ -104,14 +107,14 @@ public class PersonController {
 
   @GetMapping("/dni")
   @Operation(
-          summary = "Obtener persona por DNI",
-          description = "Busca un registro de persona utilizando su DNI. Retorna 404 si no se encuentra la persona."
-  )
+      summary = "Obtener persona por DNI",
+      description =
+          "Busca un registro de persona utilizando su DNI. Retorna 404 si no se encuentra la persona.")
   @ApiResponses({
-          @ApiResponse(responseCode = "204", description = "Persona encontrada"),
-          @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
-          @ApiResponse(responseCode = "404", description = "Persona no encontrada", content = @Content),
-          @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+    @ApiResponse(responseCode = "204", description = "Persona encontrada"),
+    @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
+    @ApiResponse(responseCode = "404", description = "Persona no encontrada", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
   })
   public ResponseEntity<GetPersonByDNIResponse> getByDNI(@RequestParam String dni) {
 
@@ -121,21 +124,19 @@ public class PersonController {
     }
     return ResponseEntity.ok(response);
   }
+
   @GetMapping
   @Operation(
-          summary = "Listar personas",
-          description = "Obtiene un listado paginado de personas registradas en el sistema."
-  )
+      summary = "Listar personas",
+      description = "Obtiene un listado paginado de personas registradas en el sistema.")
   @ApiResponses({
-          @ApiResponse(responseCode = "200", description = "Listado paginado obtenido"),
-          @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
-          @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
-          @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+    @ApiResponse(responseCode = "200", description = "Listado paginado obtenido"),
+    @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
+    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
   })
-  public ResponseEntity<Page<PersonResponse>> list(
-          Pageable pageable
-  ) {
-    return ResponseEntity.ok(getAllPersonsUseCase.execute(pageable));
-
+  public ResponseEntity<Page<PersonResponse>> list(Pageable pageable) {
+    Pageable sanitized = PageUtils.sanitize(pageable, PersonJpa.class);
+    return ResponseEntity.ok(getAllPersonsUseCase.execute(sanitized));
   }
 }

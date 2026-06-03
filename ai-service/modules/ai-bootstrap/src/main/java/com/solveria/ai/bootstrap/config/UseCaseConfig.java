@@ -2,17 +2,15 @@ package com.solveria.ai.bootstrap.config;
 
 import com.solveria.ai.application.port.in.CompletePromptUseCase;
 import com.solveria.ai.application.port.in.RagQaUseCase;
-import com.solveria.ai.application.port.out.AuditPort;
-import com.solveria.ai.application.port.out.LlmChatPort;
-import com.solveria.ai.application.port.out.LlmPort;
-import com.solveria.ai.application.port.out.TenantContextPort;
-import com.solveria.ai.application.port.out.VectorStorePort;
+import com.solveria.ai.application.port.out.*;
 import com.solveria.ai.application.service.CompletePromptService;
 import com.solveria.ai.application.service.RagQaService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @Configuration
+@EnableAsync
 public class UseCaseConfig {
 
     @Bean
@@ -27,5 +25,13 @@ public class UseCaseConfig {
             LlmChatPort llmChat,
             AuditPort audit) {
         return new RagQaService(tenantContext, vectorStore, llmChat, audit);
+    }
+
+    @Bean
+    public com.solveria.ai.application.port.in.IngestAttendancePeriodUseCase
+            ingestAttendancePeriodUseCase(
+                    com.solveria.ai.application.port.out.VectorIngestionPort vectorIngestionPort) {
+        return new com.solveria.ai.application.service.IngestAttendancePeriodService(
+                vectorIngestionPort);
     }
 }

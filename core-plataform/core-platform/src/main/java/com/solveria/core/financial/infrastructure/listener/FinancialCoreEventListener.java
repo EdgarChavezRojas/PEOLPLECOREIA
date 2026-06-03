@@ -1,4 +1,4 @@
-package com.solveria.core.financial.infrastructure.messaging.listeners;
+package com.solveria.core.financial.infrastructure.listener;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,13 +13,13 @@ import com.solveria.core.financial.application.usecase.ImputeAnalyticTerritorial
 import com.solveria.core.financial.application.usecase.ProcessLiquidationUseCase;
 import com.solveria.core.financial.application.usecase.ProcessQuinquenioPaymentUseCase;
 import com.solveria.core.financial.application.usecase.SyncBankAccountUseCase;
-import com.solveria.payroll.application.port.inbound.ApplyLeaveAdjustmentsUseCase;
 import com.solveria.core.financial.application.usecase.ValidateFundingSourceUseCase;
 import com.solveria.core.financial.domain.event.QuinquenioRequestedEvent;
 import com.solveria.core.legal.domain.event.ContractApprovedEvent;
 import com.solveria.core.legal.domain.event.ContractDraftedEvent;
 import com.solveria.core.legal.domain.event.ContractTerminatedEvent;
 import com.solveria.core.workforce.domain.event.OrgUnitAssignedChangedEvent;
+import com.solveria.payroll.application.port.inbound.ApplyLeaveAdjustmentsUseCase;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -308,8 +308,8 @@ public class FinancialCoreEventListener {
   // ──────────────────────────────────────────────────────────────────────────
 
   /**
-   * Reacciona a la aprobación gerencial de una solicitud de ausencia (Accruals BC).
-   * Intercepta el evento para futuro ajuste de nómina (vales/primas por vacaciones).
+   * Reacciona a la aprobación gerencial de una solicitud de ausencia (Accruals BC). Intercepta el
+   * evento para futuro ajuste de nómina (vales/primas por vacaciones).
    */
   @EventListener
   @Transactional
@@ -320,7 +320,8 @@ public class FinancialCoreEventListener {
         event.transactionId(),
         event.daysRequested());
     try {
-      applyLeaveAdjustmentsUseCase.applyAdjustments(event.transactionId(), event.daysRequested(), event.tenantId());
+      applyLeaveAdjustmentsUseCase.applyAdjustments(
+          event.transactionId(), event.daysRequested(), event.tenantId());
 
       log.info(
           "event=FINANCIAL_LEAVE_APPROVED_PROCESSED balanceId={} transactionId={}",

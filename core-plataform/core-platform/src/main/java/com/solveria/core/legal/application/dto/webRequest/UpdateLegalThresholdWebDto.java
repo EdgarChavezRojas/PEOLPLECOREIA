@@ -8,10 +8,8 @@ import java.util.UUID;
 
 public record UpdateLegalThresholdWebDto(
     @NotBlank(message = "El nombre de la regla (ruleName) es obligatorio") String ruleName,
-    @NotNull(message = "El nuevo valor (newValue) es obligatorio") BigDecimal newValue,
-    @NotBlank(message = "El userId es obligatorio") String userId) {
-  public UpdateLegalThresholdRequest toCommand(UUID tenantId) {
-    return new UpdateLegalThresholdRequest(
-        this.ruleName(), this.newValue(), tenantId, this.userId());
+    @NotNull(message = "El nuevo valor (newValue) es obligatorio") BigDecimal newValue) {
+  public UpdateLegalThresholdRequest toCommand(UUID tenantId, String userId) {
+    return new UpdateLegalThresholdRequest(this.ruleName(), this.newValue(), tenantId, userId);
   }
 }

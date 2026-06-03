@@ -260,6 +260,14 @@ public class Relationship extends DomainRoot {
   }
 
   public void updateEmploymentCondition(EmploymentCondition condition) {
+    if (RelationshipStatus.SUSPENDED.equals(this.currentStatus)) {
+      throw new IllegalStateException(
+          "No se puede actualizar la condicion del empleado en una relación en estado SUSPENDED.");
+    }
+    if (RelationshipStatus.TERMINATED.equals(this.currentStatus)) {
+      throw new IllegalStateException(
+          "No se puede actualizar la condicion del empleado en estado TERMINATED.");
+    }
     if (condition == null) {
       throw new SolverException("EMPLOYMENT_CONDITION_REQUIRED");
     }

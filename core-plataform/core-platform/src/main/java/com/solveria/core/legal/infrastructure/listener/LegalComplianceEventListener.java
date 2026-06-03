@@ -12,6 +12,7 @@ import com.solveria.core.legal.application.usecase.*;
 import com.solveria.core.legal.domain.event.AddendumSalaryAdjustmentApprovedEvent;
 import com.solveria.core.legal.domain.event.ContractApprovedEvent;
 import com.solveria.core.legal.domain.event.LegalThresholdUpdatedEvent;
+import com.solveria.core.legal.domain.exception.EvidenceDataMissingException;
 import com.solveria.core.legal.domain.model.vo.ContractStatus;
 import com.solveria.core.legal.domain.model.vo.ContractType;
 import com.solveria.core.legal.infrastructure.jpa.ContractJpa;
@@ -226,10 +227,18 @@ public class LegalComplianceEventListener {
     contractRepositoryPort
         .findById(event.contractId())
         .ifPresent(
-            contract ->
+            contract -> {
+              try {
                 generateContractEvidenceUseCase.execute(
                     new GenerateContractEvidenceRequest(
-                        event.contractId(), contract.getTenantId())));
+                        event.contractId(), contract.getTenantId()));
+              } catch (EvidenceDataMissingException ex) {
+                log.warn(
+                    "No se pudo generar la evidencia de cumplimiento para el contrato aprobado {} en este momento porque falta información (adenda aprobada): {}",
+                    event.contractId(),
+                    ex.getMessage());
+              }
+            });
   }
 
   @Transactional

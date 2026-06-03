@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solveria.core.dossier.domain.event.DocentAcademicTitleVerifiedEvent;
 import com.solveria.core.experience.domain.event.DataChangeRequestedEvent;
+import com.solveria.core.legal.application.port.ContractRepositoryPort;
 import com.solveria.core.legal.domain.event.ContractApprovedEvent;
 import com.solveria.core.legal.domain.event.ContractTerminatedEvent;
 import com.solveria.core.security.context.SecurityTenantContext;
@@ -32,6 +33,7 @@ public class WorkforceIntegrationConsumer {
   private final UpdatePersonUseCase updatePersonUseCase;
   private final ReactivateRelationshipUseCase reactivateRelationshipUseCase;
   private final TerminateRelationshipUseCase terminateRelationshipUseCase;
+  private final ContractRepositoryPort contractRepositoryPort;
   private final ObjectMapper objectMapper;
 
   @EventListener
@@ -86,17 +88,29 @@ public class WorkforceIntegrationConsumer {
   @EventListener
   @Transactional
   public void handle(ContractApprovedEvent event) {
-    log.info("Procesando evento CONTRACT_APPROVED. Reactivando relación: {}", event.contractId());
-    // Se asume que contractId en Legal es el mismo relationshipId en Workforce
-    reactivateRelationshipUseCase.execute(event.contractId());
+    log.info(
+        "Procesando evento CONTRACT_APPROVED. Reactivando relación para contrato: {}",
+        event.contractId());
+    UUID relationshipId =
+        contractRepositoryPort
+            .findById(event.contractId())
+            .map(com.solveria.core.legal.domain.model.Contract::getRelationshipId)
+            .orElse(event.contractId());
+    reactivateRelationshipUseCase.execute(relationshipId, event.tenantId());
   }
 
   @EventListener
   @Transactional
   public void handle(ContractTerminatedEvent event) {
-    log.info("Procesando evento CONTRACT_TERMINATED. Terminando relación: {}", event.contractId());
-    // Tu caso de uso exige un motivo. Proveemos uno automático para trazabilidad.
+    log.info(
+        "Procesando evento CONTRACT_TERMINATED. Terminando relación para contrato: {}",
+        event.contractId());
+    UUID relationshipId =
+        contractRepositoryPort
+            .findById(event.contractId())
+            .map(com.solveria.core.legal.domain.model.Contract::getRelationshipId)
+            .orElse(event.contractId());
     String reason = "Finalización de contrato confirmada desde evento Legal/Compliance";
-    terminateRelationshipUseCase.execute(event.contractId(), reason);
+    terminateRelationshipUseCase.execute(relationshipId, reason, event.tenantId());
   }
 }

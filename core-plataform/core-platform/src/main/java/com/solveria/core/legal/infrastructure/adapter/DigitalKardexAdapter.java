@@ -19,7 +19,7 @@ public class DigitalKardexAdapter implements DigitalKardexPort {
   private final VerifyDocumentComplianceUseCase verifyDocumentComplianceUseCase;
 
   // Constantes por defecto para la integración
-  private static final String DEFAULT_LOCATION = "Santa Cruz";
+  private static final String DEFAULT_LOCATION = "Santa Cruz, Bolivia";
   private static final String DEFAULT_TENANT_SEGMENT =
       "Corporativo"; // O el que aplique por defecto
   private static final String DOC_TYPE_CONTRACT = "EVIDENCIA_CONTRATO_WORM";
@@ -30,7 +30,11 @@ public class DigitalKardexAdapter implements DigitalKardexPort {
 
   @Override
   public String storeEvidence(
-      UUID contractId, UUID tenantId, byte[] fileContent, Instant generatedAt) {
+      UUID contractId,
+      UUID relationshipId,
+      UUID tenantId,
+      byte[] fileContent,
+      Instant generatedAt) {
 
     LocalDate expiryDate = LocalDate.ofInstant(generatedAt, ZoneId.systemDefault()).plusYears(5);
 
@@ -38,7 +42,7 @@ public class DigitalKardexAdapter implements DigitalKardexPort {
     VerifyDocumentComplianceCommand command =
         new VerifyDocumentComplianceCommand(
             null,
-            contractId,
+            relationshipId,
             DocumentCategory.LEGAL,
             DOC_TYPE_CONTRACT,
             true,

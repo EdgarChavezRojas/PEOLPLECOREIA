@@ -50,7 +50,9 @@ public class OrgUnit extends DomainRoot {
   public enum OrgUnitType {
     ADMINISTRATIVE("Administrativa"),
     ACADEMIC("Academica"),
-    COMMERCIAL("Comercial");
+    COMMERCIAL("Comercial"),
+    COMPANY("Empresa"),
+    DEPARTMENT("Departamento");
 
     private final String label;
 

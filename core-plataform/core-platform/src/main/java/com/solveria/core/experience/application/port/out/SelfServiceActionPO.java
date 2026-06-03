@@ -1,7 +1,6 @@
 package com.solveria.core.experience.application.port.out;
 
 import com.solveria.core.experience.domain.model.SelfServiceAction;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +14,6 @@ public interface SelfServiceActionPO {
   Optional<SelfServiceAction> findById(UUID actionId);
 
   List<SelfServiceAction> findByPersonId(UUID personId);
-  BigDecimal getAvailableLeaveBalance(UUID personId);
 
+  BigDecimal getAvailableLeaveBalance(UUID personId);
 }

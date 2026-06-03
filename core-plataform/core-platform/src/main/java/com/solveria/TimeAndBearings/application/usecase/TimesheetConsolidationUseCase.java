@@ -28,7 +28,6 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -251,7 +250,6 @@ public class TimesheetConsolidationUseCase implements TimesheetConsolidationPort
    * </ol>
    */
   @Override
-  @Scheduled(cron = "0 5 17 * * *")
   public void evaluateAndExecuteGracePeriodClosure() {
     Instant serverInstant = clock.instant();
     LocalDateTime serverNow = LocalDateTime.ofInstant(serverInstant, ZoneOffset.UTC);
@@ -293,7 +291,6 @@ public class TimesheetConsolidationUseCase implements TimesheetConsolidationPort
    * <p>En un entorno multi-tenant con múltiples OrgUnits, este CRON debería procesarse en batch;
    * aquí se delega al repositorio la consulta de todos los periodos activos del sistema.
    */
-  @Scheduled(cron = "0 30 0 * * *")
   public void runNightlyConsolidationCron() {
     LocalDateTime serverNow = LocalDateTime.now(clock);
     log.info("[WF-TM03/CRON] Iniciando consolidación nocturna: {}", serverNow);

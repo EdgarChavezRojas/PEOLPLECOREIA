@@ -1,11 +1,9 @@
 package com.solveria.core.legal.application.web;
 
 import com.solveria.core.legal.application.dto.*;
-import com.solveria.core.legal.application.dto.webRequest.ApproveContractAddendumWebDto;
 import com.solveria.core.legal.application.dto.webRequest.DraftContractWebDto;
 import com.solveria.core.legal.application.dto.webRequest.ProposeContractAddendumWebDto;
 import com.solveria.core.legal.application.dto.webRequest.TerminateContractWebDto;
-import com.solveria.core.legal.application.usecase.ApproveContractAddendumUseCase;
 import com.solveria.core.legal.application.usecase.ApproveContractUseCase;
 import com.solveria.core.legal.application.usecase.DraftContractUseCase;
 import com.solveria.core.legal.application.usecase.ProposeContractAddendumUseCase;
@@ -33,19 +31,16 @@ public class ContractLifecycleController {
   private final DraftContractUseCase draftContractUseCase;
   private final ApproveContractUseCase approveContractUseCase;
   private final ProposeContractAddendumUseCase proposeContractAddendumUseCase;
-  private final ApproveContractAddendumUseCase approveContractAddendumUseCase;
   private final TerminateContractUseCase terminateContractUseCase;
 
   public ContractLifecycleController(
       DraftContractUseCase draftContractUseCase,
       ApproveContractUseCase approveContractUseCase,
       ProposeContractAddendumUseCase proposeContractAddendumUseCase,
-      ApproveContractAddendumUseCase approveContractAddendumUseCase,
       TerminateContractUseCase terminateContractUseCase) {
     this.draftContractUseCase = draftContractUseCase;
     this.approveContractUseCase = approveContractUseCase;
     this.proposeContractAddendumUseCase = proposeContractAddendumUseCase;
-    this.approveContractAddendumUseCase = approveContractAddendumUseCase;
     this.terminateContractUseCase = terminateContractUseCase;
   }
 
@@ -140,32 +135,6 @@ public class ContractLifecycleController {
     ContractAddendumResponse response =
         proposeContractAddendumUseCase.execute(request.toCommand(tenantUuid));
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
-  }
-
-  // -------------------------------------------------------------------
-  // 4. Aprobar Adenda Contractual
-  // -------------------------------------------------------------------
-  @PostMapping("/{contractId}/addendums/{addendumId}/approve")
-  @Operation(
-      summary = "Aprobar adenda propuesta",
-      description =
-          "Aprueba y aplica la adenda al contrato, generando una nueva línea de tiempo (Effective Dating).")
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Adenda aprobada exitosamente"),
-    @ApiResponse(
-        responseCode = "403",
-        description = "Forbidden: Violación de Segregación de Funciones (SoD)",
-        content = @Content),
-    @ApiResponse(
-        responseCode = "404",
-        description = "Not Found: Contrato o Adenda no encontrados",
-        content = @Content)
-  })
-  public ResponseEntity<Void> approveAddendum(@RequestBody ApproveContractAddendumWebDto request) {
-
-    UUID tenantUuid = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
-    approveContractAddendumUseCase.execute(request.toCommand(tenantUuid));
-    return ResponseEntity.ok().build();
   }
 
   // -------------------------------------------------------------------

@@ -18,7 +18,7 @@ public record DraftContractWebDto(
   // El DTO sabe cómo convertirse en el Request que el Use Case necesita
   public DraftContractRequest toCommand(UUID tenantId) {
     return new DraftContractRequest(
-        null,
+        this.contractId(),
         this.relationshipId(),
         this.contractType(),
         this.employmentCond(),

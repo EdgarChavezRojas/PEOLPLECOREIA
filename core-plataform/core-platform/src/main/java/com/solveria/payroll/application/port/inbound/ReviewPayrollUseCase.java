@@ -6,4 +6,3 @@ import java.util.UUID;
 public interface ReviewPayrollUseCase {
   void execute(UUID runId, ReviewPayrollRequest request, UUID tenantId);
 }
-

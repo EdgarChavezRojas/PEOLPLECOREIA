@@ -2,7 +2,6 @@ package com.solveria.TimeAndBearings.infrastructure.jpa;
 
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

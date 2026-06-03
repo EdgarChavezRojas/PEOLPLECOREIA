@@ -53,7 +53,6 @@ public class DocumentRecordJpa extends BaseEntity {
 
   @Embedded private DocumentMetadataEmbeddable metadata;
 
-
   @Column(name = "expiration_warning_sent", nullable = false)
   private Boolean expirationWarningSent;
 }

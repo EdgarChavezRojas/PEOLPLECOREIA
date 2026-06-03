@@ -28,4 +28,8 @@ public class PersonResponse {
   private String professionTitle;
   private Instant createdAt;
   private String DNI;
+  private String username;
+  private String tempPassword;
+  // TODO: En el futuro, si se requiere mostrar los roles asignados en la respuesta de creación,
+  // se puede agregar un campo aquí: private java.util.Set<Long> roleIds;
 }

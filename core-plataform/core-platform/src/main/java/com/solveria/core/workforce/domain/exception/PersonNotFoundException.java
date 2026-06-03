@@ -9,4 +9,8 @@ public class PersonNotFoundException extends SolverException {
   public PersonNotFoundException(String message) {
     super(PERSON_NOT_FOUND, message);
   }
+
+  public PersonNotFoundException(String message, Throwable cause) {
+    super(message);
+  }
 }

@@ -16,7 +16,7 @@ public class Position extends DomainRoot {
   private PositionStatus status;
   private Boolean isBudgeted;
   private HeadcountPlan headcountPlan;
-  private UUID personId;
+  private java.util.List<UUID> occupantPersonIds = new java.util.ArrayList<>();
 
   public Position() {}
 
@@ -27,14 +27,14 @@ public class Position extends DomainRoot {
       PositionStatus status,
       Boolean isBudgeted,
       HeadcountPlan headcountPlan,
-      UUID personId) {
+      java.util.List<UUID> occupantPersonIds) {
     this.positionId = positionId;
     this.unitId = unitId;
     this.job = job;
     this.status = status;
     this.isBudgeted = isBudgeted;
     this.headcountPlan = headcountPlan;
-    this.personId = personId;
+    this.occupantPersonIds = occupantPersonIds != null ? occupantPersonIds : new java.util.ArrayList<>();
   }
 
   public UUID getPositionId() {
@@ -62,6 +62,16 @@ public class Position extends DomainRoot {
   }
 
   public PositionStatus getStatus() {
+    if (headcountPlan != null && occupantPersonIds != null) {
+      headcountPlan.setCurrentSlots(occupantPersonIds.size());
+      if (PositionStatus.OCCUPIED.equals(status) && headcountPlan.getCurrentSlots().equals(headcountPlan.getMaxSlots())) {
+        this.status = PositionStatus.FILLED;
+      } else if (PositionStatus.FILLED.equals(status) && headcountPlan.getCurrentSlots() < headcountPlan.getMaxSlots()) {
+        this.status = PositionStatus.OCCUPIED;
+      } else if (headcountPlan.getCurrentSlots() == 0 && (PositionStatus.OCCUPIED.equals(status) || PositionStatus.FILLED.equals(status))) {
+        this.status = PositionStatus.VACANT;
+      }
+    }
     return status;
   }
 
@@ -78,6 +88,9 @@ public class Position extends DomainRoot {
   }
 
   public HeadcountPlan getHeadcountPlan() {
+    if (headcountPlan != null && occupantPersonIds != null) {
+      headcountPlan.setCurrentSlots(occupantPersonIds.size());
+    }
     return headcountPlan;
   }
 
@@ -85,12 +98,12 @@ public class Position extends DomainRoot {
     this.headcountPlan = headcountPlan;
   }
 
-  public UUID getPersonId() {
-    return personId;
+  public java.util.List<UUID> getOccupantPersonIds() {
+    return occupantPersonIds;
   }
 
-  public void setPersonId(UUID personId) {
-    this.personId = personId;
+  public void setOccupantPersonIds(java.util.List<UUID> occupantPersonIds) {
+    this.occupantPersonIds = occupantPersonIds != null ? occupantPersonIds : new java.util.ArrayList<>();
   }
 
   public static Position create(UUID unitId, UUID jobId, Boolean isBudgeted, Integer maxSlots) {
@@ -110,7 +123,7 @@ public class Position extends DomainRoot {
         PositionStatus.VACANT,
         isBudgeted != null ? isBudgeted : false,
         HeadcountPlan.create(maxSlots),
-        null);
+        new java.util.ArrayList<>());
   }
 
   public UUID getJobId() {
@@ -118,25 +131,48 @@ public class Position extends DomainRoot {
   }
 
   public void occupy(UUID personId) {
-    if (!PositionStatus.VACANT.equals(status)) {
-      throw new IllegalStateException("Solo se puede ocupar una posicion vacante");
-    }
     if (personId == null) {
       throw new IllegalArgumentException("personId es requerido para ocupar una posicion");
     }
+    if (!hasVacancy()) {
+      throw new IllegalStateException("No hay plazas vacantes disponibles en esta posicion");
+    }
+    if (occupantPersonIds.contains(personId)) {
+      throw new IllegalStateException("La persona ya esta asignada a esta posicion");
+    }
     headcountPlan.occupy();
-    this.status = PositionStatus.OCCUPIED;
-    this.personId = personId;
+    this.occupantPersonIds.add(personId);
+    if (headcountPlan.getCurrentSlots().equals(headcountPlan.getMaxSlots())) {
+      this.status = PositionStatus.FILLED;
+    } else {
+      this.status = PositionStatus.OCCUPIED;
+    }
     registerEvent(new PositionAssignedEvent(positionId, unitId, Instant.now()));
   }
 
   public void vacate() {
+    this.occupantPersonIds.clear();
+    while (headcountPlan.getCurrentSlots() > 0) {
+      headcountPlan.vacate();
+    }
+    this.status = PositionStatus.VACANT;
+    registerEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
+  }
+
+  public void vacate(UUID personId) {
+    if (personId == null) {
+      throw new IllegalArgumentException("personId es requerido para liberar la posicion");
+    }
+    if (!occupantPersonIds.remove(personId)) {
+      throw new IllegalArgumentException("La persona especificada no ocupa esta posicion");
+    }
     headcountPlan.vacate();
     if (headcountPlan.getCurrentSlots() == 0) {
       this.status = PositionStatus.VACANT;
-      this.personId = null;
-      registerEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
+    } else {
+      this.status = PositionStatus.OCCUPIED;
     }
+    registerEvent(new PositionVacatedEvent(positionId, unitId, Instant.now()));
   }
 
   public void reserve() {
@@ -147,6 +183,12 @@ public class Position extends DomainRoot {
   }
 
   public boolean hasVacancy() {
+    if (headcountPlan == null) {
+      return false;
+    }
+    if (occupantPersonIds != null) {
+      headcountPlan.setCurrentSlots(occupantPersonIds.size());
+    }
     return headcountPlan.hasVacancy();
   }
 

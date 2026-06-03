@@ -6,6 +6,7 @@ import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.Person;
 import com.solveria.core.workforce.domain.model.vo.ContactPoint;
 import com.solveria.core.workforce.domain.model.vo.MaritalStatus;
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class UpdatePersonUseCase {
 
   private final PersonRepositoryPort personRepositoryPort;
 
+  @Transactional
   public void execute(
       UUID personId,
       MaritalStatus maritalStatus,

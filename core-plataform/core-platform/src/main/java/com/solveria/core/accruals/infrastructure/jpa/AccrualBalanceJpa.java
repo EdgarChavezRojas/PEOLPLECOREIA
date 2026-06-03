@@ -68,7 +68,6 @@ public class AccrualBalanceJpa extends BaseEntity {
   @Column(name = "last_accrual_date")
   private LocalDate lastAccrualDate;
 
-
   @OneToMany(mappedBy = "balance", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<LeaveTransactionJpa> leaveTransactions = new ArrayList<>();

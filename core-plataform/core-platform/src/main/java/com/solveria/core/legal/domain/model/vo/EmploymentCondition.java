@@ -14,5 +14,8 @@ public enum EmploymentCondition {
   PF,
 
   /** Jubilado: trabajador en condición de jubilación. */
-  JU
+  JU,
+
+  /** Tiempo Completo. */
+  TC
 }

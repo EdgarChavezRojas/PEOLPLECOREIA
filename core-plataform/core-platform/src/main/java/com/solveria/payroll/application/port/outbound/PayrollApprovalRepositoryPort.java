@@ -8,4 +8,6 @@ public interface PayrollApprovalRepositoryPort {
   PayrollApproval save(PayrollApproval payrollApproval);
 
   Optional<PayrollApproval> findByRunRef(UUID runRef);
+
+  Optional<PayrollApproval> findByApprovalId(UUID approvalId);
 }

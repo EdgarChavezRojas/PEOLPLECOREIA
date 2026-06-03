@@ -2,7 +2,6 @@ package com.solveria.core.legal.infrastructure.jpa;
 
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;

@@ -11,7 +11,7 @@ import com.solveria.core.shared.events.DomainEvent;
 import java.util.Map;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface DocumentRecordMapper {
 
   DocumentRecordJpa toJpa(DocumentRecord record);

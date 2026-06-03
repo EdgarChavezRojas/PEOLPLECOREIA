@@ -29,15 +29,28 @@ public class ContractRepositoryAdapter implements ContractRepositoryPort {
   @Override
   @Transactional
   public void save(Contract contract) {
-    ContractJpa contractJpa = contractMapper.toJpa(contract);
-    contractRepository.save(contractJpa);
+    ContractJpa contractJpa =
+        contractRepository
+            .findByContractId(contract.getContractId())
+            .map(
+                existing -> {
+                  contractMapper.updateJpa(existing, contract);
+                  contractMapper.setBackReference(existing, contract);
+                  return existing;
+                })
+            .orElseGet(() -> contractMapper.toJpa(contract));
 
+    contractRepository.save(contractJpa);
     eventOutboxPort.publish(contract.pullDomainEvents());
   }
 
   @Override
   public Optional<Contract> findById(UUID contractId) {
-    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    if (tenantStr == null || tenantStr.isBlank()) {
+      return contractRepository.findByContractId(contractId).map(contractMapper::toDomain);
+    }
+    UUID currentTenantId = UUID.fromString(tenantStr);
     return contractRepository
         .findByContractIdAndTenantId(contractId, currentTenantId)
         .map(contractMapper::toDomain);

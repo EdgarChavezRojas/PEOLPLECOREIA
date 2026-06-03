@@ -16,6 +16,8 @@ public interface PolicyRuleMapper {
 
   PolicyRuleJpa toJpa(PolicyRule policyRule);
 
+  void updateJpaFromDomain(PolicyRule policyRule, @MappingTarget PolicyRuleJpa policyRuleJpa);
+
   LegalThresholdEmbeddable toEmbeddable(LegalThreshold threshold);
 
   default PolicyRule toDomain(PolicyRuleJpa jpa) {

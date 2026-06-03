@@ -20,11 +20,17 @@ import java.util.stream.Collectors;
  */
 public class RagQaService implements RagQaUseCase {
 
-    private static final int DEFAULT_TOP_K = 5;
+    private static final int DEFAULT_TOP_K = 10;
     private static final String RAG_SYSTEM_TEMPLATE =
             """
         Answer the question based only on the following context. If the context does not contain \
         relevant information, say so. Do not invent facts.
+        The provided context contains consolidated attendance and payroll handover reports that can span multiple distinct historical months or periods (identifiable by dates, period limits, or yearMonth metadata).
+        If the user requests a comparison, analysis of variance, or historical correlation between different months, periods, or dates:
+        1. Identify and isolate the attendance records, absences (NO_SHOW), and relationship IDs corresponding to each historical period separately.
+        2. Perform an exact mathematical calculation of the increase, decrease, or stability of unjustified absences between the periods.
+        3. Draft a precise, executive-level comparison report. Contrast one period directly against the other, highlighting whether absenteeism rose or fell, and state the nominal or percentage variance.
+        If the context completely lacks data for one of the requested historical periods, explicitly inform the user about the missing timeframe and do not invent figures.
 
         Context:
         %s

@@ -27,7 +27,7 @@ public class PayrollRun {
       PayrollStatus status,
       UUID tenantId,
       List<PayrollLine> lines) {
-    this.id = id;
+    this.id = id != null ? id : UUID.randomUUID();
     this.periodRef = periodRef;
     this.groupRef = groupRef;
     this.runType = runType;

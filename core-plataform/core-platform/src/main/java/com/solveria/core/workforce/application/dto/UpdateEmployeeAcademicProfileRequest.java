@@ -1,6 +1,7 @@
 package com.solveria.core.workforce.application.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.solveria.core.workforce.domain.model.vo.AcademicRank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UpdateEmployeeAcademicProfileRequest {
 
-  @NotBlank(message = "newRank es requerido")
-  private String newRank;
+  @NotNull(message = "newRank es requerido")
+  private AcademicRank newRank;
 }

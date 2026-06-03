@@ -47,5 +47,4 @@ public class BenefitAccrualJpa extends BaseEntity {
 
   @Column(name = "accrued_amount", nullable = false)
   private BigDecimal accruedAmount;
-
 }

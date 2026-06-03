@@ -9,6 +9,7 @@ import com.solveria.core.accruals.domain.model.vo.SeniorityMilestone;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RegisterSeniorityMilestoneService implements RegisterSeniorityMilestoneUseCase {
@@ -20,6 +21,7 @@ public class RegisterSeniorityMilestoneService implements RegisterSeniorityMiles
   }
 
   @Override
+  @Transactional
   public AccrualBalance handle(RegisterSeniorityMilestoneCommand command) {
     LocalizationPolicy.requireSantaCruz(command.location());
     AccrualBalance balance =

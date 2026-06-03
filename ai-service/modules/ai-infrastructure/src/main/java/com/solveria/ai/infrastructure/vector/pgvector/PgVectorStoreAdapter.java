@@ -7,16 +7,16 @@ import java.util.stream.Collectors;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Vector store adapter via Spring AI PgVector. Mandatory metadata filter: tenantId + namespace. */
 @Component
-@ConditionalOnBean(VectorStore.class)
 public class PgVectorStoreAdapter implements VectorStorePort {
 
     private final VectorStore vectorStore;
-
+    private static final Logger log = LoggerFactory.getLogger(PgVectorStoreAdapter.class);
     public PgVectorStoreAdapter(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
@@ -39,6 +39,12 @@ public class PgVectorStoreAdapter implements VectorStorePort {
                         + "' && namespace == '"
                         + escapeFilterValue(namespace)
                         + "'";
+        // --- LOG PARA DEBUG ---
+        // 3. Usa log.info en lugar de System.out
+
+        log.info(">>> INICIANDO BÚSQUEDA VECTORIAL <<<");
+        log.info("Filtro: [{}]", filterExpr);
+        log.info("Pregunta: [{}]", query);
         SearchRequest request =
                 SearchRequest.builder()
                         .query(query)
@@ -46,7 +52,9 @@ public class PgVectorStoreAdapter implements VectorStorePort {
                         .similarityThresholdAll()
                         .filterExpression(filterExpr)
                         .build();
+
         List<Document> docs = vectorStore.similaritySearch(request);
+        log.info(">>> RESULTADO DE LA BÚSQUEDA: Se encontraron {} chunks de contexto.", docs.size());
         return docs.stream().map(d -> new RagChunkDto(d.getText())).collect(Collectors.toList());
     }
 }

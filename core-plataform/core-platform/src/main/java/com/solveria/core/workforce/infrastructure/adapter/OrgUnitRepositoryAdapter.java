@@ -30,7 +30,16 @@ public class OrgUnitRepositoryAdapter implements OrgUnitRepositoryPort {
   @Override
   @Transactional
   public OrgUnit save(OrgUnit orgUnit) {
-    OrgUnitJpa orgUnitJpa = orgUnitMapper.toJpa(orgUnit);
+    OrgUnitJpa orgUnitJpa =
+        orgUnitRepository
+            .findById(orgUnit.getUnitId())
+            .map(
+                existing -> {
+                  orgUnitMapper.updateJpa(orgUnit, existing);
+                  return existing;
+                })
+            .orElseGet(() -> orgUnitMapper.toJpa(orgUnit));
+
     OrgUnitJpa savedOrgUnitJpa = orgUnitRepository.save(orgUnitJpa);
     OrgUnit savedOrgUnit = orgUnitMapper.toDomain(savedOrgUnitJpa);
 

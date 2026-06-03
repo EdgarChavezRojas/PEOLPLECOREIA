@@ -89,17 +89,30 @@ public class ContractFinancialDataAdapter implements ContractFinancialDataPort {
     UUID projectId = contract.getProjectId();
 
     if (projectId == null) {
-      throw new IllegalStateException("El contrato " + contractId + " no tiene projectId asociado");
+      log.warn(
+          "event=CONTRACT_PROJECT_MISSING contractId={} tenantId={} reason=NO_PROJECT_ID_ON_CONTRACT",
+          contractId,
+          contract.getTenantId());
+      List<FundingSource> sources =
+          fundingSourceRepository.findAllByTenantId(contract.getTenantId());
+      if (sources.isEmpty()) {
+        throw new IllegalStateException(
+            "El contrato "
+                + contractId
+                + " no tiene projectId y no hay FundingSource por defecto para el tenant: "
+                + contract.getTenantId());
+      }
+      projectId = sources.get(0).getSourceId();
     }
 
-    // Buscar FundingSource por projectCode derivado del projectId del contrato
+    UUID finalProjectId = projectId;
     return fundingSourceRepository
         .findById(projectId)
         .map(FundingSource::getSourceId)
         .orElseThrow(
             () ->
                 new IllegalStateException(
-                    "FundingSource no encontrado para projectId=" + projectId));
+                    "FundingSource no encontrado para projectId=" + finalProjectId));
   }
 
   @Override

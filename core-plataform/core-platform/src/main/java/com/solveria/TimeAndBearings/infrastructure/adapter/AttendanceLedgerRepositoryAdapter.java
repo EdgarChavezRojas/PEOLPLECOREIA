@@ -82,6 +82,7 @@ public class AttendanceLedgerRepositoryAdapter implements AttendanceLedgerReposi
             jpa.getLedgerId(),
             (jpa.getTenantId()),
             jpa.getRelationshipId(),
+            jpa.getOrgUnitId(),
             jpa.getWorkDate(),
             jpa.getShiftId(),
             jpa.getStatus(),
@@ -144,6 +145,7 @@ public class AttendanceLedgerRepositoryAdapter implements AttendanceLedgerReposi
     AttendanceLedgerJpa jpa = mapper.toJpa(domain);
     jpa.setTenantId(domain.getTenantId());
     jpa.setLedgerId(domain.getLedgerId());
+    jpa.setOrgUnitId(domain.getOrgUnitId());
 
     // WorkedHoursSummary (nullable)
     if (domain.getWorkedHoursSummary() != null) {

@@ -10,4 +10,6 @@ public interface PredictionModelPO {
   void save(PredictionModel model);
 
   Optional<PredictionModel> findById(UUID modelId);
+
+  Optional<PredictionModel> findByTenantId(UUID tenantId);
 }

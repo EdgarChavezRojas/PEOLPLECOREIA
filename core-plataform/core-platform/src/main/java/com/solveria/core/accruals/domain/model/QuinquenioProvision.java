@@ -76,11 +76,13 @@ public class QuinquenioProvision extends DomainRoot {
         QuinquenioCalculationFinalizedEvent.now(provisionId, relationshipId, averageLast90Days));
   }
 
-  public void evaluatePenalty(LocalDate requestDate, LocalDate today, LocalDate paymentDate) {
+  public void evaluatePenalty(
+      LocalDate requestDate, LocalDate today, LocalDate paymentDate, UUID tenantId) {
     if (QuinquenioPolicy.isPaymentOverdue(requestDate, today, paymentDate)) {
       penaltyActive = true;
       BigDecimal penalty = totalAccumulated.multiply(QuinquenioPolicy.PENALTY_RATE);
-      registerEvent(QuinquenioPaymentOverdueEvent.now(relationshipId, provisionId, penalty));
+      registerEvent(
+          QuinquenioPaymentOverdueEvent.now(relationshipId, provisionId, penalty, tenantId));
     }
   }
 

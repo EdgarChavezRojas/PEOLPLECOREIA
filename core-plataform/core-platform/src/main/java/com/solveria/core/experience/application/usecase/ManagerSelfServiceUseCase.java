@@ -3,6 +3,7 @@ package com.solveria.core.experience.application.usecase;
 import com.solveria.core.experience.application.command.ApproveDataChangeCommand;
 import com.solveria.core.experience.application.command.RejectDataChangeCommand;
 import com.solveria.core.experience.application.port.in.ManagerSelfServicePI;
+import com.solveria.core.experience.application.port.out.PersonLookupPO;
 import com.solveria.core.experience.application.port.out.SelfServiceActionPO;
 import com.solveria.core.experience.domain.model.SelfServiceAction;
 import java.util.UUID;
@@ -21,10 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class ManagerSelfServiceUseCase implements ManagerSelfServicePI {
 
   private final SelfServiceActionPO selfServiceActionPO;
+  private final PersonLookupPO personLookupPO;
 
   @Override
   @Transactional
-  public void approveDataChange(UUID actionId, UUID approvedBy, String tenantId) {
+  public void approveDataChange(UUID actionId, Long userId, String tenantId) {
+    UUID approvedBy = resolvePersonId(userId);
     log.info("event=DATA_CHANGE_APPROVAL actionId={} approvedBy={}", actionId, approvedBy);
 
     ApproveDataChangeCommand cmd = new ApproveDataChangeCommand(actionId, approvedBy);
@@ -48,7 +51,8 @@ public class ManagerSelfServiceUseCase implements ManagerSelfServicePI {
   @Override
   @Transactional
   public void rejectDataChange(
-      UUID actionId, UUID rejectedBy, String rejectionReason, String tenantId) {
+      UUID actionId, Long userId, String rejectionReason, String tenantId) {
+    UUID rejectedBy = resolvePersonId(userId);
     log.info("event=DATA_CHANGE_REJECTION actionId={} rejectedBy={}", actionId, rejectedBy);
 
     RejectDataChangeCommand cmd =
@@ -72,5 +76,12 @@ public class ManagerSelfServiceUseCase implements ManagerSelfServicePI {
         actionId,
         rejectedBy,
         rejectionReason);
+  }
+
+  private UUID resolvePersonId(Long userId) {
+    return personLookupPO
+        .findPersonIdByUserId(userId)
+        .orElseThrow(
+            () -> new IllegalArgumentException("Person no encontrada para userId: " + userId));
   }
 }

@@ -39,7 +39,6 @@ public class TalentInventoryJpa extends BaseEntity {
   @Column(name = "relationship_id", nullable = false)
   private UUID relationshipId;
 
-
   @OneToMany(
       mappedBy = "inventory",
       cascade = CascadeType.ALL,

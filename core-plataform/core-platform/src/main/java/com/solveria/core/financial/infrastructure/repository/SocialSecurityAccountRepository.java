@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 /** Spring Data JPA Repository: SocialSecurityAccount. */
 @Repository
 public interface SocialSecurityAccountRepository
-    extends JpaRepository<SocialSecurityAccountJpa, Long> {
+    extends JpaRepository<SocialSecurityAccountJpa, UUID> {
 
   Optional<SocialSecurityAccountJpa> findBySsaIdAndTenantId(UUID ssaId, UUID tenantId);
 

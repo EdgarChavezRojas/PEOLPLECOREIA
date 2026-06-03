@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface PredictionModelRepository extends JpaRepository<PredictionModelJpa, UUID> {
 
   Optional<PredictionModelJpa> findByModelIdAndTenantId(UUID modelId, UUID tenantId);
+
+  Optional<PredictionModelJpa> findByTenantId(UUID tenantId);
 }

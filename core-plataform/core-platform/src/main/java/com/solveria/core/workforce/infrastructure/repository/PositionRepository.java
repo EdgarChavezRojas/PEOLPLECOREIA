@@ -61,5 +61,4 @@ public interface PositionRepository extends JpaRepository<PositionJpa, UUID> {
       nativeQuery = true)
   List<PositionJpa> findByTenantIdAndStatus(
       @Param("tenantId") UUID tenantId, @Param("status") PositionStatus status);
-
 }

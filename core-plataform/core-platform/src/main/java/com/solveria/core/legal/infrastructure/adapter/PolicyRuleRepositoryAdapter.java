@@ -24,13 +24,26 @@ public class PolicyRuleRepositoryAdapter implements PolicyRuleRepositoryPort {
   @Override
   @Transactional
   public void save(PolicyRule policyRule) {
-    PolicyRuleJpa jpa = policyRuleMapper.toJpa(policyRule);
+    PolicyRuleJpa jpa =
+        policyRuleRepository
+            .findByPolicyId(policyRule.getPolicyId())
+            .orElseGet(
+                () -> {
+                  PolicyRuleJpa newJpa = new PolicyRuleJpa();
+                  newJpa.setPolicyId(policyRule.getPolicyId());
+                  return newJpa;
+                });
+    policyRuleMapper.updateJpaFromDomain(policyRule, jpa);
     policyRuleRepository.save(jpa);
   }
 
   @Override
   public Optional<PolicyRule> findById(UUID policyId) {
-    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    if (tenantStr == null || tenantStr.isBlank()) {
+      return policyRuleRepository.findByPolicyId(policyId).map(policyRuleMapper::toDomain);
+    }
+    UUID currentTenantId = UUID.fromString(tenantStr);
     return policyRuleRepository
         .findByPolicyIdAndTenantId(policyId, currentTenantId)
         .map(policyRuleMapper::toDomain);
@@ -38,7 +51,11 @@ public class PolicyRuleRepositoryAdapter implements PolicyRuleRepositoryPort {
 
   @Override
   public Optional<PolicyRule> findByPolicyName(String policyName) {
-    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    if (tenantStr == null || tenantStr.isBlank()) {
+      return policyRuleRepository.findByPolicyName(policyName).map(policyRuleMapper::toDomain);
+    }
+    UUID currentTenantId = UUID.fromString(tenantStr);
     return policyRuleRepository
         .findByPolicyNameAndTenantId(policyName, currentTenantId)
         .map(policyRuleMapper::toDomain);

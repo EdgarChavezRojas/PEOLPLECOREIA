@@ -49,4 +49,3 @@ public class ProcessReviewPayrollUseCase implements ReviewPayrollUseCase {
     payrollApprovalRepositoryPort.save(approval);
   }
 }
-

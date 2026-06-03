@@ -1,0 +1,23 @@
+dossier:
+  cron:
+    document-expiration: "0 */2 * * * ?"
+
+accruals:
+  cron:
+    monthly-vacation-seniority: "0 */2 * * * ?"
+    monthly-financial-provisions: "0 */2 * * * ?"
+    daily-legal-audit: "0 */2 * * * ?"
+
+benefits:
+  cron:
+    monthly-provision: "0 */2 * * * ?"
+
+timesheet:
+  cron:
+    grace-period-closure: "0 */2 * * * ?"
+    nightly-consolidation: "0 */2 * * * ?"
+
+shared:
+  outbox:
+    relay:
+      delay-ms: "5000"

@@ -33,12 +33,24 @@ public interface PartyIdentifierMapper {
 
   @Named("toExtension")
   default String toExtension(Extension extension) {
-    return extension != null ? extension.name() : null;
+    if (extension == null) {
+      return null;
+    }
+    if (extension == Extension.SCZ) {
+      return "SC";
+    }
+    return extension.name();
   }
 
   @Named("toExtensionEnum")
   default Extension toExtensionEnum(String value) {
-    return value != null ? Extension.valueOf(value) : null;
+    if (value == null) {
+      return null;
+    }
+    if (value.equalsIgnoreCase("SC") || value.equalsIgnoreCase("SCZ")) {
+      return Extension.SCZ;
+    }
+    return Extension.valueOf(value.toUpperCase());
   }
-  //test
+  // test
 }

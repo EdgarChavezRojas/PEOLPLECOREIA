@@ -1,5 +1,7 @@
 package com.solveria.core.accruals.infrastructure.listener;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.solveria.core.accruals.application.command.ApproveLeaveCommand;
 import com.solveria.core.accruals.application.port.AccrualBalanceRepositoryPort;
 import com.solveria.core.accruals.application.port.AccrualsPolicyCachePort;
@@ -24,8 +26,6 @@ import com.solveria.core.workforce.domain.event.RelationshipEndedEvent;
 import com.solveria.core.workforce.domain.event.RelationshipReactivatedEvent;
 import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -187,7 +187,8 @@ public class AccrualsEventListener {
 
     LocalDate startDate = event.startDate();
     LocalDate endDate = event.endDate();
-    List<HolidayCalendar> holidays = benefitsRepository.findHolidaysBetween(startDate, endDate);
+    List<HolidayCalendar> holidays =
+        benefitsRepository.findHolidaysBetween(startDate, endDate, event.tenantId());
     BigDecimal chargeableDays = HolidayPolicy.calculateChargeableDays(startDate, endDate, holidays);
 
     balance.requestLeave(startDate, endDate, chargeableDays);
@@ -237,9 +238,9 @@ public class AccrualsEventListener {
   // ──────────────────────────────────────────────────────────────────────────
 
   /**
-   * Reacciona a eventos de aprobación de cambio de datos (Experience BC).
-   * Filtra por actionType "LEAVE_APPROVAL" para orquestar la aprobación cross-BC
-   * de ausencias, delegando a {@link ApproveLeaveUseCase}.
+   * Reacciona a eventos de aprobación de cambio de datos (Experience BC). Filtra por actionType
+   * "LEAVE_APPROVAL" para orquestar la aprobación cross-BC de ausencias, delegando a {@link
+   * ApproveLeaveUseCase}.
    */
   @EventListener
   @Transactional
@@ -260,7 +261,7 @@ public class AccrualsEventListener {
       String location = payloadNode.path("location").asText("UNKNOWN");
 
       ApproveLeaveCommand command = new ApproveLeaveCommand(balanceId, transactionId, location);
-      AccrualBalance result = approveLeaveUseCase.handle(command);
+      approveLeaveUseCase.handle(command);
 
       log.info(
           "event=ACCRUALS_LEAVE_APPROVAL_PROCESSED actionId={} balanceId={} transactionId={}",

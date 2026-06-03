@@ -7,9 +7,9 @@ import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundExcepti
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import com.solveria.core.security.context.SecurityTenantContext;
-import org.springframework.stereotype.Service;
-
 import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ApproveLeaveService implements ApproveLeaveUseCase {
@@ -21,6 +21,7 @@ public class ApproveLeaveService implements ApproveLeaveUseCase {
   }
 
   @Override
+  @Transactional
   public AccrualBalance handle(ApproveLeaveCommand command) {
     LocalizationPolicy.requireSantaCruz(command.location());
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());

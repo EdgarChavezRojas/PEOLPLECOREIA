@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public record ProposeContractAddendumWebDto(
     @NotNull(message = "El contractId es obligatorio") UUID contractId,
-    @NotNull(message = "El addendumId es obligatorio") UUID addendumId,
+    UUID addendumId,
     @NotNull(message = "La fecha effectiveFrom es obligatoria") LocalDate effectiveFrom,
     LocalDate effectiveTo,
     @Valid @NotNull(message = "salaryTerms es obligatorio") SalaryTermsDto salaryTerms,

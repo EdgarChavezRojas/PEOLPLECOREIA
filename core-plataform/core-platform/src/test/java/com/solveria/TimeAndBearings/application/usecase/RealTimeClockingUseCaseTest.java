@@ -41,10 +41,12 @@ class RealTimeClockingUseCaseTest {
     RealTimeClockingUseCase useCase = new RealTimeClockingUseCase(ledgerRepository, eventOutbox);
     UUID tenantId = UUID.randomUUID();
     UUID relationshipId = UUID.randomUUID();
+    UUID orgUnitId = UUID.randomUUID();
     ClockCommand command =
         new ClockCommand(
             tenantId,
             relationshipId,
+            orgUnitId,
             PunchSource.MOBILE,
             null,
             null,
@@ -71,6 +73,7 @@ class RealTimeClockingUseCaseTest {
     verify(eventOutbox).store(anyList());
 
     AttendanceLedger savedLedger = ledgerCaptor.getValue();
+    assertThat(savedLedger.getOrgUnitId()).isEqualTo(orgUnitId);
     assertThat(savedLedger.getTimeEntries()).hasSize(1);
     assertThat(savedLedger.getTimeEntries().getFirst().getGeoSnapshot().geoStatus())
         .isEqualTo(GeoStatus.OUTSIDE_FENCE);

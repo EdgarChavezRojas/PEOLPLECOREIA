@@ -64,8 +64,10 @@ public class AccrualBalance extends DomainRoot {
     this.daysTakenYtd = daysTakenYtd;
     this.lastAccrualDate = lastAccrualDate;
     this.tenantId = tenantId;
-    this.leaveTransactions = leaveTransactions;
-    this.seniorityMilestones = seniorityMilestones;
+    this.leaveTransactions =
+        (leaveTransactions != null) ? new ArrayList<>(leaveTransactions) : new ArrayList<>();
+    this.seniorityMilestones =
+        (seniorityMilestones != null) ? new ArrayList<>(seniorityMilestones) : new ArrayList<>();
   }
 
   public static AccrualBalance open(
@@ -111,26 +113,33 @@ public class AccrualBalance extends DomainRoot {
   public LeaveTransaction requestLeave(
       LocalDate startDate, LocalDate endDate, BigDecimal chargeableDays) {
     requireVacationDays();
-    if (startDate == null || endDate == null) {
-      throw new IllegalArgumentException("startDate and endDate are required");
-    }
-    if (chargeableDays == null || chargeableDays.signum() <= 0) {
-      throw new IllegalArgumentException("chargeableDays must be positive");
-    }
+
     if (currentBalance.compareTo(chargeableDays) < 0) {
       registerEvent(
           VacationBalanceThresholdLowEvent.now(balanceId, chargeableDays, currentBalance));
       throw new InsufficientAccrualBalanceException(balanceId, chargeableDays, currentBalance);
     }
+
+    deduct(chargeableDays);
+
+    // CORRECCIÓN: Pasa el tenantId aquí
     LeaveTransaction transaction =
-        LeaveTransaction.pending(balanceId, startDate, endDate, chargeableDays);
+        LeaveTransaction.pending(this.balanceId, this.tenantId, startDate, endDate, chargeableDays);
+
     if (leaveTransactions == null) {
       leaveTransactions = new ArrayList<>();
     }
     leaveTransactions.add(transaction);
+
     registerEvent(
         LeaveRequestSubmittedEvent.now(
-            balanceId, transaction.getTransactionId(), startDate, endDate, chargeableDays));
+            balanceId,
+            transaction.getTransactionId(),
+            startDate,
+            endDate,
+            chargeableDays,
+            this.tenantId));
+
     return transaction;
   }
 
@@ -139,11 +148,16 @@ public class AccrualBalance extends DomainRoot {
     if (transaction.getStatus() != LeaveStatus.PENDING) {
       throw new InvalidLeaveStateException("leave transaction is not pending");
     }
+
+    // 1. Aprobamos la transacción
     transaction.approve();
-    deduct(transaction.getDaysRequested());
+
+    // 2. Registramos el evento de aprobación
     registerEvent(
         LeaveRequestManagerApprovedEvent.now(
             balanceId, transaction.getTransactionId(), transaction.getDaysRequested(), tenantId));
+
+    // 3. Registramos el evento de deducción
     registerEvent(AccrualBalanceDeductedEvent.now(balanceId, transaction.getDaysRequested()));
   }
 
@@ -270,5 +284,9 @@ public class AccrualBalance extends DomainRoot {
 
   public List<SeniorityMilestone> getSeniorityMilestones() {
     return seniorityMilestones;
+  }
+
+  public void setTenantId(UUID tenantId) {
+    this.tenantId = tenantId;
   }
 }

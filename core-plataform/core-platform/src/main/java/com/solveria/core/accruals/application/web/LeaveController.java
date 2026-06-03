@@ -6,10 +6,15 @@ import com.solveria.core.accruals.application.command.RequestLeaveCommand;
 import com.solveria.core.accruals.application.dto.RequestLeaveRequest;
 import com.solveria.core.accruals.application.dto.ReviewLeaveRequest;
 import com.solveria.core.accruals.application.usecase.ApproveLeaveUseCase;
+import com.solveria.core.accruals.application.usecase.ListAllLeavesUseCase;
 import com.solveria.core.accruals.application.usecase.ListEmployeeLeavesUseCase;
+import com.solveria.core.accruals.application.usecase.ListLeavesByStatusUseCase;
 import com.solveria.core.accruals.application.usecase.RejectLeaveUseCase;
 import com.solveria.core.accruals.application.usecase.RequestLeaveUseCase;
 import com.solveria.core.accruals.domain.model.LeaveTransaction;
+import com.solveria.core.accruals.domain.model.vo.LeaveStatus;
+import com.solveria.core.accruals.infrastructure.jpa.LeaveTransactionJpa;
+import com.solveria.core.shared.pagination.PageUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -42,13 +47,16 @@ public class LeaveController {
   private final ApproveLeaveUseCase approveLeaveUseCase;
   private final RejectLeaveUseCase rejectLeaveUseCase;
   private final ListEmployeeLeavesUseCase listEmployeeLeavesUseCase;
+  private final ListAllLeavesUseCase listAllLeavesUseCase;
+  private final ListLeavesByStatusUseCase listLeavesByStatusUseCase;
 
   @GetMapping
   @Operation(
-          summary = "Registrar licencia en el motor de saldos",
-          description = "Crea y asienta una transacción de licencia directamente en el saldo del colaborador. " +
-                  "Esta operación es administrativa y se utiliza para integraciones directas o " +
-                  "ajustes de RRHH. No activa el flujo de aprobación gerencial de Experience BC.")
+      summary = "Obtener todas las licencias en el motor de saldos",
+      description =
+          "Crea y asienta una transacción de licencia directamente en el saldo del colaborador. "
+              + "Esta operación es administrativa y se utiliza para integraciones directas o "
+              + "ajustes de RRHH. No activa el flujo de aprobación gerencial de Experience BC.")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Listado paginado obtenido"),
     @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),
@@ -56,9 +64,48 @@ public class LeaveController {
     @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
   })
   public ResponseEntity<Page<LeaveTransaction>> list(
-          @RequestParam("personId") UUID personId, Pageable pageable) {
-    return ResponseEntity.ok(listEmployeeLeavesUseCase.handle(personId, pageable));
+      @RequestParam("personId") UUID personId, Pageable pageable) {
+    return ResponseEntity.ok(
+        listEmployeeLeavesUseCase.handle(
+            personId, PageUtils.sanitize(pageable, LeaveTransactionJpa.class)));
   }
+
+  @GetMapping("/all")
+  @Operation(
+      summary = "Listar todas las licencias del tenant",
+      description =
+          "Devuelve todas las solicitudes de licencia del tenant de forma paginada, "
+              + "sin importar su estado (PENDING, APPROVED, REJECTED). "
+              + "No requiere ningún parámetro de filtro adicional.")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Listado paginado obtenido"),
+    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+  })
+  public ResponseEntity<Page<LeaveTransaction>> listAll(Pageable pageable) {
+    return ResponseEntity.ok(
+        listAllLeavesUseCase.handle(PageUtils.sanitize(pageable, LeaveTransactionJpa.class)));
+  }
+
+  @GetMapping("/by-status")
+  @Operation(
+      summary = "Listar licencias por estado",
+      description =
+          "Devuelve las solicitudes de licencia del tenant filtradas por estado. "
+              + "Los valores válidos son: PENDING (pendientes), APPROVED (aprobadas), REJECTED (rechazadas).")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Listado paginado obtenido"),
+    @ApiResponse(responseCode = "400", description = "Estado invalido", content = @Content),
+    @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+    @ApiResponse(responseCode = "500", description = "Error interno", content = @Content)
+  })
+  public ResponseEntity<Page<LeaveTransaction>> listByStatus(
+      @RequestParam("status") LeaveStatus status, Pageable pageable) {
+    return ResponseEntity.ok(
+        listLeavesByStatusUseCase.handle(
+            status, PageUtils.sanitize(pageable, LeaveTransactionJpa.class)));
+  }
+
   @PostMapping
   @Operation(summary = "Solicitar licencia", description = "Registra una solicitud de licencia")
   @ApiResponses({
@@ -76,9 +123,11 @@ public class LeaveController {
   }
 
   @PostMapping("/{transactionId}/approve")
-  @Operation(summary = "Asentar aprobación de licencia en la base de datos",
-          description = "Ejecuta el descuento matemático y el cierre de estado de una transacción de licencia " +
-                  "previamente existente. Esta operación es de bajo nivel y actualiza directamente el AccrualBalance.")
+  @Operation(
+      summary = "Asentar aprobación de licencia en la base de datos",
+      description =
+          "Ejecuta el descuento matemático y el cierre de estado de una transacción de licencia "
+              + "previamente existente. Esta operación es de bajo nivel y actualiza directamente el AccrualBalance.")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Solicitud aprobada"),
     @ApiResponse(responseCode = "400", description = "Solicitud invalida", content = @Content),

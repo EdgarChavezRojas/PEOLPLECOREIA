@@ -3,6 +3,7 @@ package com.solveria.core.legal.application.usecase;
 import com.solveria.core.legal.application.dto.ContractResponse;
 import com.solveria.core.legal.application.dto.DraftContractRequest;
 import com.solveria.core.legal.application.port.ContractRepositoryPort;
+import com.solveria.core.legal.application.port.ProjectResolutionPort;
 import com.solveria.core.legal.domain.model.Contract;
 import com.solveria.core.legal.domain.model.vo.EmploymentCondition;
 import com.solveria.core.security.context.SecurityTenantContext;
@@ -20,11 +21,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class DraftContractUseCase {
 
   private final ContractRepositoryPort contractRepositoryPort;
+  private final ProjectResolutionPort projectResolutionPort;
 
   @Transactional
   public ContractResponse execute(DraftContractRequest request) {
-    String tenantStr = SecurityTenantContext.getCurrentTenantId();
-    UUID tenantId = UUID.fromString(tenantStr);
+    UUID tenantId =
+        request.tenantId() != null
+            ? request.tenantId()
+            : UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+
+    UUID projectId =
+        request.projectId() != null
+            ? request.projectId()
+            : projectResolutionPort.getDefaultProjectIdForTenant(tenantId);
 
     // revisar porque puede generar fallo
     UUID contractId = request.contractId() != null ? request.contractId() : UUID.randomUUID();
@@ -39,7 +48,7 @@ public class DraftContractUseCase {
             request.relationshipId(),
             request.contractType(),
             empCond,
-            request.projectId(),
+            projectId,
             tenantId,
             createdBy);
 

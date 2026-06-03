@@ -5,17 +5,21 @@ import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.infrastructure.jpa.RelationshipJpa;
 import com.solveria.core.workforce.infrastructure.jpa.StatusLogJpa;
 import org.mapstruct.AfterMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(
     componentModel = "spring",
+    builder = @Builder(disableBuilder = true),
     uses = {WorkerProfileMapper.class, AcademicProfileMapper.class, StatusLogMapper.class})
 public interface RelationshipMapper {
 
+  @Mapping(target = "tenantId", source = "tenantId")
   RelationshipJpa toJpa(Relationship relationship);
 
+  @Mapping(target = "tenantId", source = "tenantId")
   Relationship toDomain(RelationshipJpa jpa);
 
   @Mapping(
@@ -32,13 +36,16 @@ public interface RelationshipMapper {
   default void setBackReference(@MappingTarget RelationshipJpa relationshipJpa) {
     if (relationshipJpa.getWorkerProfile() != null) {
       relationshipJpa.getWorkerProfile().setRelationship(relationshipJpa);
+      relationshipJpa.getWorkerProfile().setTenantId(relationshipJpa.getTenantId());
     }
     if (relationshipJpa.getAcademicProfile() != null) {
       relationshipJpa.getAcademicProfile().setRelationship(relationshipJpa);
+      relationshipJpa.getAcademicProfile().setTenantId(relationshipJpa.getTenantId());
     }
     if (relationshipJpa.getStatusLogs() != null) {
       for (StatusLogJpa statusLog : relationshipJpa.getStatusLogs()) {
         statusLog.setRelationship(relationshipJpa);
+        statusLog.setTenantId(relationshipJpa.getTenantId());
       }
     }
   }
@@ -64,4 +71,10 @@ public interface RelationshipMapper {
       throw new RuntimeException("Error serializando Relationship a JSON", e);
     }
   }
+
+  @Mapping(target = "tenantId", source = "tenantId")
+  @Mapping(target = "workerProfile", ignore = true)
+  @Mapping(target = "academicProfile", ignore = true)
+  @Mapping(target = "statusLogs", ignore = true)
+  void updateJpa(Relationship relationship, @MappingTarget RelationshipJpa relationshipJpa);
 }

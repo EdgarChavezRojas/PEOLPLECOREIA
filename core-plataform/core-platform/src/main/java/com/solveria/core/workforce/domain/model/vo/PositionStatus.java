@@ -3,7 +3,8 @@ package com.solveria.core.workforce.domain.model.vo;
 public enum PositionStatus {
   VACANT("VACANT"),
   OCCUPIED("OCCUPIED"),
-  RESERVED("RESERVED");
+  RESERVED("RESERVED"),
+  FILLED("FILLED");
 
   private final String label;
 

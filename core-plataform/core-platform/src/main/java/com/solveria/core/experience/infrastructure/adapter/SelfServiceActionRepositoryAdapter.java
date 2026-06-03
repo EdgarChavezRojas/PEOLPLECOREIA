@@ -11,15 +11,13 @@ import com.solveria.core.experience.infrastructure.repository.SelfServiceActionR
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.events.DomainEvent;
 import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
-
+import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
+import com.solveria.core.workforce.domain.model.Relationship;
+import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
-import com.solveria.core.workforce.domain.model.Relationship;
-import com.solveria.core.workforce.domain.model.vo.RelationshipStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,11 +36,23 @@ public class SelfServiceActionRepositoryAdapter implements SelfServiceActionPO {
   private final EventOutboxPort eventOutboxPort;
   private final RelationshipRepositoryPort relationshipRepositoryPort;
   private final AccrualBalanceRepositoryPort accrualBalanceRepositoryPort;
+
   @Override
   @Transactional
   public void save(SelfServiceAction action) {
     List<DomainEvent> events = action.pullDomainEvents();
-    SelfServiceActionJpa jpa = mapper.toJpa(action);
+
+    SelfServiceActionJpa jpa =
+        repository
+            .findByActionIdAndTenantId(action.getActionId(), action.getTenantId())
+            .map(
+                existing -> {
+                  mapper.updateJpa(existing, action);
+                  mapper.enrichJpa(existing, action);
+                  return existing;
+                })
+            .orElseGet(() -> mapper.toJpa(action));
+
     repository.save(jpa);
     eventOutboxPort.publish(events);
   }
@@ -67,25 +77,27 @@ public class SelfServiceActionRepositoryAdapter implements SelfServiceActionPO {
 
     // 1. Obtener la relación laboral activa (Workforce BC)
     List<Relationship> relationships = relationshipRepositoryPort.findByPersonId(personId);
-    Optional<Relationship> activeRelationship = relationships.stream()
+    Optional<Relationship> activeRelationship =
+        relationships.stream()
             .filter(rel -> rel.getCurrentStatus() == RelationshipStatus.ACTIVE)
             .findFirst();
 
     if (activeRelationship.isEmpty()) {
-      log.warn("event=EXP_BALANCE_QUERY_FAILED reason=NO_ACTIVE_RELATIONSHIP personId={}", personId);
+      log.warn(
+          "event=EXP_BALANCE_QUERY_FAILED reason=NO_ACTIVE_RELATIONSHIP personId={}", personId);
       return BigDecimal.ZERO;
     }
 
     UUID relationshipId = activeRelationship.get().getRelationshipId();
 
     // 2. Obtener el saldo de vacaciones de esa relación (Accruals BC)
-    List<AccrualBalance> balances = accrualBalanceRepositoryPort.findAllByRelationshipId(relationshipId);
+    List<AccrualBalance> balances =
+        accrualBalanceRepositoryPort.findAllByRelationshipId(relationshipId);
 
     return balances.stream()
-            .filter(bal -> bal.getBalanceType() == AccrualBalanceType.VACATION)
-            .map(AccrualBalance::getCurrentBalance)
-            .findFirst()
-            .orElse(BigDecimal.ZERO);
+        .filter(bal -> bal.getBalanceType() == AccrualBalanceType.VACATION)
+        .map(AccrualBalance::getCurrentBalance)
+        .findFirst()
+        .orElse(BigDecimal.ZERO);
   }
-  }
-
+}

@@ -25,10 +25,15 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface ContractMapper {
 
+  @Mapping(target = "tenantId", source = "tenantId")
   ContractJpa toJpa(Contract contract);
+
+  @Mapping(target = "tenantId", source = "tenantId")
+  @Mapping(target = "addendums", ignore = true)
+  void updateJpa(@MappingTarget ContractJpa jpa, Contract contract);
 
   @Mapping(target = "contract", ignore = true)
   @Mapping(target = "complianceSnapshot", ignore = true)
@@ -94,14 +99,47 @@ public interface ContractMapper {
 
   @AfterMapping
   default void setBackReference(@MappingTarget ContractJpa contractJpa, Contract contract) {
-    if (contractJpa != null) {
-      contractJpa.setTenantId(contract.getTenantId());
+    if (contractJpa == null) {
+      return;
     }
-    if (contractJpa != null && contractJpa.getAddendums() != null) {
-      for (ContractAddendumJpa addendum : contractJpa.getAddendums()) {
-        addendum.setContract(contractJpa);
-        addendum.setTenantId(contract.getTenantId());
+    contractJpa.setTenantId(contract.getTenantId());
+
+    if (contract.getAddendums() != null) {
+      List<ContractAddendumJpa> existingJpas = contractJpa.getAddendums();
+      if (existingJpas == null) {
+        existingJpas = new java.util.ArrayList<>();
+        contractJpa.setAddendums(existingJpas);
       }
+
+      // Sincronizar en-lugar (merge in-place) para evitar colisiones de Hibernate con orphanRemoval
+      for (ContractAddendum domainAddendum : contract.getAddendums()) {
+        ContractAddendumJpa match =
+            existingJpas.stream()
+                .filter(a -> a.getAddendumId().equals(domainAddendum.getAddendumId()))
+                .findFirst()
+                .orElse(null);
+
+        if (match != null) {
+          match.setStatus(domainAddendum.getStatus());
+          match.setEffectiveFrom(domainAddendum.getEffectiveFrom());
+          match.setEffectiveTo(domainAddendum.getEffectiveTo());
+          match.setSalaryTerms(toEmbeddable(domainAddendum.getSalaryTerms()));
+          match.setComplianceSnapshot(toEmbeddable(domainAddendum.getSnapshot()));
+          match.setTenantId(contract.getTenantId());
+          match.setContract(contractJpa);
+        } else {
+          ContractAddendumJpa newJpa = toAddendumJpa(domainAddendum);
+          newJpa.setContract(contractJpa);
+          newJpa.setTenantId(contract.getTenantId());
+          existingJpas.add(newJpa);
+        }
+      }
+
+      // Eliminar huérfanos que ya no están en el modelo de dominio
+      existingJpas.removeIf(
+          jpaAddendum ->
+              contract.getAddendums().stream()
+                  .noneMatch(a -> a.getAddendumId().equals(jpaAddendum.getAddendumId())));
     }
   }
 

@@ -5,6 +5,7 @@ import com.solveria.core.workforce.application.port.OrgUnitRepositoryPort;
 import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.OrgUnit;
 import com.solveria.core.workforce.domain.model.vo.Extension;
+import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class RelocateOrgUnitUseCase {
 
   private final OrgUnitRepositoryPort orgUnitRepositoryPort;
 
+  @Transactional
   public void execute(UUID unitId, Extension geoExtension) {
     if (geoExtension == null) {
       throw new SolverException(ORG_UNIT_GEO_EXTENSION_REQUIRED);

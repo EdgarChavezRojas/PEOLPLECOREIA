@@ -50,7 +50,6 @@ public class RelationshipJpa extends BaseEntity {
   @Column(name = "person_id", nullable = false)
   private UUID personId;
 
-
   @Enumerated(EnumType.STRING)
   @Column(name = "rel_type", nullable = false)
   private RelationshipType relationType;
@@ -75,7 +74,6 @@ public class RelationshipJpa extends BaseEntity {
       fetch = FetchType.LAZY)
   @Builder.Default
   private List<StatusLogJpa> statusLogs = new ArrayList<>();
-
 
   @Override
   public final boolean equals(Object o) {

@@ -5,7 +5,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record DocumentValidationRejectedEvent(
-    UUID docId, UUID relationshipId, String reason, Instant occurredAt) implements DomainEvent {
+    UUID docId, UUID relationshipId, String reason, UUID tenantId, Instant occurredAt)
+    implements DomainEvent {
 
   public DocumentValidationRejectedEvent {
     if (docId == null || relationshipId == null || occurredAt == null) {
@@ -17,7 +18,8 @@ public record DocumentValidationRejectedEvent(
   }
 
   public static DocumentValidationRejectedEvent now(
-      UUID docId, UUID relationshipId, String reason) {
-    return new DocumentValidationRejectedEvent(docId, relationshipId, reason, Instant.now());
+      UUID docId, UUID relationshipId, String reason, UUID tenantId) {
+    return new DocumentValidationRejectedEvent(
+        docId, relationshipId, reason, tenantId, Instant.now());
   }
 }

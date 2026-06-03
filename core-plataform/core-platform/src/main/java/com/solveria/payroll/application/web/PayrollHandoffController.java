@@ -23,8 +23,7 @@ public class PayrollHandoffController {
   @Operation(
       summary = "Sincronizar asistencia",
       description = "Ejecuta la sincronización manual de asistencia para un periodo.")
-  public ResponseEntity<Void> syncAttendance(
-      @RequestParam UUID periodId) {
+  public ResponseEntity<Void> syncAttendance(@RequestParam UUID periodId) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     attendanceHandoffUseCase.manualSync(periodId, tenantId);
     return ResponseEntity.ok().build();

@@ -2,7 +2,6 @@ package com.solveria.core.workforce.infrastructure.jpa;
 
 import com.solveria.core.shared.base.BaseEntity;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.*;
@@ -35,7 +34,6 @@ public class JobJpa extends BaseEntity {
 
   @Column(name = "description")
   private String description;
-
 
   @Override
   public final boolean equals(Object o) {

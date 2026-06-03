@@ -1,0 +1,22 @@
+# Profile "openai": Enable OpenAI models (chat and embedding).
+# Use with "dev,openai" to enable OpenAI while keeping dev database config.
+#spring:
+#  ai:
+#    google:
+#      genai:
+#        # Tu API Key de Google AI Studio (o variables de entorno)
+#        api-key: ${GEMINI_API_KEY:AIzaSyA2u_LuWc-zGl0_MUwQAuDwUa53pFX6Law}
+#        chat:
+#          options:
+#            # Modelos recomendados por la documentación oficial
+#            model: gemini-2.0-flash # o gemini-2.0-flash / gemini-1.5-pro
+#            temperature: 0.2
+#            top-p: 0.95
+#        embedding:
+#          api-key: ${GEMINI_API_KEY:AIzaSyA2u_LuWc-zGl0_MUwQAuDwUa53pFX6Law}
+#          options:
+#            model: gemini-embedding-001
+#
+#    vectorstore:
+#      pgvector:
+#        dimensions: 768

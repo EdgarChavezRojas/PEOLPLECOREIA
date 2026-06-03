@@ -9,9 +9,8 @@ public class PayrollApproval {
   private UUID id;
   private UUID runRef;
   private ApprovalStatus status;
-  private UUID creatorRef;
-  private UUID reviewerRef;
-  private UUID approverRef;
+  private Long reviewerRef;
+  private Long approverRef;
   private Boolean sodViolationFlag;
   private UUID tenantId;
 
@@ -19,40 +18,38 @@ public class PayrollApproval {
       UUID id,
       UUID runRef,
       ApprovalStatus status,
-      UUID creatorRef,
-      UUID reviewerRef,
-      UUID approverRef,
+      Long reviewerRef,
+      Long approverRef,
       Boolean sodViolationFlag,
       UUID tenantId) {
-    this.id = id;
+    this.id = id != null ? id : UUID.randomUUID();
     this.runRef = runRef;
     this.status = status;
-    this.creatorRef = creatorRef;
     this.reviewerRef = reviewerRef;
     this.approverRef = approverRef;
     this.sodViolationFlag = sodViolationFlag;
     this.tenantId = tenantId;
   }
 
-  public static PayrollApproval createDraft(UUID id, UUID runRef, UUID creatorRef, UUID tenantId) {
-    return new PayrollApproval(
-        id, runRef, ApprovalStatus.PENDIENTE_REVISION, creatorRef, null, null, false, tenantId);
-  }
-
-  public void review(UUID reviewerId) {
-    if (reviewerId.equals(this.creatorRef)) {
-      this.sodViolationFlag = true;
-      throw new SolverExceptionImpl("PAYROLL_SOD_VIOLATION_REVIEWER");
+  public void review(Long reviewerId) {
+    if (this.status != ApprovalStatus.PENDIENTE_REVISION) {
+      throw new SolverExceptionImpl("INVALID_STATUS_FOR_REVIEW");
+    }
+    if (reviewerId == null) {
+      throw new SolverExceptionImpl("REVIEWER_REQUIRED");
     }
     this.reviewerRef = reviewerId;
     this.status = ApprovalStatus.REVISADO;
   }
 
-  public void approve(UUID approverId) {
+  public void approve(Long approverId) {
     if (this.status != ApprovalStatus.REVISADO) {
       throw new SolverExceptionImpl("INVALID_STATUS_FOR_APPROVAL");
     }
-    if (approverId.equals(this.creatorRef) || approverId.equals(this.reviewerRef)) {
+    if (approverId == null) {
+      throw new SolverExceptionImpl("APPROVER_REQUIRED");
+    }
+    if (approverId.equals(this.reviewerRef)) {
       this.sodViolationFlag = true;
       throw new SolverExceptionImpl("PAYROLL_SOD_VIOLATION_APPROVER");
     }
@@ -72,15 +69,11 @@ public class PayrollApproval {
     return status;
   }
 
-  public UUID getCreatorRef() {
-    return creatorRef;
-  }
-
-  public UUID getReviewerRef() {
+  public Long getReviewerRef() {
     return reviewerRef;
   }
 
-  public UUID getApproverRef() {
+  public Long getApproverRef() {
     return approverRef;
   }
 

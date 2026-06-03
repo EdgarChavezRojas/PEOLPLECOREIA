@@ -11,7 +11,7 @@ import java.util.UUID;
  * boliviana. El sistema no permite ignorar la multa una vez disparada.
  */
 public record QuinquenioPaymentOverdueEvent(
-    UUID personId, UUID provisionId, BigDecimal penaltyAmount, Instant occurredAt)
+    UUID personId, UUID provisionId, BigDecimal penaltyAmount, UUID tenantId, Instant occurredAt)
     implements DomainEvent {
 
   public QuinquenioPaymentOverdueEvent {
@@ -30,7 +30,8 @@ public record QuinquenioPaymentOverdueEvent(
   }
 
   public static QuinquenioPaymentOverdueEvent now(
-      UUID personId, UUID provisionId, BigDecimal penaltyAmount) {
-    return new QuinquenioPaymentOverdueEvent(personId, provisionId, penaltyAmount, Instant.now());
+      UUID personId, UUID provisionId, BigDecimal penaltyAmount, UUID tenantId) {
+    return new QuinquenioPaymentOverdueEvent(
+        personId, provisionId, penaltyAmount, tenantId, Instant.now());
   }
 }

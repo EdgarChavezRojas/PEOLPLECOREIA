@@ -30,5 +30,5 @@ public interface EmployeeSelfServicePI {
   UUID requestLeave(RequestLeaveCommand cmd);
 
   /** Consultar saldo disponible de vacaciones/ausencias para un empleado. */
-  BigDecimal getAvailableLeaveBalance(UUID personId);
+  BigDecimal getAvailableLeaveBalance();
 }

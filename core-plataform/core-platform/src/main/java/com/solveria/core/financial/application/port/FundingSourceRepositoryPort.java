@@ -1,6 +1,7 @@
 package com.solveria.core.financial.application.port;
 
 import com.solveria.core.financial.domain.model.FundingSource;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +13,6 @@ public interface FundingSourceRepositoryPort {
   Optional<FundingSource> findByProjectCode(String projectCode, UUID tenantId);
 
   void save(FundingSource fundingSource);
+
+  List<FundingSource> findAllByTenantId(UUID tenantId);
 }

@@ -17,7 +17,7 @@ public class BenefitProvisionScheduler {
 
   // ocupa su propio configuration para definir a que hora se realiza
   // como el modulo de dossier
-  @Scheduled(cron = "0 0 23 L * ?")
+  @Scheduled(cron = "${benefits.cron.monthly-provision}")
   public void runMonthlyBenefitProvision() {
     // TODO: Fetch active relationships from Person bounded context via Port
     List<ProvisionBenefitBatchCommand.BenefitProvisionItem> items = List.of();

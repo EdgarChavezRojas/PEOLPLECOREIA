@@ -6,6 +6,6 @@ import java.util.Map;
 public class InvalidLeaveStateException extends DomainException {
 
   public InvalidLeaveStateException(String reason) {
-    super("INVALID_LEAVE_STATE", Map.of("reason", reason), null);
+    super("INVALID_LEAVE_STATE", Map.of("reason", reason), reason);
   }
 }

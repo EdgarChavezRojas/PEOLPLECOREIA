@@ -14,6 +14,7 @@ public class FieldJpaEntity extends BaseEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
   @Column(nullable = false)
   private String name;
 
@@ -44,9 +45,11 @@ public class FieldJpaEntity extends BaseEntity {
   public void setResource(ResourceJpaEntity resource) {
     this.resource = resource;
   }
+
   public Long getId() {
     return id;
   }
+
   public void setId(Long id) {
     this.id = id;
   }

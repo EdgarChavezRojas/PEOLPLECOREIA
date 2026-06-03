@@ -5,12 +5,14 @@ import com.solveria.core.experience.application.command.RequestDataUpdateCommand
 import com.solveria.core.experience.application.command.RequestLeaveCommand;
 import com.solveria.core.experience.application.port.in.EmployeeSelfServicePI;
 import com.solveria.core.experience.application.port.out.NotificationPO;
+import com.solveria.core.experience.application.port.out.PersonLookupPO;
 import com.solveria.core.experience.application.port.out.SelfServiceActionPO;
 import com.solveria.core.experience.domain.model.Notification;
 import com.solveria.core.experience.domain.model.SelfServiceAction;
 import com.solveria.core.experience.domain.model.vo.CertificatePayload;
 import com.solveria.core.experience.domain.service.CertificateGenerationService;
 import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.security.context.SecurityUserContext;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
 
   private final SelfServiceActionPO selfServiceActionPO;
   private final NotificationPO notificationPO;
+  private final PersonLookupPO personLookupPO;
 
   @Override
   @Transactional
@@ -131,35 +134,49 @@ public class EmployeeSelfServiceUseCase implements EmployeeSelfServicePI {
   @Transactional
   public UUID requestLeave(RequestLeaveCommand cmd) {
     UUID tenantIdUUID = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    Long userId = SecurityUserContext.getUserId();
+    UUID personId =
+        personLookupPO
+            .findPersonIdByUserId(userId)
+            .orElseThrow(
+                () -> new IllegalArgumentException("Person no encontrada para userId: " + userId));
+
     log.info(
         "event=LEAVE_REQUESTED personId={} leaveType={} start={} end={} ",
-        cmd.personId(),
+        personId,
         cmd.leaveType(),
         cmd.startDate(),
         cmd.endDate());
 
     SelfServiceAction action =
         SelfServiceAction.requestLeave(
-            cmd.personId(),
+            personId,
             cmd.leaveType(),
             cmd.startDate(),
             cmd.endDate(),
             tenantIdUUID,
-            cmd.personId().toString());
+            personId.toString());
 
     selfServiceActionPO.save(action);
 
     log.info(
         "event=LEAVE_REQUEST_CREATED actionId={} personId={} leaveType={}",
         action.getActionId(),
-        cmd.personId(),
+        personId,
         cmd.leaveType());
     return action.getActionId();
   }
 
   @Override
   @Transactional(readOnly = true)
-  public BigDecimal getAvailableLeaveBalance(UUID personId) {
+  public BigDecimal getAvailableLeaveBalance() {
+    Long userId = SecurityUserContext.getUserId();
+    UUID personId =
+        personLookupPO
+            .findPersonIdByUserId(userId)
+            .orElseThrow(
+                () -> new IllegalArgumentException("Person no encontrada para userId: " + userId));
+
     log.info("event=LEAVE_BALANCE_QUERY_REQUESTED personId={}", personId);
 
     BigDecimal balance = selfServiceActionPO.getAvailableLeaveBalance(personId);

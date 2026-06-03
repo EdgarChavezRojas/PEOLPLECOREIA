@@ -9,14 +9,18 @@ import com.solveria.core.accruals.infrastructure.jpa.HolidayCalendarJpa;
 import com.solveria.core.accruals.infrastructure.jpa.QuinquenioProvisionJpa;
 import com.solveria.core.shared.events.DomainEvent;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", builder = @org.mapstruct.Builder(disableBuilder = true))
 public interface BenefitsMapper {
 
+  @Mapping(target = "tenantId", source = "tenantId")
   HolidayCalendarJpa toJpa(HolidayCalendar holiday);
 
+  @Mapping(target = "tenantId", source = "tenantId")
   QuinquenioProvisionJpa toJpa(QuinquenioProvision provision);
 
+  @Mapping(target = "tenantId", source = "tenantId")
   BenefitAccrualJpa toJpa(BenefitAccrual accrual);
 
   default HolidayCalendar toDomain(HolidayCalendarJpa jpa) {

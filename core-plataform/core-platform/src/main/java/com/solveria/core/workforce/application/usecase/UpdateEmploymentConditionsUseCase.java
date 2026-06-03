@@ -5,6 +5,7 @@ import com.solveria.core.workforce.application.port.RelationshipRepositoryPort;
 import com.solveria.core.workforce.domain.exception.SolverException;
 import com.solveria.core.workforce.domain.model.Relationship;
 import com.solveria.core.workforce.domain.model.vo.EmploymentCondition;
+import jakarta.transaction.Transactional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ public class UpdateEmploymentConditionsUseCase {
 
   private final RelationshipRepositoryPort relationshipRepositoryPort;
 
+  @Transactional
   public void execute(UUID relationshipId, EmploymentCondition condition) {
     UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     Relationship relationship =

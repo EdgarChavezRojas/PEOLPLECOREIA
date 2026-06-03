@@ -4,6 +4,8 @@ spring:
 
   profiles:
     default: dev
+#    group:
+#      dev: gemini
 
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -29,8 +31,6 @@ spring:
         format_sql: false
 
   ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:}
     vectorstore:
       pgvector:
         initialize-schema: ${PGVECTOR_INIT_SCHEMA:true}

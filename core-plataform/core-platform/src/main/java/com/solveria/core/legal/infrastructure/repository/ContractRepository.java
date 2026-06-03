@@ -14,6 +14,8 @@ public interface ContractRepository extends JpaRepository<ContractJpa, Long> {
 
   Optional<ContractJpa> findByContractIdAndTenantId(UUID contractId, UUID tenantId);
 
+  Optional<ContractJpa> findByContractId(UUID contractId);
+
   @Query(
       "select distinct c from ContractJpa c join c.addendums a "
           + "where c.contractType = :contractType "

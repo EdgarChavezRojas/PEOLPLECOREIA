@@ -6,6 +6,7 @@ import com.solveria.core.financial.infrastructure.mapper.FundingSourceMapper;
 import com.solveria.core.financial.infrastructure.repository.FundingSourceRepository;
 import com.solveria.core.security.context.SecurityTenantContext;
 import com.solveria.core.shared.outbox.application.port.EventOutboxPort;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,11 @@ public class FundingSourceRepositoryAdapter implements FundingSourceRepositoryPo
 
   @Override
   public Optional<FundingSource> findById(UUID sourceId) {
-    UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+    String tenantStr = SecurityTenantContext.getCurrentTenantId();
+    if (tenantStr == null || tenantStr.isBlank()) {
+      return fundingSourceRepository.findById(sourceId).map(fundingSourceMapper::toDomain);
+    }
+    UUID currentTenantId = UUID.fromString(tenantStr);
     return fundingSourceRepository
         .findBySourceIdAndTenantId(sourceId, currentTenantId)
         .map(fundingSourceMapper::toDomain);
@@ -48,5 +53,12 @@ public class FundingSourceRepositoryAdapter implements FundingSourceRepositoryPo
     return fundingSourceRepository
         .findByProjectCodeAndTenantId(projectCode, tenantId)
         .map(fundingSourceMapper::toDomain);
+  }
+
+  @Override
+  public List<FundingSource> findAllByTenantId(UUID tenantId) {
+    return fundingSourceRepository.findAllByTenantId(tenantId).stream()
+        .map(fundingSourceMapper::toDomain)
+        .toList();
   }
 }

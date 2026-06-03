@@ -6,8 +6,10 @@ import com.solveria.core.shared.pagination.PageUtils;
 import com.solveria.core.workforce.application.port.PositionRepositoryPort;
 import com.solveria.core.workforce.domain.model.Position;
 import com.solveria.core.workforce.domain.model.vo.PositionStatus;
+import com.solveria.core.workforce.infrastructure.jpa.JobJpa;
 import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
 import com.solveria.core.workforce.infrastructure.mapper.PositionMapper;
+import com.solveria.core.workforce.infrastructure.repository.JobRepository;
 import com.solveria.core.workforce.infrastructure.repository.PositionRepository;
 import java.util.List;
 import java.util.Optional;
@@ -27,11 +29,36 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
   private final PositionRepository positionRepository;
   private final PositionMapper positionMapper;
   private final EventOutboxPort eventOutboxPort;
+  private final JobRepository jobRepository;
 
   @Override
   @Transactional
   public Position save(Position position) {
-    PositionJpa positionJpa = positionMapper.toJpa(position);
+    PositionJpa positionJpa =
+        positionRepository
+            .findById(position.getPositionId())
+            .map(
+                existing -> {
+                  positionMapper.updateJpa(position, existing);
+                  if (position.getJobId() != null) {
+                    JobJpa jobJpa = jobRepository.findById(position.getJobId())
+                        .orElseThrow(() -> new IllegalArgumentException("Job not found: " + position.getJobId()));
+                    existing.setJob(jobJpa);
+                  }
+                  return existing;
+                })
+            .orElseGet(() -> {
+              PositionJpa jpa = positionMapper.toJpa(position);
+              UUID tenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
+              jpa.setTenantId(tenantId);
+              if (position.getJobId() != null) {
+                JobJpa jobJpa = jobRepository.findById(position.getJobId())
+                    .orElseThrow(() -> new IllegalArgumentException("Job not found: " + position.getJobId()));
+                jpa.setJob(jobJpa);
+              }
+              return jpa;
+            });
+
     PositionJpa savedPositionJpa = positionRepository.save(positionJpa);
     Position savedPosition = positionMapper.toDomain(savedPositionJpa);
 
@@ -41,6 +68,7 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Optional<Position> findByPositionIdAndTenantId(UUID positionId, UUID tenantId) {
     UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     if (!currentTenantId.equals(tenantId)) {
@@ -52,6 +80,7 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public int countByJobIdAndTenantId(UUID jobId, UUID tenantId) {
     UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     if (!currentTenantId.equals(tenantId)) {
@@ -61,6 +90,7 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<Position> findByTenantId(UUID tenantId, Pageable pageable) {
     UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());
     if (!currentTenantId.equals(tenantId)) {
@@ -74,6 +104,7 @@ public class PositionRepositoryAdapter implements PositionRepositoryPort {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<Position> findByTenantIdAndStatus(
       UUID tenantId, PositionStatus status, Pageable pageable) {
     UUID currentTenantId = UUID.fromString(SecurityTenantContext.getCurrentTenantId());

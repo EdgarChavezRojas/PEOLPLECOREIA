@@ -41,5 +41,4 @@ public class HolidayCalendarJpa extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "scope", nullable = false)
   private HolidayScope scope;
-
 }

@@ -61,7 +61,11 @@ public class GenerateContractEvidenceUseCase {
     // CAMBIO 2: Pasamos los bytes al puerto y este nos DEVUELVE el hash oficial del Kardex
     String hash =
         digitalKardexPort.storeEvidence(
-            contract.getContractId(), request.tenantId(), fileContent, generatedAt);
+            contract.getContractId(),
+            contract.getRelationshipId(),
+            request.tenantId(),
+            fileContent,
+            generatedAt);
 
     auditLogPort.registerEvidenceGenerated(contract.getContractId(), generatedAt, hash);
     eventOutboxPort.publish(

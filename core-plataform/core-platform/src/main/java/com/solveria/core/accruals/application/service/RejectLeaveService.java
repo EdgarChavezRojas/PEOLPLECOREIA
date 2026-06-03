@@ -7,6 +7,7 @@ import com.solveria.core.accruals.domain.exception.AccrualBalanceNotFoundExcepti
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.policy.LocalizationPolicy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RejectLeaveService implements RejectLeaveUseCase {
@@ -18,6 +19,7 @@ public class RejectLeaveService implements RejectLeaveUseCase {
   }
 
   @Override
+  @Transactional
   public AccrualBalance handle(RejectLeaveCommand command) {
     LocalizationPolicy.requireSantaCruz(command.location());
     AccrualBalance balance =

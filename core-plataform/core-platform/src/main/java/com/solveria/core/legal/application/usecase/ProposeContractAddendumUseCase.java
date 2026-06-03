@@ -35,7 +35,7 @@ public class ProposeContractAddendumUseCase {
   // en un futuro sera implementado con una clase application properties, revisar que es esto
   // urgentemente
   // @Value("${legal.policies.smn.id}")
-  private final String smnPolicyId = "00000000-0000-0000-0000-000000000000";
+  private final String smnPolicyId = "c1a00000-0000-4000-8000-000000000100";
 
   @Transactional
   public ContractAddendumResponse execute(ProposeContractAddendumRequest request) {

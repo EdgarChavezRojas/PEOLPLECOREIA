@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnBean(LlmChatPort.class)
 public class LlmPortFromChatAdapter implements LlmPort {
 
-    private static final String MODEL_NAME = "openai";
+    private static final String MODEL_NAME = "ollama";
 
     private final LlmChatPort llmChat;
 

@@ -18,7 +18,7 @@ import com.solveria.core.financial.application.usecase.SyncBankAccountUseCase;
 import com.solveria.core.financial.application.usecase.ValidateFundingSourceUseCase;
 import com.solveria.core.financial.domain.event.QuinquenioRequestedEvent;
 import com.solveria.core.financial.domain.model.vo.TerminationType;
-import com.solveria.core.financial.infrastructure.messaging.listeners.FinancialCoreEventListener;
+import com.solveria.core.financial.infrastructure.listener.FinancialCoreEventListener;
 import com.solveria.core.legal.domain.event.ContractApprovedEvent;
 import com.solveria.core.legal.domain.event.ContractDraftedEvent;
 import com.solveria.core.legal.domain.event.ContractTerminatedEvent;

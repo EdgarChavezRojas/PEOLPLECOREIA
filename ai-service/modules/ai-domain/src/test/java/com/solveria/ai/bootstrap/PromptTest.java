@@ -1,7 +1,8 @@
-package com.solveria.ai.domain.model;
+package com.solveria.ai.bootstrap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.solveria.ai.domain.model.Prompt;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

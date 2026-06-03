@@ -22,15 +22,17 @@ public class QueryPayrollRunByPeriodUseCase implements GetPayrollRunByPeriodUseC
 
   @Override
   @Transactional(readOnly = true)
-  public PayrollRunDetailResponse execute(UUID periodId, UUID tenantId) {
-    PayrollRun run =
-        repository
-            .findByPeriodAndTenant(periodId, tenantId)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "No se encontró ninguna planilla para el período y tenant especificados."));
+  public List<PayrollRunDetailResponse> execute(UUID periodId, UUID tenantId) {
+    List<PayrollRun> runs = repository.findByPeriodAndTenant(periodId, tenantId);
+    if (runs.isEmpty()) {
+      throw new IllegalArgumentException(
+          "No se encontró ninguna planilla para el período y tenant especificados.");
+    }
 
+    return runs.stream().map(this::toDetailResponse).toList();
+  }
+
+  private PayrollRunDetailResponse toDetailResponse(PayrollRun run) {
     BigDecimal totalGross = BigDecimal.ZERO;
     BigDecimal totalNet = BigDecimal.ZERO;
 

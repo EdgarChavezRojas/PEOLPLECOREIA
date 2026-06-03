@@ -23,7 +23,15 @@ public class PayrollApprovalRepositoryAdapter implements PayrollApprovalReposito
 
   @Override
   public PayrollApproval save(PayrollApproval payrollApproval) {
-    PayrollApprovalJpa jpa = mapper.toJpa(payrollApproval);
+    PayrollApprovalJpa jpa = null;
+    if (payrollApproval.getId() != null) {
+      jpa = repository.findById(payrollApproval.getId()).orElse(null);
+    }
+    if (jpa == null) {
+      jpa = mapper.toJpa(payrollApproval);
+    } else {
+      mapper.updateJpa(payrollApproval, jpa);
+    }
     PayrollApprovalJpa saved = repository.save(jpa);
     return mapper.toDomain(saved);
   }
@@ -31,5 +39,10 @@ public class PayrollApprovalRepositoryAdapter implements PayrollApprovalReposito
   @Override
   public Optional<PayrollApproval> findByRunRef(UUID runRef) {
     return repository.findByRunRef(runRef).map(mapper::toDomain);
+  }
+
+  @Override
+  public Optional<PayrollApproval> findByApprovalId(UUID approvalId) {
+    return repository.findById(approvalId).map(mapper::toDomain);
   }
 }

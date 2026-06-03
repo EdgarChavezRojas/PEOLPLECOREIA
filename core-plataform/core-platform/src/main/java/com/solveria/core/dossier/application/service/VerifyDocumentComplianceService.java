@@ -67,7 +67,7 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
             command.critical(),
             metadata,
             UUID.fromString(SecurityTenantContext.getCurrentTenantId()));
-    record.evaluateExpiration(LocalDate.now());
+    record.evaluateExpiration(LocalDate.now(), record.getTenantId());
     return documentRecordRepository.save(record);
   }
 
@@ -76,7 +76,7 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
     LocalDateTime reviewDate =
         command.reviewDate() != null ? command.reviewDate() : LocalDateTime.now();
     record.approve(command.reviewerId(), reviewDate);
-    record.evaluateExpiration(LocalDate.now());
+    record.evaluateExpiration(LocalDate.now(), record.getTenantId());
     return documentRecordRepository.save(record);
   }
 
@@ -84,13 +84,13 @@ public class VerifyDocumentComplianceService implements VerifyDocumentCompliance
     DocumentRecord record = findOrPublishMissing(command);
     LocalDateTime reviewDate =
         command.reviewDate() != null ? command.reviewDate() : LocalDateTime.now();
-    record.reject(command.reviewerId(), command.rejectReason(), reviewDate);
+    record.reject(command.reviewerId(), command.rejectReason(), reviewDate, record.getTenantId());
     return documentRecordRepository.save(record);
   }
 
   private DocumentRecord expireDocument(VerifyDocumentComplianceCommand command) {
     DocumentRecord record = findOrPublishMissing(command);
-    record.evaluateExpiration(LocalDate.now());
+    record.evaluateExpiration(LocalDate.now(), record.getTenantId());
     return documentRecordRepository.save(record);
   }
 

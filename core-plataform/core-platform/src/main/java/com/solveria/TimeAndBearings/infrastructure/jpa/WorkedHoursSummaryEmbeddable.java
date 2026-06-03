@@ -2,8 +2,6 @@ package com.solveria.TimeAndBearings.infrastructure.jpa;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import jakarta.persistence.Id;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

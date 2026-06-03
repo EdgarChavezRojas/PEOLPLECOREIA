@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -46,7 +45,6 @@ public class OrgUnitJpa extends BaseEntity {
   @Column(name = "unit_id")
   private UUID unitId;
 
-
   @Column(name = "parent_id")
   private UUID parentId;
 
@@ -72,7 +70,6 @@ public class OrgUnitJpa extends BaseEntity {
       fetch = FetchType.LAZY)
   @Builder.Default
   private List<OrgHierarchyJpa> orgHierarchies = new ArrayList<>();
-
 
   @Override
   public final boolean equals(Object o) {

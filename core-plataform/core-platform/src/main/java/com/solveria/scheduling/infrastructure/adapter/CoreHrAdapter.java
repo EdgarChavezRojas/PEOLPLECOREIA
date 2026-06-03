@@ -11,8 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * Adaptador de infraestructura que implementa CoreHrPort para conectarse con el módulo Core HR (BC 01)
- * de manera directa en el monolito, consultando al puerto del repositorio de relaciones laborales.
+ * Adaptador de infraestructura que implementa CoreHrPort para conectarse con el módulo Core HR (BC
+ * 01) de manera directa en el monolito, consultando al puerto del repositorio de relaciones
+ * laborales.
  */
 @Component
 @RequiredArgsConstructor

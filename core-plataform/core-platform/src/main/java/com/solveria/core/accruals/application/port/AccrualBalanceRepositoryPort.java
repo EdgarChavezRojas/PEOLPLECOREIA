@@ -2,6 +2,7 @@ package com.solveria.core.accruals.application.port;
 
 import com.solveria.core.accruals.domain.model.AccrualBalance;
 import com.solveria.core.accruals.domain.model.LeaveTransaction;
+import com.solveria.core.accruals.domain.model.vo.LeaveStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,4 +21,8 @@ public interface AccrualBalanceRepositoryPort {
 
   Page<LeaveTransaction> findLeaveTransactionsByRelationshipId(
       UUID relationshipId, Pageable pageable);
+
+  Page<LeaveTransaction> findAllLeaves(Pageable pageable);
+
+  Page<LeaveTransaction> findLeavesByStatus(LeaveStatus status, Pageable pageable);
 }

@@ -5,18 +5,23 @@ import com.solveria.core.workforce.domain.model.Person;
 import com.solveria.core.workforce.infrastructure.jpa.PartyIdentifierJpa;
 import com.solveria.core.workforce.infrastructure.jpa.PersonJpa;
 import org.mapstruct.AfterMapping;
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 @Mapper(
     componentModel = "spring",
+    builder = @Builder(disableBuilder = true),
     uses = {PartyIdentifierMapper.class})
 public interface PersonMapper {
 
   PersonJpa toJpa(Person person);
 
   Person toDomain(PersonJpa jpa);
+
+  @Mapping(target = "identifiers", ignore = true)
+  void updateJpa(Person person, @MappingTarget PersonJpa personJpa);
 
   @Mapping(
       target = "gender",

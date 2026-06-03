@@ -5,6 +5,7 @@ import com.solveria.core.workforce.domain.model.Position;
 import com.solveria.core.workforce.infrastructure.jpa.PositionJpa;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 @Mapper(
     componentModel = "spring",
@@ -14,6 +15,9 @@ public interface PositionMapper {
   PositionJpa toJpa(Position position);
 
   Position toDomain(PositionJpa jpa);
+
+  @Mapping(target = "job", ignore = true)
+  void updateJpa(Position position, @MappingTarget PositionJpa positionJpa);
 
   @Mapping(target = "jobId", source = "job.jobId")
   @Mapping(

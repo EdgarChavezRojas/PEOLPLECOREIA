@@ -9,8 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO contenedor de respuesta que agrupa los turnos asignados a un empleado
- * dentro de un rango de fechas específico.
+ * DTO contenedor de respuesta que agrupa los turnos asignados a un empleado dentro de un rango de
+ * fechas específico.
  */
 @Data
 @NoArgsConstructor

@@ -33,7 +33,6 @@ public class NotificationJpa extends BaseEntity {
   @Column(name = "body", columnDefinition = "TEXT")
   private String body;
 
-
   @Column(name = "sent_at", nullable = false, updatable = false)
   private Instant sentAt;
 
@@ -44,9 +43,9 @@ public class NotificationJpa extends BaseEntity {
   @Column(name = "read_by")
   private boolean requiresAcknowledgement;
 
-  @Column(name = "acknowledged_at", nullable = false, updatable = false)
+  @Column(name = "acknowledged_at")
   private Instant acknowledgedAt;
 
-  @Column(name = "acknowledged_by", nullable = false)
+  @Column(name = "acknowledged_by")
   private UUID acknowledgedBy;
 }

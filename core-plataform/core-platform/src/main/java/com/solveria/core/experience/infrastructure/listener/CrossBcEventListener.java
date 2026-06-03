@@ -4,10 +4,11 @@ import com.solveria.core.accruals.domain.event.LeaveRequestSubmittedEvent;
 import com.solveria.core.accruals.domain.event.QuinquenioPaymentOverdueEvent;
 import com.solveria.core.dossier.domain.event.DocumentValidationRejectedEvent;
 import com.solveria.core.dossier.domain.event.EligibilitySuspendedByComplianceEvent;
+import com.solveria.core.experience.application.port.out.PredictionModelPO;
 import com.solveria.core.experience.application.port.out.RelationshipPersonResolverPort;
 import com.solveria.core.experience.application.usecase.CrossBcEventConsumerUseCase;
 import com.solveria.core.experience.application.usecase.SendNotificationUseCase;
-import com.solveria.core.security.context.SecurityTenantContext;
+import com.solveria.core.experience.domain.model.PredictionModel;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
  * <ul>
  *   <li>{@link RelationshipPersonResolverPort}: resolución de personId a partir de relationshipId
  *       (ACL).
- *   <li>{@link SecurityTenantContext}: resolución del tenantId del contexto de seguridad.
- *   <li>Propiedad {@code experience.prediction.default-model-id}: PredictionModel por defecto.
+ *   <li>Eventos Autocontenidos: El tenantId ahora viaja dentro de cada evento, asegurando su
+ *       trazabilidad asíncrona sin depender de contextos de hilo (ThreadLocal).
+ *   <li>{@link PredictionModelPO}: Búsqueda dinámica del modelo de IA correspondiente al tenant,
+ *       garantizando la separación de datos entre clientes.
  * </ul>
  *
  * <p>Eventos consumidos:
@@ -51,15 +54,10 @@ public class CrossBcEventListener {
   // ── ACL Port (resolución de datos cross-BC) ─────────────────────────────
   private final RelationshipPersonResolverPort relationshipPersonResolverPort;
 
-  // ── Configuración ───────────────────────────────────────────────────────
-  /**
-   * ID del PredictionModel por defecto. Se inyecta desde la propiedad {@code
-   * experience.prediction.default-model-id} . Usado cuando el evento no transporta un modelId
-   * explícito.
-   */
-  // revisar urgente porque usa defaultPredictionModelId
-  private final UUID defaultPredictionModelId =
-      UUID.fromString("00000000-0000-0000-0000-000000000000");
+  // ── Outbound Ports ──────────────────────────────────────────────────────
+  // Nuevo puerto integrado para obtener dinámicamente el modelo predictivo del tenant
+  // reemplazando la constante hardcodeada anterior (defaultPredictionModelId).
+  private final PredictionModelPO predictionModelPO;
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. QuinquenioPaymentOverdueEvent → handleQuinquenioPaymentOverdue
@@ -71,29 +69,41 @@ public class CrossBcEventListener {
    * <p>Mapping:
    *
    * <ul>
-   *   <li>{@code modelId} → {@link #defaultPredictionModelId} (estático, vía property)
+   *   <li>{@code modelId} → Resuelto dinámicamente desde BD mediante el tenantId
    *   <li>{@code personId} → {@code event.personId()}
    *   <li>{@code amount} → {@code event.penaltyAmount()}
-   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback
+   *   <li>{@code tenantId} → {@code event.tenantId()} obtenido desde el propio evento
    * </ul>
    */
   @EventListener
   public void handle(QuinquenioPaymentOverdueEvent event) {
     log.info(
-        "event=EXP_QUINQUENIO_OVERDUE_RECEIVED personId={} provisionId={} amount={}",
+        "event=EXP_QUINQUENIO_OVERDUE_RECEIVED personId={} provisionId={} amount={} tenantId={}",
         event.personId(),
         event.provisionId(),
-        event.penaltyAmount());
+        event.penaltyAmount(),
+        event.tenantId());
     try {
-      String tenantId = resolveTenantId();
+      UUID tenantId = event.tenantId();
+
+      // Buscamos dinámicamente el modelo predictivo que le pertenece a ESTE tenant.
+      // Si un tenant no tiene modelo configurado, fallamos rápido para mantener integridad de
+      // negocio.
+      PredictionModel model =
+          predictionModelPO
+              .findByTenantId(tenantId)
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "No se encontró PredictionModel activo para el tenant: " + tenantId));
 
       crossBcEventConsumerUseCase.handleQuinquenioPaymentOverdue(
-          defaultPredictionModelId, event.personId(), event.penaltyAmount(), tenantId);
+          model.getModelId(), event.personId(), event.penaltyAmount());
 
       log.info(
           "event=EXP_QUINQUENIO_OVERDUE_PROCESSED personId={} modelId={}",
           event.personId(),
-          defaultPredictionModelId);
+          model.getModelId());
     } catch (Exception ex) {
       log.warn(
           "event=EXP_QUINQUENIO_OVERDUE_FAILED personId={} error={}",
@@ -116,23 +126,24 @@ public class CrossBcEventListener {
    *   <li>{@code personId} → resuelto desde {@code event.relationshipId()} vía ACL port
    *   <li>{@code documentType} → {@code "Documento ID: " + event.docId()}
    *   <li>{@code reason} → {@code event.reason()}
-   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback
+   *   <li>{@code tenantId} → {@code event.tenantId()} obtenido desde el propio evento
    * </ul>
    */
   @EventListener
   public void handle(DocumentValidationRejectedEvent event) {
     log.info(
-        "event=EXP_DOC_VALIDATION_REJECTED_RECEIVED docId={} relationshipId={}",
+        "event=EXP_DOC_VALIDATION_REJECTED_RECEIVED docId={} relationshipId={} tenantId={}",
         event.docId(),
-        event.relationshipId());
+        event.relationshipId(),
+        event.tenantId());
     try {
       UUID personId =
           relationshipPersonResolverPort.resolvePersonIdByRelationship(event.relationshipId());
       String documentType = "Documento ID: " + event.docId();
-      String tenantId = resolveTenantId();
+      UUID tenantId = event.tenantId();
 
       crossBcEventConsumerUseCase.handleDocumentValidationRejected(
-          personId, documentType, event.reason(), UUID.fromString(tenantId));
+          personId, documentType, event.reason(), tenantId);
 
       log.info(
           "event=EXP_DOC_VALIDATION_REJECTED_PROCESSED docId={} personId={}",
@@ -157,31 +168,40 @@ public class CrossBcEventListener {
    * <p>Mapping:
    *
    * <ul>
-   *   <li>{@code modelId} → {@link #defaultPredictionModelId} (estático/default)
+   *   <li>{@code modelId} → Resuelto dinámicamente desde BD mediante el tenantId
    *   <li>{@code personId} → resuelto desde {@code event.relationshipId()} vía ACL port
    *   <li>{@code reason} → {@code "Documento crítico expirado"} (constante de negocio)
-   *   <li>{@code tenantId} → {@link SecurityTenantContext#getCurrentTenantId()} con fallback
+   *   <li>{@code tenantId} → {@code event.tenantId()} obtenido desde el propio evento
    * </ul>
    */
   @EventListener
   public void handle(EligibilitySuspendedByComplianceEvent event) {
-    log.info("event=EXP_ELIGIBILITY_SUSPENDED_RECEIVED relationshipId={}", event.relationshipId());
+    log.info(
+        "event=EXP_ELIGIBILITY_SUSPENDED_RECEIVED relationshipId={} tenantId={}",
+        event.relationshipId(),
+        event.tenantId());
     try {
       UUID personId =
           relationshipPersonResolverPort.resolvePersonIdByRelationship(event.relationshipId());
-      String tenantId = resolveTenantId();
+      UUID tenantId = event.tenantId();
+
+      // Resolvemos el ID del modelo dinámicamente para procesar la suspensión en el contexto IA
+      PredictionModel model =
+          predictionModelPO
+              .findByTenantId(tenantId)
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "No se encontró PredictionModel activo para el tenant: " + tenantId));
 
       crossBcEventConsumerUseCase.handleEligibilitySuspended(
-          defaultPredictionModelId,
-          personId,
-          REASON_CRITICAL_DOCUMENT_EXPIRED,
-          UUID.fromString(tenantId));
+          model.getModelId(), personId, REASON_CRITICAL_DOCUMENT_EXPIRED);
 
       log.info(
           "event=EXP_ELIGIBILITY_SUSPENDED_PROCESSED relationshipId={} personId={} modelId={}",
           event.relationshipId(),
           personId,
-          defaultPredictionModelId);
+          model.getModelId());
     } catch (Exception ex) {
       log.warn(
           "event=EXP_ELIGIBILITY_SUSPENDED_FAILED relationshipId={} error={}",
@@ -195,42 +215,27 @@ public class CrossBcEventListener {
 
   private static final String REASON_CRITICAL_DOCUMENT_EXPIRED = "Documento crítico expirado";
 
-  // ── Métodos auxiliares ──────────────────────────────────────────────────
-
-  /**
-   * Resuelve el tenantId del contexto de seguridad actual. Fallback a {@code "UNKNOWN"} si no hay
-   * contexto de tenant establecido (p.ej. en procesamiento asíncrono de eventos donde el
-   * SecurityContext puede no estar propagado).
-   */
-  private String resolveTenantId() {
-    String tenantId = SecurityTenantContext.getCurrentTenantId();
-    if (tenantId == null || tenantId.isBlank()) {
-      log.warn("event=EXP_TENANT_RESOLUTION_FALLBACK reason=NO_SECURITY_CONTEXT");
-      return "UNKNOWN";
-    }
-    return tenantId;
-  }
-
   // ──────────────────────────────────────────────────────────────────────────────
   // 4. LeaveRequestSubmittedEvent → Notificación al Manager
   // ──────────────────────────────────────────────────────────────────────────────
 
   /**
-   * Reacciona a la solicitud de ausencia enviada (Accruals BC).
-   * Envía una notificación al supervisor indicando que hay una solicitud de ausencia pendiente
-   * de revisión.
+   * Reacciona a la solicitud de ausencia enviada (Accruals BC). Envía una notificación al
+   * supervisor indicando que hay una solicitud de ausencia pendiente de revisión.
    */
   @EventListener
   @Transactional
   public void handle(LeaveRequestSubmittedEvent event) {
     log.info(
-        "event=EXP_LEAVE_REQUEST_SUBMITTED_RECEIVED balanceId={} transactionId={} startDate={} endDate={}",
+        "event=EXP_LEAVE_REQUEST_SUBMITTED_RECEIVED balanceId={} transactionId={} startDate={} endDate={} tenantId={}",
         event.balanceId(),
         event.transactionId(),
         event.startDate(),
-        event.endDate());
+        event.endDate(),
+        event.tenantId());
     try {
-      String tenantId = resolveTenantId();
+      // Extraemos el tenant directamente sin depender del SecurityTenantContext (hilo asíncrono)
+      UUID tenantId = event.tenantId();
 
       sendNotificationUseCase.send(
           event.balanceId(), // recipientId – se resuelve al supervisor en capas internas
@@ -238,11 +243,8 @@ public class CrossBcEventListener {
           "Solicitud de ausencia pendiente",
           String.format(
               "Se ha recibido una solicitud de ausencia (transactionId=%s) del %s al %s por %s días. Requiere su aprobación.",
-              event.transactionId(),
-              event.startDate(),
-              event.endDate(),
-              event.chargeableDays()),
-          UUID.fromString(tenantId));
+              event.transactionId(), event.startDate(), event.endDate(), event.chargeableDays()),
+          tenantId);
 
       log.info(
           "event=EXP_LEAVE_REQUEST_NOTIFICATION_SENT balanceId={} transactionId={}",

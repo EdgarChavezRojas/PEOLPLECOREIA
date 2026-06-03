@@ -2,6 +2,7 @@ package com.solveria.core.workforce.application.dto;
 
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,4 +42,7 @@ public class CreatePersonRequest {
 
   @NotBlank(message = "gender es requerido")
   private String DNI;
+
+  @NotNull(message = "tenantId es requerido")
+  private UUID tenantId;
 }
